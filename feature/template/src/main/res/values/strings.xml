@@ -1,0 +1,12 @@
+<resources>
+    <string name="template_title">Boilerplate Template</string>
+    <string name="template_empty_msg">No data available in local Room database.</string>
+    <string name="template_btn_add_template">Add Template Data</string>
+    <string name="template_item_title_1">Modern Architecture</string>
+    <string name="template_item_desc_1">Multi-module with clean boundaries.</string>
+    <string name="template_item_title_new">New Template Item</string>
+    <string name="template_item_desc_new">Created from floating action button.</string>
+    <string name="template_action_add">Add</string>
+    <string name="template_action_delete">Delete</string>
+    <string name="template_action_retry">RETRY</string>
+</resources>

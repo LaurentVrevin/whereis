@@ -1,0 +1,42 @@
+# Android Studio / IntelliJ
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+/.idea/deploymentTargetDropDown.xml
+/.idea/vcs.xml
+/.idea/modules/
+/.idea/vcs.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+
+# Gradle
+.gradle/
+build/
+
+# Kotlin
+.kotlin/
+
+# Generated files
+app/build/
+*.ap_
+*.dex
+*.class
+.bootstrap-complete
+
+# Logcat
+*.log
+
+# Sensitive info
+local.properties
+
+# Android Starter Artifacts
+.artifacts/
