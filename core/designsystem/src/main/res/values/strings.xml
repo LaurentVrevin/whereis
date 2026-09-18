@@ -1,7 +1,5 @@
 <resources>
     <string name="showcase_title">Design System Showcase</string>
-    <string name="showcase_nav_template">Go to Template Feature</string>
-    <string name="showcase_section_nav">Navigation &amp; Templates</string>
     <string name="showcase_section_typography">Typography</string>
     <string name="showcase_section_colors">Core Colors</string>
     <string name="showcase_section_foundations">Foundations</string>

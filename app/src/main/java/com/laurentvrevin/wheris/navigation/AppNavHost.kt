@@ -6,15 +6,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.laurentvrevin.wheris.core.designsystem.ShowcaseScreen
 import com.laurentvrevin.wheris.ui.StartScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
 data object StartRoute
-
-@Serializable
-data object ShowcaseRoute
 
 @Composable
 fun AppNavHost(
@@ -29,17 +25,7 @@ fun AppNavHost(
         modifier = modifier,
     ) {
         composable<StartRoute> {
-            StartScreen(
-                onNavigateToShowcase = { navController.navigate(ShowcaseRoute) },
-            )
-        }
-
-        composable<ShowcaseRoute> {
-            ShowcaseScreen(
-                isDarkTheme = isDarkTheme,
-                onThemeToggle = onThemeToggle,
-                onBackClick = { navController.popBackStack() },
-            )
+            StartScreen()
         }
     }
 }

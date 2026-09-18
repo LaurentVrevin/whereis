@@ -1,6 +1,5 @@
 plugins {
     id("com.laurentvrevin.android.application.compose")
-    alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -55,7 +54,6 @@ dependencies {
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.koinTest)
-    testImplementation(libs.ktor.client.core)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
 }

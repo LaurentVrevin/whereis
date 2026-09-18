@@ -7,8 +7,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import com.laurentvrevin.wheris.core.model.ThemeMode
 import com.laurentvrevin.wheris.core.designsystem.theme.AppTheme
+import com.laurentvrevin.wheris.core.model.ThemeMode
 import com.laurentvrevin.wheris.navigation.AppNavHost
 import com.laurentvrevin.wheris.ui.MainViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
