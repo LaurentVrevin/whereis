@@ -1,12 +1,3 @@
 <resources>
-    <string name="showcase_title">Design System Showcase</string>
-    <string name="showcase_section_typography">Typography</string>
-    <string name="showcase_section_colors">Core Colors</string>
-    <string name="showcase_section_foundations">Foundations</string>
-    <string name="showcase_section_buttons">Buttons</string>
-    <string name="showcase_section_chips">Chips</string>
-    <string name="showcase_section_inputs">Inputs</string>
-    <string name="showcase_section_cards">Cards</string>
-    <string name="showcase_section_feedback">UI State &amp; Feedback</string>
     <string name="design_back">Back</string>
 </resources>
