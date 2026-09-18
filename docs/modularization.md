@@ -32,7 +32,7 @@ plugins {
 }
 
 android {
-    namespace = "com.laurentvrevin.androidstarter.feature.tasks"
+    namespace = "com.laurentvrevin.wheris.feature.tasks"
 }
 
 dependencies {

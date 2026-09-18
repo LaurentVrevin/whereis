@@ -46,7 +46,7 @@ Un résumé s'affiche. Tape **`y`** pour lancer la transformation.
 
 La tâche automatise les modifications les plus pénibles du renommage manuel :
 -   **Remplacement textuel** : Mise à jour de `applicationId`, `namespace`, déclarations `package` et `import` dans tous les fichiers texte.
--   **Déplacement physique** : Les dossiers sources sont déplacés pour correspondre au nouveau package (ex: `com/laurentvrevin/androidstarter` devient `com/monapp/package`).
+-   **Déplacement physique** : Les dossiers sources sont déplacés pour correspondre au nouveau package (ex: `com/laurentvrevin/wheris` devient `com/monapp/package`).
 -   **Schémas Room** : Les répertoires de schémas exportés par Room sont également renommés pour inclure le nouveau package.
 -   **Ressources** : Mise à jour de `app_name` (avec échappement XML automatique) et des styles de thèmes XML.
 -   **Nettoyage** : Suppression automatique du fichier `starter.properties`.

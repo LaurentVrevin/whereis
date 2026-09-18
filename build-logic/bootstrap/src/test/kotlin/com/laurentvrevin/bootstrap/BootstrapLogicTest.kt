@@ -40,18 +40,18 @@ class BootstrapLogicTest {
     @Test
     fun `applyTransformations correctly handles regex and independent names`() {
         val settingsFile = tempFolder.newFile("settings.gradle.kts")
-        settingsFile.writeText("rootProject.name = \"AndroidStarter\"")
+        settingsFile.writeText("rootProject.name = \"Wheris\"")
 
         val stringsFile = tempFolder.newFile("strings.xml")
-        stringsFile.writeText("<string name=\"app_name\">AndroidStarter</string>")
+        stringsFile.writeText("<string name=\"app_name\">Wheris</string>")
 
         val logic = BootstrapLogic(tempFolder.root)
         val regexTransformations = listOf(
-            Regex("rootProject\\.name\\s*=\\s*\"AndroidStarter\"") to "rootProject.name = \"MonApplication\"",
-            Regex("<string name=\"app_name\">AndroidStarter</string>") to "<string name=\"app_name\">Mon application</string>"
+            Regex("rootProject\\.name\\s*=\\s*\"Wheris\"") to "rootProject.name = \"MonApplication\"",
+            Regex("<string name=\"app_name\">Wheris</string>") to "<string name=\"app_name\">Mon application</string>"
         )
         val stringTransformations = listOf(
-            "AndroidStarter" to "MonApplication"
+            "Wheris" to "MonApplication"
         )
 
         logic.applyTransformations(stringTransformations, regexTransformations)
@@ -132,12 +132,12 @@ class BootstrapLogicTest {
     fun `applyTransformations excludes build folders`() {
         val buildDir = tempFolder.newFolder("build")
         val file = File(buildDir, "should_not_be_touched.kt")
-        file.writeText("AndroidStarter")
+        file.writeText("Wheris")
 
         val logic = BootstrapLogic(tempFolder.root)
-        logic.applyTransformations(listOf("AndroidStarter" to "NewName"))
+        logic.applyTransformations(listOf("Wheris" to "NewName"))
 
-        assertEquals("AndroidStarter", file.readText())
+        assertEquals("Wheris", file.readText())
     }
 
     @Test
@@ -145,27 +145,27 @@ class BootstrapLogicTest {
         val root = tempFolder.root
         val artifactsDir = File(root, ".artifacts/session").apply { mkdirs() }
         val artifactFile = File(artifactsDir, "implementation_plan.artifact.md")
-        artifactFile.writeText("com.laurentvrevin.androidstarter")
+        artifactFile.writeText("com.laurentvrevin.wheris")
 
         val ideaDir = File(root, ".idea").apply { mkdirs() }
         val ideaFile = File(ideaDir, "workspace.xml")
-        ideaFile.writeText("com.laurentvrevin.androidstarter")
+        ideaFile.writeText("com.laurentvrevin.wheris")
 
         val logic = BootstrapLogic(root)
-        logic.applyTransformations(listOf("com.laurentvrevin.androidstarter" to "com.new.app"))
+        logic.applyTransformations(listOf("com.laurentvrevin.wheris" to "com.new.app"))
 
-        assertEquals("com.laurentvrevin.androidstarter", artifactFile.readText())
-        assertEquals("com.laurentvrevin.androidstarter", ideaFile.readText())
+        assertEquals("com.laurentvrevin.wheris", artifactFile.readText())
+        assertEquals("com.laurentvrevin.wheris", ideaFile.readText())
     }
 
     @Test
     fun `dryRun does not modify anything`() {
         val file = tempFolder.newFile("test.kt")
-        file.writeText("AndroidStarter")
+        file.writeText("Wheris")
 
         val logic = BootstrapLogic(tempFolder.root, dryRun = true)
-        logic.applyTransformations(listOf("AndroidStarter" to "NewName"))
+        logic.applyTransformations(listOf("Wheris" to "NewName"))
 
-        assertEquals("AndroidStarter", file.readText())
+        assertEquals("Wheris", file.readText())
     }
 }

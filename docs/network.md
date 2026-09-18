@@ -6,10 +6,10 @@ Le starter utilise **Ktor Client 3.x** avec le moteur **OkHttp**, offrant une so
 
 ## 🛠️ Configuration (KtorClientFactory)
 
-La configuration centralisée se trouve dans [`KtorClientFactory.kt`](../data/src/main/java/com/laurentvrevin/androidstarter/data/remote/KtorClientFactory.kt).
+La configuration centralisée se trouve dans [`KtorClientFactory.kt`](../data/src/main/java/com/laurentvrevin/wheris/data/remote/KtorClientFactory.kt).
 
 ### Dépendance à NetworkConfig
-Le `KtorClientFactory` a besoin d'un objet [`NetworkConfig`](../data/src/main/java/com/laurentvrevin/androidstarter/data/remote/NetworkConfig.kt) pour connaître la `baseUrl` et le niveau de log. Cet objet est automatiquement fourni par le **`configurationModule`** de Koin.
+Le `KtorClientFactory` a besoin d'un objet [`NetworkConfig`](../data/src/main/java/com/laurentvrevin/wheris/data/remote/NetworkConfig.kt) pour connaître la `baseUrl` et le niveau de log. Cet objet est automatiquement fourni par le **`configurationModule`** de Koin.
 
 > [!IMPORTANT]
 > Pour que le réseau fonctionne, assure-toi que `configurationModule` est bien déclaré dans ton fichier `App.kt`. Plus de détails dans le [Guide d'Injection de Dépendances](dependency_injection.md).
@@ -18,9 +18,9 @@ Le `KtorClientFactory` a besoin d'un objet [`NetworkConfig`](../data/src/main/ja
 
 ## 🛡️ Appels sécurisés (safeCall)
 
-Tous les appels API doivent passer par la méthode `safeCall` de [`BaseRepository`](../data/src/main/java/com/laurentvrevin/androidstarter/data/base/BaseRepository.kt).
+Tous les appels API doivent passer par la méthode `safeCall` de [`BaseRepository`](../data/src/main/java/com/laurentvrevin/wheris/data/base/BaseRepository.kt).
 
-Elle capture les exceptions réseau (401, 404, 500, pas d'internet) et les transforme en un objet [`NetworkResult`](../data/src/main/java/com/laurentvrevin/androidstarter/data/network/NetworkResult.kt).
+Elle capture les exceptions réseau (401, 404, 500, pas d'internet) et les transforme en un objet [`NetworkResult`](../data/src/main/java/com/laurentvrevin/wheris/data/network/NetworkResult.kt).
 
 ```kotlin
 // Dans ton Repository

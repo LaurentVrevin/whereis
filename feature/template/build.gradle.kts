@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.laurentvrevin.androidstarter.feature.template"
+    namespace = "com.laurentvrevin.wheris.feature.template"
 }
 
 dependencies {

@@ -20,7 +20,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AndroidStarter"
+rootProject.name = "Wheris"
 include(":app")
 include(":core")
 include(":designsystem")

@@ -9,16 +9,16 @@ La testabilité est un pilier de ce starter. L'architecture Clean et l'injection
 ### 1. Tests Unitaires (Locaux)
 -   **VM / Domain / Mappers** : Situés dans `src/test`. Rapides et sans simulateur.
 -   **Outils** : JUnit 4, Kotlin Coroutines Test.
--   **Exemple** : [`TemplateViewModelTest.kt`](../feature/template/src/test/java/com/laurentvrevin/androidstarter/feature/template/TemplateViewModelTest.kt).
+-   **Exemple** : [`TemplateViewModelTest.kt`](../feature/template/src/test/java/com/laurentvrevin/wheris/feature/template/TemplateViewModelTest.kt).
 
 ### 2. Tests de Données (Instrumentés)
 -   **Room DB** : Situés dans `src/androidTest`. Vérifient les requêtes SQL sur un vrai appareil ou émulateur.
--   **Exemple** : [`DatabaseTest.kt`](../data/src/androidTest/java/com/laurentvrevin/androidstarter/data/local/DatabaseTest.kt).
+-   **Exemple** : [`DatabaseTest.kt`](../data/src/androidTest/java/com/laurentvrevin/wheris/data/local/DatabaseTest.kt).
 
 ### 3. Tests UI (Compose)
 -   **Screens / Navigation** : Vérifient que l'interface s'affiche correctement et réagit aux clics.
 -   **Outil** : Compose UI Test.
--   **Exemple** : [`TemplateScreenTest.kt`](../feature/template/src/androidTest/java/com/laurentvrevin/androidstarter/feature/template/TemplateScreenTest.kt).
+-   **Exemple** : [`TemplateScreenTest.kt`](../feature/template/src/androidTest/java/com/laurentvrevin/wheris/feature/template/TemplateScreenTest.kt).
 
 ---
 

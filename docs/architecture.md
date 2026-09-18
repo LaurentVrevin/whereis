@@ -1,6 +1,6 @@
 # Architecture du Projet 🏛️
 
-Le projet **AndroidStarter** adopte une architecture moderne, modulaire et hautement testable, inspirée des principes de la **Clean Architecture** et du pattern **MVVM**.
+Le projet **Wheris** adopte une architecture moderne, modulaire et hautement testable, inspirée des principes de la **Clean Architecture** et du pattern **MVVM**.
 
 ---
 

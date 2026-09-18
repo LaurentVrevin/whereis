@@ -5,10 +5,10 @@ plugins {
 }
 
 android {
-    namespace = "com.laurentvrevin.androidstarter"
+    namespace = "com.laurentvrevin.wheris"
 
     defaultConfig {
-        applicationId = "com.laurentvrevin.androidstarter"
+        applicationId = "com.laurentvrevin.wheris"
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

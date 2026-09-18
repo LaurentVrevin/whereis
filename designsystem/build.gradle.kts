@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.laurentvrevin.androidstarter.designsystem"
+    namespace = "com.laurentvrevin.wheris.designsystem"
 }
 
 dependencies {

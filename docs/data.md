@@ -21,7 +21,7 @@ com.exemple.app.data/
 Nous utilisons **Room** comme **Source Unique de Vérité (SSOT)**. L'UI n'affiche que les données stockées localement.
 
 ### BaseDao
-Le starter fournit un [`BaseDao<T>`](../data/src/main/java/com/laurentvrevin/androidstarter/data/local/dao/BaseDao.kt) générique pour les opérations standard.
+Le starter fournit un [`BaseDao<T>`](../data/src/main/java/com/laurentvrevin/wheris/data/local/dao/BaseDao.kt) générique pour les opérations standard.
 
 ```kotlin
 @Dao
@@ -39,7 +39,7 @@ Tes DAOs doivent retourner des `Flow`. Cela permet à l'UI de réagir automatiqu
 ## ⚙️ 2. Préférences (DataStore)
 
 Pour les réglages simples (thème, réglages utilisateur), utilise **Jetpack DataStore**.
-Le starter fournit [`AppPreferences`](../data/src/main/java/com/laurentvrevin/androidstarter/data/local/AppPreferences.kt) pré-configuré pour la gestion du mode sombre.
+Le starter fournit [`AppPreferences`](../data/src/main/java/com/laurentvrevin/wheris/data/local/AppPreferences.kt) pré-configuré pour la gestion du mode sombre.
 
 ---
 

@@ -9,7 +9,7 @@ Le projet utilise **Koin 4.x**, un framework d'injection de dépendances (DI) l�
 Koin est démarré dans la classe `App` (située dans le module `:app`). Il est crucial d'y enregistrer **tous** les modules nécessaires au fonctionnement de l'application.
 
 ```kotlin
-// app/src/main/java/com/laurentvrevin/androidstarter/App.kt
+// app/src/main/java/com/laurentvrevin/wheris/App.kt
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
@@ -39,7 +39,7 @@ Les dépendances sont organisées par responsabilité.
 ### Flux de la Couche Réseau
 La couche réseau illustre parfaitement la chaîne de dépendances dans Koin :
 
-1.  **`configurationModule`** : Extrait les valeurs de `BuildConfig` (Base URL, debug mode) pour fournir un objet [`NetworkConfig`](../data/src/main/java/com/laurentvrevin/androidstarter/data/remote/NetworkConfig.kt).
+1.  **`configurationModule`** : Extrait les valeurs de `BuildConfig` (Base URL, debug mode) pour fournir un objet [`NetworkConfig`](../data/src/main/java/com/laurentvrevin/wheris/data/remote/NetworkConfig.kt).
 2.  **`networkModule`** : Demande ce `NetworkConfig` (via `get()`) pour configurer et fournir le `HttpClient` de Ktor.
 3.  **`repositories`** : Injectent le `HttpClient` pour effectuer les appels API.
 
@@ -51,7 +51,7 @@ La couche réseau illustre parfaitement la chaîne de dépendances dans Koin :
 ## 🧪 Tests de Non-Régression
 
 Un test dédié vérifie l'intégrité du graphe Koin pour la partie réseau :
-[`NetworkKoinModuleTest.kt`](../app/src/test/java/com/laurentvrevin/androidstarter/di/NetworkKoinModuleTest.kt)
+[`NetworkKoinModuleTest.kt`](../app/src/test/java/com/laurentvrevin/wheris/di/NetworkKoinModuleTest.kt)
 
 Ce test charge `configurationModule` et `networkModule` pour s'assurer que `HttpClient` est résolvable. Il prend soin de fermer le client et d'arrêter Koin après l'exécution pour éviter les fuites entre les tests.
 

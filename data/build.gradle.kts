@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.laurentvrevin.androidstarter.data"
+    namespace = "com.laurentvrevin.wheris.data"
 }
 
 ksp {

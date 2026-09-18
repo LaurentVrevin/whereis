@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.laurentvrevin.androidstarter.core"
+    namespace = "com.laurentvrevin.wheris.core"
 }
 
 dependencies {
