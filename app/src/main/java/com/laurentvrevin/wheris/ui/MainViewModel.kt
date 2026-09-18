@@ -2,8 +2,8 @@ package com.laurentvrevin.wheris.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.laurentvrevin.wheris.data.local.AppPreferences
-import com.laurentvrevin.wheris.data.local.ThemeMode
+import com.laurentvrevin.wheris.core.datastore.AppPreferences
+import com.laurentvrevin.wheris.core.model.ThemeMode
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn

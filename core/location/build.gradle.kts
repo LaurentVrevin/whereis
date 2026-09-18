@@ -1,0 +1,12 @@
+plugins {
+    id("com.laurentvrevin.android.library")
+}
+
+android {
+    namespace = "com.laurentvrevin.wheris.core.location"
+}
+
+dependencies {
+    implementation(project(":core:model"))
+    implementation(project(":domain"))
+}

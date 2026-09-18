@@ -12,8 +12,6 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        buildConfigField("String", "API_BASE_URL", "\"https://api.example.com/\"")
     }
 
     buildFeatures {
@@ -32,10 +30,16 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
+    implementation(project(":domain"))
+    implementation(project(":core:model"))
+    implementation(project(":core:database"))
+    implementation(project(":core:datastore"))
+    implementation(project(":core:designsystem"))
+    implementation(project(":core:ui"))
+    implementation(project(":core:navigation"))
+    implementation(project(":core:location"))
+    implementation(project(":core:map"))
     implementation(project(":data"))
-    implementation(project(":designsystem"))
-    implementation(project(":feature:template"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)

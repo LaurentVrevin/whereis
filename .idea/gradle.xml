@@ -28,10 +28,17 @@
             <option value="$PROJECT_DIR$/build-logic/bootstrap" />
             <option value="$PROJECT_DIR$/build-logic/convention" />
             <option value="$PROJECT_DIR$/core" />
+            <option value="$PROJECT_DIR$/core/common" />
+            <option value="$PROJECT_DIR$/core/database" />
+            <option value="$PROJECT_DIR$/core/datastore" />
+            <option value="$PROJECT_DIR$/core/designsystem" />
+            <option value="$PROJECT_DIR$/core/location" />
+            <option value="$PROJECT_DIR$/core/map" />
+            <option value="$PROJECT_DIR$/core/model" />
+            <option value="$PROJECT_DIR$/core/navigation" />
+            <option value="$PROJECT_DIR$/core/ui" />
             <option value="$PROJECT_DIR$/data" />
-            <option value="$PROJECT_DIR$/designsystem" />
-            <option value="$PROJECT_DIR$/feature" />
-            <option value="$PROJECT_DIR$/feature/template" />
+            <option value="$PROJECT_DIR$/domain" />
           </set>
         </option>
       </GradleProjectSettings>

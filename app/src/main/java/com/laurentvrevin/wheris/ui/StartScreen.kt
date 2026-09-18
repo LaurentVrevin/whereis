@@ -15,14 +15,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.laurentvrevin.wheris.R
-import com.laurentvrevin.wheris.designsystem.components.button.AppPrimaryButton
-import com.laurentvrevin.wheris.designsystem.components.button.AppSecondaryButton
-import com.laurentvrevin.wheris.designsystem.theme.AppTheme
+import com.laurentvrevin.wheris.core.designsystem.components.button.AppSecondaryButton
+import com.laurentvrevin.wheris.core.designsystem.theme.AppTheme
 
 @Composable
 fun StartScreen(
     onNavigateToShowcase: () -> Unit,
-    onNavigateToTemplate: () -> Unit,
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -52,14 +50,6 @@ fun StartScreen(
             )
 
             Spacer(modifier = Modifier.height(AppTheme.spacing.tripleLarge))
-
-            AppPrimaryButton(
-                text = stringResource(R.string.start_btn_template),
-                onClick = onNavigateToTemplate,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Spacer(modifier = Modifier.height(AppTheme.spacing.standard))
 
             AppSecondaryButton(
                 text = stringResource(R.string.start_btn_showcase),
