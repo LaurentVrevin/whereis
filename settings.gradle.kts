@@ -22,14 +22,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Wheris"
 include(":app")
-include(":domain")
-include(":data")
-include(":core:common")
-include(":core:model")
 include(":core:designsystem")
-include(":core:ui")
-include(":core:navigation")
-include(":core:location")
-include(":core:map")
-include(":core:database")
-include(":core:datastore")

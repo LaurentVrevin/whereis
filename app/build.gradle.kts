@@ -1,6 +1,5 @@
 plugins {
     id("com.laurentvrevin.android.application.compose")
-    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -29,16 +28,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":domain"))
-    implementation(project(":core:model"))
-    implementation(project(":core:database"))
-    implementation(project(":core:datastore"))
     implementation(project(":core:designsystem"))
-    implementation(project(":core:ui"))
-    implementation(project(":core:navigation"))
-    implementation(project(":core:location"))
-    implementation(project(":core:map"))
-    implementation(project(":data"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
@@ -48,12 +38,8 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.navigation.compose)
 
-    implementation(libs.koin.android)
-    implementation(libs.koin.compose)
-
     // Testing
     testImplementation(libs.junit)
-    testImplementation(libs.koinTest)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
 }

@@ -1,23 +1,17 @@
 package com.laurentvrevin.wheris.core.designsystem.foundation
 
-import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-@Immutable
-data class WherisSpacing(
-    val none: Dp = 0.dp,
-    val xxs: Dp = 2.dp,
-    val xs: Dp = 4.dp,
-    val sm: Dp = 8.dp,
-    val md: Dp = 12.dp,
-    val lg: Dp = 16.dp,
-    val xl: Dp = 24.dp,
-    val xxl: Dp = 32.dp,
-    val xxxl: Dp = 40.dp,
-    val xxxxl: Dp = 48.dp,
-    val xxxxxl: Dp = 64.dp,
-)
-
-val LocalWherisSpacing = staticCompositionLocalOf { WherisSpacing() }
+object WherisSpacing {
+    val none = 0.dp
+    val xxs = 2.dp
+    val xs = 4.dp
+    val sm = 8.dp
+    val md = 12.dp
+    val lg = 16.dp
+    val xl = 24.dp
+    val xxl = 32.dp
+    val xxxl = 40.dp
+    val xxxxl = 48.dp
+    val xxxxxl = 64.dp
+}
