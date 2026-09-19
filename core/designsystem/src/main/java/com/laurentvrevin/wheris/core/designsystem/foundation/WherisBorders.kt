@@ -6,10 +6,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Immutable
-data class AppBorders(
+data class WherisBorders(
     val none: Dp = 0.dp,
-    val thin: Dp = 1.dp,
-    val thick: Dp = 2.dp,
+    val default: Dp = 1.dp,
+    val emphasis: Dp = 2.dp,
 )
 
-val LocalAppBorders = staticCompositionLocalOf { AppBorders() }
+val LocalWherisBorders = staticCompositionLocalOf { WherisBorders() }
