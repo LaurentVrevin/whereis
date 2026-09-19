@@ -14,4 +14,10 @@ dependencies {
     implementation(project(":core:common"))
     implementation(project(":core:location"))
     implementation(project(":core:map"))
+
+    implementation(platform(libs.koin.bom))
+    implementation(libs.koin.android)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

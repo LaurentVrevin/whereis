@@ -1,6 +1,8 @@
 package com.laurentvrevin.wheris
 
 import android.app.Application
+import com.laurentvrevin.wheris.core.database.di.databaseModule
+import com.laurentvrevin.wheris.data.di.dataModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -16,8 +18,10 @@ class App : Application() {
                 androidLogger(Level.DEBUG)
             }
             androidContext(this@App)
-            // Modules will be added here as they are created
-            modules(emptyList())
+            modules(
+                databaseModule,
+                dataModule,
+            )
         }
     }
 }
