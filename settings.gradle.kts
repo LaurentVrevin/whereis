@@ -39,3 +39,5 @@ include(":core:location")
 include(":core:map")
 include(":core:database")
 include(":core:datastore")
+
+include(":feature:addpin")

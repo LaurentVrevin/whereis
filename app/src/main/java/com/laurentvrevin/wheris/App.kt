@@ -2,7 +2,9 @@ package com.laurentvrevin.wheris
 
 import android.app.Application
 import com.laurentvrevin.wheris.core.database.di.databaseModule
+import com.laurentvrevin.wheris.core.location.di.locationModule
 import com.laurentvrevin.wheris.data.di.dataModule
+import com.laurentvrevin.wheris.feature.addpin.di.addPinModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -21,6 +23,8 @@ class App : Application() {
             modules(
                 databaseModule,
                 dataModule,
+                locationModule,
+                addPinModule,
             )
         }
     }

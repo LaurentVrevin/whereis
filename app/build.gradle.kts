@@ -39,6 +39,7 @@ dependencies {
     implementation(project(":core:map"))
     implementation(project(":core:database"))
     implementation(project(":core:datastore"))
+    implementation(project(":feature:addpin"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)

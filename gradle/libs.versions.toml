@@ -20,6 +20,7 @@ room = "2.6.1"
 datastore = "1.1.2"
 ksp = "2.1.0-1.0.29"
 koinBom = "4.1.1"
+playServicesLocation = "21.3.0"
 
 [libraries]
 
@@ -68,6 +69,9 @@ koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koinBom" }
 koin-android = { module = "io.insert-koin:koin-android" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose" }
 koin-test = { module = "io.insert-koin:koin-test" }
+
+# Play Services Location
+play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 
 # Testing
 junit = { group = "junit", name = "junit", version = "4.13.2" }

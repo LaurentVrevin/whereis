@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="addpin_title">Ajouter un lieu</string>
+    <string name="addpin_permission_title">Localisation requise</string>
+    <string name="addpin_permission_rationale">Wheris a besoin d’accéder à ta position pour pouvoir enregistrer cet endroit et te permettre de le retrouver plus tard.</string>
+
+    <string name="addpin_btn_grant_permission">Autoriser la localisation</string>
+    <string name="addpin_btn_open_settings">Ouvrir les paramètres</string>
+    <string name="addpin_btn_retry">Réessayer</string>
+    <string name="addpin_btn_open_location_settings">Activer la localisation</string>
+
+    <string name="addpin_permission_denied_title">Permission refusée</string>
+    <string name="addpin_permission_denied_msg">La localisation est nécessaire pour déterminer la position actuelle. Tu peux l’activer dans les paramètres de ton téléphone.</string>
+
+    <string name="addpin_searching_title">Recherche de ta position…</string>
+    <string name="addpin_searching_subtitle">Acquisition du signal GPS en cours</string>
+
+    <string name="addpin_success_title">Position trouvée</string>
+    <string name="addpin_approximate_badge">Position approximative</string>
+    <string name="addpin_accuracy_format">Précision : ±%.0f m</string>
+    <string name="addpin_altitude_format">Altitude : %.0f m</string>
+
+    <string name="addpin_services_disabled_title">Services de localisation désactivés</string>
+    <string name="addpin_services_disabled_msg">Active la localisation (GPS) dans les paramètres de ton appareil pour continuer.</string>
+
+    <string name="addpin_timeout_title">Aucun signal GPS</string>
+    <string name="addpin_timeout_msg">Impossible d’obtenir une position suffisamment précise dans le délai imparti. Assure-toi d’être à l’extérieur ou dégagé.</string>
+
+    <string name="addpin_error_title">Erreur de localisation</string>
+    <string name="addpin_error_msg">Une erreur technique est survenue lors de la récupération de la position.</string>
+</resources>

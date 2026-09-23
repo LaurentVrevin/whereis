@@ -7,4 +7,14 @@ android {
 }
 
 dependencies {
+    implementation(project(":domain"))
+    implementation(project(":core:model"))
+
+    implementation(libs.play.services.location)
+
+    implementation(platform(libs.koin.bom))
+    implementation(libs.koin.android)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
