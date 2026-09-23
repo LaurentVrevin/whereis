@@ -12,5 +12,5 @@ sealed interface LocationResult {
 
     data object Timeout : LocationResult
 
-    data class Error(val cause: Throwable? = null) : LocationResult
+    data object TechnicalError : LocationResult
 }

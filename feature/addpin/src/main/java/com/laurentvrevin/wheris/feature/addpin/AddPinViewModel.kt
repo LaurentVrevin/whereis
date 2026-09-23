@@ -3,7 +3,7 @@ package com.laurentvrevin.wheris.feature.addpin
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.laurentvrevin.wheris.domain.location.LocationResult
-import com.laurentvrevin.wheris.domain.usecase.GetCurrentLocationUseCase
+import com.laurentvrevin.wheris.domain.repository.UserLocationRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class AddPinViewModel(
-    private val getCurrentLocationUseCase: GetCurrentLocationUseCase,
+    private val userLocationRepository: UserLocationRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<AddPinUiState>(AddPinUiState.PermissionRequired)
     val uiState: StateFlow<AddPinUiState> = _uiState.asStateFlow()
@@ -57,7 +57,7 @@ class AddPinViewModel(
 
         activeJob =
             viewModelScope.launch {
-                val result = getCurrentLocationUseCase()
+                val result = userLocationRepository.getCurrentLocation()
                 _uiState.value =
                     when (result) {
                         is LocationResult.Success -> {
@@ -69,7 +69,7 @@ class AddPinViewModel(
                         }
                         is LocationResult.ServicesDisabled -> AddPinUiState.ServicesDisabled
                         is LocationResult.Timeout -> AddPinUiState.Timeout
-                        is LocationResult.Error -> AddPinUiState.Error(result.cause?.message)
+                        is LocationResult.TechnicalError -> AddPinUiState.TechnicalError
                     }
             }
     }

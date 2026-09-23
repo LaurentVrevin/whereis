@@ -20,7 +20,7 @@ room = "2.6.1"
 datastore = "1.1.2"
 ksp = "2.1.0-1.0.29"
 koinBom = "4.1.1"
-playServicesLocation = "21.3.0"
+playServicesLocation = "21.4.0"
 
 [libraries]
 

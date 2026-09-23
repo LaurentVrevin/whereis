@@ -12,7 +12,7 @@ data class UserLocation(
     val position: GeoPoint,
     val accuracyMeters: Float? = null,
     val altitudeMeters: Double? = null,
-    val timestampEpochMillis: Long = System.currentTimeMillis(),
+    val timestampEpochMillis: Long,
 ) {
     init {
         accuracyMeters?.let {

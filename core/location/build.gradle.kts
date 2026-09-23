@@ -6,6 +6,12 @@ android {
     namespace = "com.laurentvrevin.wheris.core.location"
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    compilerOptions {
+        freeCompilerArgs.add("-Xskip-metadata-version-check")
+    }
+}
+
 dependencies {
     implementation(project(":domain"))
     implementation(project(":core:model"))

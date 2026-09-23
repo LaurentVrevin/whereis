@@ -25,10 +25,15 @@ class UserLocationTest {
     @Test
     fun `user location with null optional fields`() {
         val geoPoint = GeoPoint(48.8566, 2.3522)
-        val userLocation = UserLocation(position = geoPoint)
+        val userLocation =
+            UserLocation(
+                position = geoPoint,
+                timestampEpochMillis = 2000L,
+            )
 
         assertNull(userLocation.accuracyMeters)
         assertNull(userLocation.altitudeMeters)
+        assertEquals(2000L, userLocation.timestampEpochMillis)
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -36,6 +41,7 @@ class UserLocationTest {
         UserLocation(
             position = GeoPoint(48.8566, 2.3522),
             accuracyMeters = -1.0f,
+            timestampEpochMillis = 1000L,
         )
     }
 
@@ -44,6 +50,7 @@ class UserLocationTest {
         UserLocation(
             position = GeoPoint(48.8566, 2.3522),
             altitudeMeters = Double.POSITIVE_INFINITY,
+            timestampEpochMillis = 1000L,
         )
     }
 }

@@ -4,7 +4,6 @@ import com.laurentvrevin.wheris.core.model.GeoPoint
 import com.laurentvrevin.wheris.core.model.UserLocation
 import com.laurentvrevin.wheris.domain.location.LocationResult
 import com.laurentvrevin.wheris.domain.repository.UserLocationRepository
-import com.laurentvrevin.wheris.domain.usecase.GetCurrentLocationUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -35,7 +34,7 @@ class AddPinViewModelTest {
     @Test
     fun `initial state is PermissionRequired`() {
         val fakeRepo = FakeLocationRepository(LocationResult.Timeout)
-        val viewModel = AddPinViewModel(GetCurrentLocationUseCase(fakeRepo))
+        val viewModel = AddPinViewModel(fakeRepo)
 
         assertEquals(AddPinUiState.PermissionRequired, viewModel.uiState.value)
     }
@@ -43,9 +42,14 @@ class AddPinViewModelTest {
     @Test
     fun `onPermissionGranted transitions to Searching then Success`() =
         runTest(testDispatcher) {
-            val expectedLocation = UserLocation(GeoPoint(48.8566, 2.3522), accuracyMeters = 5.0f)
+            val expectedLocation =
+                UserLocation(
+                    position = GeoPoint(48.8566, 2.3522),
+                    accuracyMeters = 5.0f,
+                    timestampEpochMillis = 1000L,
+                )
             val fakeRepo = FakeLocationRepository(LocationResult.Success(expectedLocation))
-            val viewModel = AddPinViewModel(GetCurrentLocationUseCase(fakeRepo))
+            val viewModel = AddPinViewModel(fakeRepo)
 
             viewModel.onPermissionGranted(isFineGranted = true, isCoarseGranted = true)
 
@@ -61,9 +65,13 @@ class AddPinViewModelTest {
     @Test
     fun `onPermissionGranted with coarse only sets isApproximate to true`() =
         runTest(testDispatcher) {
-            val expectedLocation = UserLocation(GeoPoint(48.8566, 2.3522))
+            val expectedLocation =
+                UserLocation(
+                    position = GeoPoint(48.8566, 2.3522),
+                    timestampEpochMillis = 1000L,
+                )
             val fakeRepo = FakeLocationRepository(LocationResult.Success(expectedLocation))
-            val viewModel = AddPinViewModel(GetCurrentLocationUseCase(fakeRepo))
+            val viewModel = AddPinViewModel(fakeRepo)
 
             viewModel.onPermissionGranted(isFineGranted = false, isCoarseGranted = true)
 
@@ -79,7 +87,7 @@ class AddPinViewModelTest {
     fun `onPermissionGranted handles ServicesDisabled`() =
         runTest(testDispatcher) {
             val fakeRepo = FakeLocationRepository(LocationResult.ServicesDisabled)
-            val viewModel = AddPinViewModel(GetCurrentLocationUseCase(fakeRepo))
+            val viewModel = AddPinViewModel(fakeRepo)
 
             viewModel.onPermissionGranted(isFineGranted = true, isCoarseGranted = true)
 
@@ -92,7 +100,7 @@ class AddPinViewModelTest {
     fun `onPermissionGranted handles Timeout`() =
         runTest(testDispatcher) {
             val fakeRepo = FakeLocationRepository(LocationResult.Timeout)
-            val viewModel = AddPinViewModel(GetCurrentLocationUseCase(fakeRepo))
+            val viewModel = AddPinViewModel(fakeRepo)
 
             viewModel.onPermissionGranted(isFineGranted = true, isCoarseGranted = true)
 
@@ -102,24 +110,32 @@ class AddPinViewModelTest {
         }
 
     @Test
-    fun `onPermissionGranted handles Error`() =
+    fun `onPermissionGranted handles TechnicalError`() =
         runTest(testDispatcher) {
-            val fakeRepo = FakeLocationRepository(LocationResult.Error(RuntimeException("GPS failed")))
-            val viewModel = AddPinViewModel(GetCurrentLocationUseCase(fakeRepo))
+            val fakeRepo = FakeLocationRepository(LocationResult.TechnicalError)
+            val viewModel = AddPinViewModel(fakeRepo)
 
             viewModel.onPermissionGranted(isFineGranted = true, isCoarseGranted = true)
 
             testScheduler.advanceUntilIdle()
 
-            val state = viewModel.uiState.value
-            assertTrue(state is AddPinUiState.Error)
-            assertEquals("GPS failed", (state as AddPinUiState.Error).message)
+            assertEquals(AddPinUiState.TechnicalError, viewModel.uiState.value)
         }
 
     @Test
-    fun `onPermissionDenied sets PermissionDenied state`() {
+    fun `onPermissionDenied with requestable sets PermissionDenied false`() {
         val fakeRepo = FakeLocationRepository(LocationResult.Timeout)
-        val viewModel = AddPinViewModel(GetCurrentLocationUseCase(fakeRepo))
+        val viewModel = AddPinViewModel(fakeRepo)
+
+        viewModel.onPermissionDenied(isPermanentlyDenied = false)
+
+        assertEquals(AddPinUiState.PermissionDenied(isPermanentlyDenied = false), viewModel.uiState.value)
+    }
+
+    @Test
+    fun `onPermissionDenied with settings required sets PermissionDenied true`() {
+        val fakeRepo = FakeLocationRepository(LocationResult.Timeout)
+        val viewModel = AddPinViewModel(fakeRepo)
 
         viewModel.onPermissionDenied(isPermanentlyDenied = true)
 
@@ -129,9 +145,13 @@ class AddPinViewModelTest {
     @Test
     fun `retryLocation re-fetches location when permission was previously granted`() =
         runTest(testDispatcher) {
-            val expectedLocation = UserLocation(GeoPoint(48.8566, 2.3522))
+            val expectedLocation =
+                UserLocation(
+                    position = GeoPoint(48.8566, 2.3522),
+                    timestampEpochMillis = 1000L,
+                )
             val fakeRepo = FakeLocationRepository(LocationResult.ServicesDisabled)
-            val viewModel = AddPinViewModel(GetCurrentLocationUseCase(fakeRepo))
+            val viewModel = AddPinViewModel(fakeRepo)
 
             viewModel.onPermissionGranted(isFineGranted = true, isCoarseGranted = true)
             testScheduler.advanceUntilIdle()
@@ -148,7 +168,7 @@ class AddPinViewModelTest {
     fun `retryLocation cancels previous in-progress acquisition`() =
         runTest(testDispatcher) {
             val slowRepo = SlowLocationRepository()
-            val viewModel = AddPinViewModel(GetCurrentLocationUseCase(slowRepo))
+            val viewModel = AddPinViewModel(slowRepo)
 
             viewModel.onPermissionGranted(isFineGranted = true, isCoarseGranted = true)
             testScheduler.runCurrent()
@@ -163,7 +183,7 @@ class AddPinViewModelTest {
     private class FakeLocationRepository(
         var nextResult: LocationResult,
     ) : UserLocationRepository {
-        override suspend fun getCurrentLocation(timeoutMillis: Long): LocationResult {
+        override suspend fun getCurrentLocation(): LocationResult {
             return nextResult
         }
     }
@@ -171,7 +191,7 @@ class AddPinViewModelTest {
     private class SlowLocationRepository : UserLocationRepository {
         var completedCalls = 0
 
-        override suspend fun getCurrentLocation(timeoutMillis: Long): LocationResult {
+        override suspend fun getCurrentLocation(): LocationResult {
             delay(5000)
             completedCalls++
             return LocationResult.Timeout

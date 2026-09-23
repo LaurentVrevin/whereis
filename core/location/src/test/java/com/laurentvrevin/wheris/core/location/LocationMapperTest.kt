@@ -16,5 +16,6 @@ class LocationMapperTest {
         assertEquals(0.0, userLocation.position.longitude, 0.0001)
         assertNull(userLocation.accuracyMeters)
         assertNull(userLocation.altitudeMeters)
+        assertEquals(0L, userLocation.timestampEpochMillis)
     }
 }

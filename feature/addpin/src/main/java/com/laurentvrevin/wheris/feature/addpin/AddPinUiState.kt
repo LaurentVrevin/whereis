@@ -21,5 +21,5 @@ sealed interface AddPinUiState {
 
     data object Timeout : AddPinUiState
 
-    data class Error(val message: String? = null) : AddPinUiState
+    data object TechnicalError : AddPinUiState
 }

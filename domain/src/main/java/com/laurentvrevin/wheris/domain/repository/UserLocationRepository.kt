@@ -4,7 +4,7 @@ import com.laurentvrevin.wheris.domain.location.LocationResult
 
 interface UserLocationRepository {
     /**
-     * Attempts to acquire current foreground location within [timeoutMillis].
+     * Attempts to acquire current foreground location.
      */
-    suspend fun getCurrentLocation(timeoutMillis: Long = 10_000L): LocationResult
+    suspend fun getCurrentLocation(): LocationResult
 }

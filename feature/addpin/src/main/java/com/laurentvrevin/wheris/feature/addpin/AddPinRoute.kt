@@ -1,7 +1,9 @@
 package com.laurentvrevin.wheris.feature.addpin
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -9,11 +11,15 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.androidx.compose.koinViewModel
 
@@ -24,6 +30,19 @@ fun AddPinRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    val activity = context.findActivity()
+
+    fun evaluatePermissionDenied() {
+        val showRationale =
+            activity?.let {
+                ActivityCompat.shouldShowRequestPermissionRationale(it, Manifest.permission.ACCESS_FINE_LOCATION) ||
+                    ActivityCompat.shouldShowRequestPermissionRationale(it, Manifest.permission.ACCESS_COARSE_LOCATION)
+            } ?: false
+
+        viewModel.onPermissionDenied(isPermanentlyDenied = !showRationale)
+    }
 
     val permissionLauncher =
         rememberLauncherForActivityResult(
@@ -38,7 +57,7 @@ fun AddPinRoute(
                     isCoarseGranted = isCoarseGranted,
                 )
             } else {
-                viewModel.onPermissionDenied()
+                evaluatePermissionDenied()
             }
         }
 
@@ -70,24 +89,33 @@ fun AddPinRoute(
         }
     }
 
-    LaunchedEffect(Unit) {
-        val hasFine =
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-            ) == PackageManager.PERMISSION_GRANTED
+    DisposableEffect(lifecycleOwner) {
+        val observer =
+            LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    val hasFine =
+                        ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                        ) == PackageManager.PERMISSION_GRANTED
 
-        val hasCoarse =
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-            ) == PackageManager.PERMISSION_GRANTED
+                    val hasCoarse =
+                        ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                        ) == PackageManager.PERMISSION_GRANTED
 
-        if (hasFine || hasCoarse) {
-            viewModel.onPermissionGranted(
-                isFineGranted = hasFine,
-                isCoarseGranted = hasCoarse,
-            )
+                    if (hasFine || hasCoarse) {
+                        viewModel.onPermissionGranted(
+                            isFineGranted = hasFine,
+                            isCoarseGranted = hasCoarse,
+                        )
+                    }
+                }
+            }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 
@@ -99,6 +127,15 @@ fun AddPinRoute(
         onRetry = { checkAndRequestPermissions() },
         modifier = modifier,
     )
+}
+
+private fun Context.findActivity(): Activity? {
+    var ctx = this
+    while (ctx is ContextWrapper) {
+        if (ctx is Activity) return ctx
+        ctx = ctx.baseContext
+    }
+    return null
 }
 
 private fun openAppSettings(context: Context) {

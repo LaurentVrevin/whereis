@@ -64,6 +64,7 @@ fun AddPinScreen(
                 }
                 is AddPinUiState.PermissionDenied -> {
                     PermissionDeniedContent(
+                        state = uiState,
                         onOpenSettings = onOpenSettings,
                         onRetry = onRetry,
                     )
@@ -86,11 +87,8 @@ fun AddPinScreen(
                 is AddPinUiState.Timeout -> {
                     TimeoutContent(onRetry = onRetry)
                 }
-                is AddPinUiState.Error -> {
-                    ErrorContent(
-                        message = uiState.message,
-                        onRetry = onRetry,
-                    )
+                is AddPinUiState.TechnicalError -> {
+                    ErrorContent(onRetry = onRetry)
                 }
             }
         }
@@ -134,6 +132,7 @@ private fun PermissionRequiredContent(onRequestPermission: () -> Unit) {
 
 @Composable
 private fun PermissionDeniedContent(
+    state: AddPinUiState.PermissionDenied,
     onOpenSettings: () -> Unit,
     onRetry: () -> Unit,
 ) {
@@ -157,18 +156,35 @@ private fun PermissionDeniedContent(
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(WherisSpacing.lg))
-        Button(
-            onClick = onOpenSettings,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(text = stringResource(R.string.addpin_btn_open_settings))
-        }
-        Spacer(modifier = Modifier.height(WherisSpacing.sm))
-        OutlinedButton(
-            onClick = onRetry,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(text = stringResource(R.string.addpin_btn_retry))
+
+        if (state.isPermanentlyDenied) {
+            Button(
+                onClick = onOpenSettings,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(text = stringResource(R.string.addpin_btn_open_settings))
+            }
+            Spacer(modifier = Modifier.height(WherisSpacing.sm))
+            OutlinedButton(
+                onClick = onRetry,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(text = stringResource(R.string.addpin_btn_retry))
+            }
+        } else {
+            Button(
+                onClick = onRetry,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(text = stringResource(R.string.addpin_btn_retry))
+            }
+            Spacer(modifier = Modifier.height(WherisSpacing.sm))
+            OutlinedButton(
+                onClick = onOpenSettings,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(text = stringResource(R.string.addpin_btn_open_settings))
+            }
         }
     }
 }
@@ -317,10 +333,7 @@ private fun TimeoutContent(onRetry: () -> Unit) {
 }
 
 @Composable
-private fun ErrorContent(
-    message: String?,
-    onRetry: () -> Unit,
-) {
+private fun ErrorContent(onRetry: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Icon(
             imageVector = Icons.Default.Error,
@@ -336,7 +349,7 @@ private fun ErrorContent(
         )
         Spacer(modifier = Modifier.height(WherisSpacing.sm))
         Text(
-            text = message ?: stringResource(R.string.addpin_error_msg),
+            text = stringResource(R.string.addpin_error_msg),
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
         )
