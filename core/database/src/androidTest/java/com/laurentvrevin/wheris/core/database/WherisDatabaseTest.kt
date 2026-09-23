@@ -1,6 +1,7 @@
 package com.laurentvrevin.wheris.core.database
 
 import android.content.Context
+import android.database.sqlite.SQLiteConstraintException
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -14,6 +15,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -44,14 +46,13 @@ class WherisDatabaseTest {
     }
 
     @Test
-    fun seed_shouldProvideOtherCategory() =
+    fun seed_shouldProvideOtherCategoryAutomatically() =
         runBlocking {
-            // Room doesn't trigger onCreate for in-memory DB unless we open it
-            // Or we can manually insert for the test if the callback isn't triggered as expected in in-memory
-            categoryDao.insertCategory(CategoryEntity(SystemCategoryIds.OTHER.value, true))
+            // Proactive trigger to open the database and run the callback
+            db.openHelper.writableDatabase
 
             val category = categoryDao.getCategoryById(SystemCategoryIds.OTHER.value)
-            assertNotNull(category)
+            assertNotNull("System category OTHER should be seeded automatically", category)
             assertTrue(category?.isSystem == true)
         }
 
@@ -78,8 +79,8 @@ class WherisDatabaseTest {
             assertEquals("pin1", observed[0].id)
         }
 
-    @Test(expected = Exception::class)
-    fun insertPinWithInvalidCategory_shouldThrow() =
+    @Test
+    fun insertPinWithInvalidCategory_shouldThrowConstraintException() =
         runBlocking {
             val pin =
                 PinEntity(
@@ -92,11 +93,14 @@ class WherisDatabaseTest {
                     createdAtEpochMillis = 1000L,
                     updatedAtEpochMillis = 1000L,
                 )
-            pinDao.insertPin(pin)
+
+            assertThrows(SQLiteConstraintException::class.java) {
+                runBlocking { pinDao.insertPin(pin) }
+            }
         }
 
-    @Test(expected = Exception::class)
-    fun insertDuplicatePinId_shouldThrow() =
+    @Test
+    fun insertDuplicatePinId_shouldThrowConstraintException() =
         runBlocking {
             categoryDao.insertCategory(CategoryEntity("cat1", false))
             val pin =
@@ -111,6 +115,38 @@ class WherisDatabaseTest {
                     updatedAtEpochMillis = 1000L,
                 )
             pinDao.insertPin(pin)
-            pinDao.insertPin(pin) // Should throw because Strategy is ABORT
+
+            assertThrows(SQLiteConstraintException::class.java) {
+                runBlocking { pinDao.insertPin(pin) }
+            }
+        }
+
+    @Test
+    fun deleteCategory_withAssociatedPin_shouldThrowConstraintException() =
+        runBlocking {
+            // 1. Insert category and pin
+            val catId = "protected_cat"
+            categoryDao.insertCategory(CategoryEntity(catId, false))
+            val pin =
+                PinEntity(
+                    id = "pin_linked",
+                    latitude = 1.0,
+                    longitude = 1.0,
+                    categoryId = catId,
+                    accuracyMeters = null,
+                    altitudeMeters = null,
+                    createdAtEpochMillis = 1000L,
+                    updatedAtEpochMillis = 1000L,
+                )
+            pinDao.insertPin(pin)
+
+            // 2. Attempt to delete category via raw SQL since DAO has no delete yet
+            assertThrows(SQLiteConstraintException::class.java) {
+                db.openHelper.writableDatabase.execSQL("DELETE FROM categories WHERE id = '$catId'")
+            }
+
+            // 3. Verify Pin still exists
+            val observed = pinDao.observePin("pin_linked").first()
+            assertNotNull("Pin should still exist after failed category deletion", observed)
         }
 }
