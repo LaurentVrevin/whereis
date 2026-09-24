@@ -51,13 +51,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.laurentvrevin.wheris.core.designsystem.foundation.WherisSpacing
+import com.laurentvrevin.wheris.core.designsystem.theme.WherisTheme
 import com.laurentvrevin.wheris.core.map.WherisMap
 import com.laurentvrevin.wheris.core.map.WherisMapMarker
 import com.laurentvrevin.wheris.core.model.Category
 import com.laurentvrevin.wheris.core.model.CategoryId
+import com.laurentvrevin.wheris.core.model.GeoPoint
 import com.laurentvrevin.wheris.core.model.SystemCategoryIds
+import com.laurentvrevin.wheris.core.model.UserLocation
 
 @Composable
 fun AddPinScreen(
@@ -683,5 +687,34 @@ private fun SavedContent(onFinished: () -> Unit) {
                 .padding(top = WherisSpacing.sm),
     ) {
         Text(stringResource(R.string.addpin_finish))
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AddPinScreenPreview() {
+    WherisTheme {
+        AddPinScreen(
+            uiState =
+                AddPinUiState.PositionFound(
+                    location =
+                        UserLocation(
+                            position = GeoPoint(latitude = 48.8566, longitude = 2.3522),
+                            accuracyMeters = 8.5f,
+                            altitudeMeters = 35.0,
+                            timestampEpochMillis = 1000L,
+                        ),
+                    isApproximate = false,
+                ),
+            onRequestPermission = {},
+            onOpenSettings = {},
+            onOpenLocationSettings = {},
+            onRetryLocation = {},
+            onConfirmPosition = {},
+            onSelectCategory = {},
+            onSave = {},
+            onBackToPosition = {},
+            onFinished = {},
+        )
     }
 }

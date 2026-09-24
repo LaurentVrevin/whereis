@@ -39,6 +39,7 @@
             <option value="$PROJECT_DIR$/domain" />
             <option value="$PROJECT_DIR$/feature" />
             <option value="$PROJECT_DIR$/feature/addpin" />
+            <option value="$PROJECT_DIR$/feature/home" />
           </set>
         </option>
       </GradleProjectSettings>
