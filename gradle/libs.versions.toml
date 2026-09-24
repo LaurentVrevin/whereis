@@ -21,6 +21,7 @@ datastore = "1.1.2"
 ksp = "2.1.0-1.0.29"
 koinBom = "4.1.1"
 playServicesLocation = "21.4.0"
+mapbox = "11.31.0"
 
 [libraries]
 
@@ -72,6 +73,10 @@ koin-test = { module = "io.insert-koin:koin-test" }
 
 # Play Services Location
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
+
+# Mapbox
+mapbox-maps = { module = "com.mapbox.maps:android-ndk27", version.ref = "mapbox" }
+mapbox-compose = { module = "com.mapbox.extension:maps-compose-ndk27", version.ref = "mapbox" }
 
 # Testing
 junit = { group = "junit", name = "junit", version = "4.13.2" }

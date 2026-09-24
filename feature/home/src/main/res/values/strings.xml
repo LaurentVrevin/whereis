@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_add_place">Ajouter un lieu</string>
+    <string name="home_empty_prompt">Quel lieu veux-tu retrouver ?</string>
+    <string name="home_map_unavailable">Carte indisponible</string>
+    <string name="home_map_unavailable_empty">Tu peux toujours ajouter un lieu. Tes lieux enregistrés restent stockés localement.</string>
+    <string name="home_map_unavailable_saved">Tes lieux enregistrés restent stockés localement. Tu peux toujours ajouter un lieu.</string>
+    <string name="home_data_error">Impossible de charger les lieux enregistrés pour le moment.</string>
+</resources>

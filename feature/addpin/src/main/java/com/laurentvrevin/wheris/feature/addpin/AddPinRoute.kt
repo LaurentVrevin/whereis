@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -25,13 +26,13 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun AddPinRoute(
+    onFinished: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AddPinViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-
     val activity = context.findActivity()
 
     fun evaluatePermissionDenied() {
@@ -62,17 +63,8 @@ fun AddPinRoute(
         }
 
     fun checkAndRequestPermissions() {
-        val hasFine =
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-            ) == PackageManager.PERMISSION_GRANTED
-
-        val hasCoarse =
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-            ) == PackageManager.PERMISSION_GRANTED
+        val hasFine = context.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+        val hasCoarse = context.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
 
         if (hasFine || hasCoarse) {
             viewModel.onPermissionGranted(
@@ -93,23 +85,16 @@ fun AddPinRoute(
         val observer =
             LifecycleEventObserver { _, event ->
                 if (event == Lifecycle.Event.ON_RESUME) {
-                    val hasFine =
-                        ContextCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.ACCESS_FINE_LOCATION,
-                        ) == PackageManager.PERMISSION_GRANTED
-
-                    val hasCoarse =
-                        ContextCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.ACCESS_COARSE_LOCATION,
-                        ) == PackageManager.PERMISSION_GRANTED
+                    val hasFine = context.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                    val hasCoarse = context.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
 
                     if (hasFine || hasCoarse) {
                         viewModel.onPermissionGranted(
                             isFineGranted = hasFine,
                             isCoarseGranted = hasCoarse,
                         )
+                    } else if (viewModel.uiState.value is AddPinUiState.PermissionDenied) {
+                        evaluatePermissionDenied()
                     }
                 }
             }
@@ -119,21 +104,36 @@ fun AddPinRoute(
         }
     }
 
+    BackHandler(enabled = uiState is AddPinUiState.CategorySelection) {
+        viewModel.backToPosition()
+    }
+    BackHandler(enabled = uiState is AddPinUiState.Saved) {
+        onFinished()
+    }
+
     AddPinScreen(
         uiState = uiState,
         onRequestPermission = { checkAndRequestPermissions() },
         onOpenSettings = { openAppSettings(context) },
         onOpenLocationSettings = { openLocationSettings(context) },
-        onRetry = { checkAndRequestPermissions() },
+        onRetryLocation = { checkAndRequestPermissions() },
+        onConfirmPosition = viewModel::confirmPosition,
+        onSelectCategory = viewModel::selectCategory,
+        onSave = viewModel::savePin,
+        onBackToPosition = viewModel::backToPosition,
+        onFinished = onFinished,
         modifier = modifier,
     )
 }
 
+private fun Context.hasPermission(permission: String): Boolean =
+    ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
+
 private fun Context.findActivity(): Activity? {
-    var ctx = this
-    while (ctx is ContextWrapper) {
-        if (ctx is Activity) return ctx
-        ctx = ctx.baseContext
+    var context = this
+    while (context is ContextWrapper) {
+        if (context is Activity) return context
+        context = context.baseContext
     }
     return null
 }

@@ -1,21 +1,32 @@
 package com.laurentvrevin.wheris.feature.addpin
 
+import com.laurentvrevin.wheris.core.model.Category
 import com.laurentvrevin.wheris.core.model.GeoPoint
+import com.laurentvrevin.wheris.core.model.Pin
+import com.laurentvrevin.wheris.core.model.PinId
+import com.laurentvrevin.wheris.core.model.SystemCategoryIds
 import com.laurentvrevin.wheris.core.model.UserLocation
+import com.laurentvrevin.wheris.domain.PinRepository
 import com.laurentvrevin.wheris.domain.location.LocationResult
+import com.laurentvrevin.wheris.domain.repository.CategoryRepository
 import com.laurentvrevin.wheris.domain.repository.UserLocationRepository
+import com.laurentvrevin.wheris.domain.usecase.CreatePinUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AddPinViewModelTest {
@@ -33,168 +44,231 @@ class AddPinViewModelTest {
 
     @Test
     fun `initial state is PermissionRequired`() {
-        val fakeRepo = FakeLocationRepository(LocationResult.Timeout)
-        val viewModel = AddPinViewModel(fakeRepo)
+        val fixture = Fixture()
 
-        assertEquals(AddPinUiState.PermissionRequired, viewModel.uiState.value)
+        assertEquals(AddPinUiState.PermissionRequired, fixture.viewModel.uiState.value)
     }
 
     @Test
-    fun `onPermissionGranted transitions to Searching then Success`() =
+    fun `fine permission transitions to position found`() =
         runTest(testDispatcher) {
-            val expectedLocation =
-                UserLocation(
-                    position = GeoPoint(48.8566, 2.3522),
-                    accuracyMeters = 5.0f,
-                    timestampEpochMillis = 1000L,
-                )
-            val fakeRepo = FakeLocationRepository(LocationResult.Success(expectedLocation))
-            val viewModel = AddPinViewModel(fakeRepo)
+            val location = testLocation()
+            val fixture = Fixture(locationResult = LocationResult.Success(location))
 
-            viewModel.onPermissionGranted(isFineGranted = true, isCoarseGranted = true)
-
+            fixture.viewModel.onPermissionGranted(isFineGranted = true, isCoarseGranted = true)
             testScheduler.advanceUntilIdle()
 
-            val state = viewModel.uiState.value
-            assertTrue(state is AddPinUiState.Success)
-            val successState = state as AddPinUiState.Success
-            assertEquals(expectedLocation, successState.location)
-            assertEquals(false, successState.isApproximate)
+            val state = fixture.viewModel.uiState.value as AddPinUiState.PositionFound
+            assertEquals(location, state.location)
+            assertFalse(state.isApproximate)
         }
 
     @Test
-    fun `onPermissionGranted with coarse only sets isApproximate to true`() =
+    fun `coarse only permission marks position approximate`() =
         runTest(testDispatcher) {
-            val expectedLocation =
-                UserLocation(
-                    position = GeoPoint(48.8566, 2.3522),
-                    timestampEpochMillis = 1000L,
-                )
-            val fakeRepo = FakeLocationRepository(LocationResult.Success(expectedLocation))
-            val viewModel = AddPinViewModel(fakeRepo)
+            val fixture = Fixture(locationResult = LocationResult.Success(testLocation()))
 
-            viewModel.onPermissionGranted(isFineGranted = false, isCoarseGranted = true)
-
+            fixture.viewModel.onPermissionGranted(isFineGranted = false, isCoarseGranted = true)
             testScheduler.advanceUntilIdle()
 
-            val state = viewModel.uiState.value
-            assertTrue(state is AddPinUiState.Success)
-            val successState = state as AddPinUiState.Success
-            assertEquals(true, successState.isApproximate)
+            val state = fixture.viewModel.uiState.value as AddPinUiState.PositionFound
+            assertTrue(state.isApproximate)
         }
 
     @Test
-    fun `onPermissionGranted handles ServicesDisabled`() =
+    fun `location failures remain recoverable states`() =
         runTest(testDispatcher) {
-            val fakeRepo = FakeLocationRepository(LocationResult.ServicesDisabled)
-            val viewModel = AddPinViewModel(fakeRepo)
-
-            viewModel.onPermissionGranted(isFineGranted = true, isCoarseGranted = true)
-
+            val fixture = Fixture(locationResult = LocationResult.ServicesDisabled)
+            fixture.viewModel.onPermissionGranted(true, true)
             testScheduler.advanceUntilIdle()
+            assertEquals(AddPinUiState.ServicesDisabled, fixture.viewModel.uiState.value)
 
-            assertEquals(AddPinUiState.ServicesDisabled, viewModel.uiState.value)
+            fixture.locationRepository.nextResult = LocationResult.Timeout
+            fixture.viewModel.retryLocation()
+            testScheduler.advanceUntilIdle()
+            assertEquals(AddPinUiState.Timeout, fixture.viewModel.uiState.value)
+
+            fixture.locationRepository.nextResult = LocationResult.TechnicalError
+            fixture.viewModel.retryLocation()
+            testScheduler.advanceUntilIdle()
+            assertEquals(AddPinUiState.TechnicalError, fixture.viewModel.uiState.value)
         }
 
     @Test
-    fun `onPermissionGranted handles Timeout`() =
-        runTest(testDispatcher) {
-            val fakeRepo = FakeLocationRepository(LocationResult.Timeout)
-            val viewModel = AddPinViewModel(fakeRepo)
+    fun `permission denied distinguishes requestable and settings required`() {
+        val fixture = Fixture()
 
-            viewModel.onPermissionGranted(isFineGranted = true, isCoarseGranted = true)
+        fixture.viewModel.onPermissionDenied(isPermanentlyDenied = false)
+        assertEquals(
+            AddPinUiState.PermissionDenied(isPermanentlyDenied = false),
+            fixture.viewModel.uiState.value,
+        )
 
-            testScheduler.advanceUntilIdle()
-
-            assertEquals(AddPinUiState.Timeout, viewModel.uiState.value)
-        }
-
-    @Test
-    fun `onPermissionGranted handles TechnicalError`() =
-        runTest(testDispatcher) {
-            val fakeRepo = FakeLocationRepository(LocationResult.TechnicalError)
-            val viewModel = AddPinViewModel(fakeRepo)
-
-            viewModel.onPermissionGranted(isFineGranted = true, isCoarseGranted = true)
-
-            testScheduler.advanceUntilIdle()
-
-            assertEquals(AddPinUiState.TechnicalError, viewModel.uiState.value)
-        }
-
-    @Test
-    fun `onPermissionDenied with requestable sets PermissionDenied false`() {
-        val fakeRepo = FakeLocationRepository(LocationResult.Timeout)
-        val viewModel = AddPinViewModel(fakeRepo)
-
-        viewModel.onPermissionDenied(isPermanentlyDenied = false)
-
-        assertEquals(AddPinUiState.PermissionDenied(isPermanentlyDenied = false), viewModel.uiState.value)
+        fixture.viewModel.onPermissionDenied(isPermanentlyDenied = true)
+        assertEquals(
+            AddPinUiState.PermissionDenied(isPermanentlyDenied = true),
+            fixture.viewModel.uiState.value,
+        )
     }
 
     @Test
-    fun `onPermissionDenied with settings required sets PermissionDenied true`() {
-        val fakeRepo = FakeLocationRepository(LocationResult.Timeout)
-        val viewModel = AddPinViewModel(fakeRepo)
-
-        viewModel.onPermissionDenied(isPermanentlyDenied = true)
-
-        assertEquals(AddPinUiState.PermissionDenied(isPermanentlyDenied = true), viewModel.uiState.value)
-    }
-
-    @Test
-    fun `retryLocation re-fetches location when permission was previously granted`() =
+    fun `confirm position loads system categories and preserves location`() =
         runTest(testDispatcher) {
-            val expectedLocation =
-                UserLocation(
-                    position = GeoPoint(48.8566, 2.3522),
-                    timestampEpochMillis = 1000L,
-                )
-            val fakeRepo = FakeLocationRepository(LocationResult.ServicesDisabled)
-            val viewModel = AddPinViewModel(fakeRepo)
+            val location = testLocation()
+            val fixture = Fixture(locationResult = LocationResult.Success(location))
+            fixture.categoryRepository.categories.value = systemCategories()
 
-            viewModel.onPermissionGranted(isFineGranted = true, isCoarseGranted = true)
+            fixture.viewModel.onPermissionGranted(true, true)
             testScheduler.advanceUntilIdle()
-            assertEquals(AddPinUiState.ServicesDisabled, viewModel.uiState.value)
-
-            fakeRepo.nextResult = LocationResult.Success(expectedLocation)
-            viewModel.retryLocation()
+            fixture.viewModel.confirmPosition()
             testScheduler.advanceUntilIdle()
 
-            assertTrue(viewModel.uiState.value is AddPinUiState.Success)
+            val state = fixture.viewModel.uiState.value as AddPinUiState.CategorySelection
+            assertEquals(location, state.location)
+            assertEquals(SystemCategoryIds.ALL, state.categories.map { it.id })
+            assertFalse(state.isLoadingCategories)
         }
 
     @Test
-    fun `retryLocation cancels previous in-progress acquisition`() =
+    fun `select category then save persists once and reaches Saved`() =
         runTest(testDispatcher) {
-            val slowRepo = SlowLocationRepository()
-            val viewModel = AddPinViewModel(slowRepo)
+            val fixture = readyToSaveFixture()
 
-            viewModel.onPermissionGranted(isFineGranted = true, isCoarseGranted = true)
+            fixture.viewModel.selectCategory(SystemCategoryIds.PARKING)
+            fixture.viewModel.savePin()
+            fixture.viewModel.savePin()
+            testScheduler.advanceUntilIdle()
+
+            assertEquals(1, fixture.pinRepository.saveCalls)
+            val saved = fixture.viewModel.uiState.value as AddPinUiState.Saved
+            assertEquals(SystemCategoryIds.PARKING, saved.pin.categoryId)
+            assertEquals(testLocation().position, saved.pin.position)
+        }
+
+    @Test
+    fun `save failure preserves draft and selected category then retry succeeds`() =
+        runTest(testDispatcher) {
+            val fixture = readyToSaveFixture()
+            fixture.viewModel.selectCategory(SystemCategoryIds.RESTAURANT)
+            fixture.pinRepository.shouldFail = true
+
+            fixture.viewModel.savePin()
+            testScheduler.advanceUntilIdle()
+
+            val failed = fixture.viewModel.uiState.value as AddPinUiState.CategorySelection
+            assertEquals(testLocation(), failed.location)
+            assertEquals(SystemCategoryIds.RESTAURANT, failed.selectedCategoryId)
+            assertTrue(failed.saveFailed)
+
+            fixture.pinRepository.shouldFail = false
+            fixture.viewModel.savePin()
+            testScheduler.advanceUntilIdle()
+
+            assertTrue(fixture.viewModel.uiState.value is AddPinUiState.Saved)
+            assertEquals(2, fixture.pinRepository.saveCalls)
+        }
+
+    @Test
+    fun `back from category restores accepted position`() =
+        runTest(testDispatcher) {
+            val fixture = readyToSaveFixture()
+
+            fixture.viewModel.backToPosition()
+
+            val state = fixture.viewModel.uiState.value as AddPinUiState.PositionFound
+            assertEquals(testLocation(), state.location)
+        }
+
+    @Test
+    fun `retry location cancels previous in progress acquisition`() =
+        runTest(testDispatcher) {
+            val slowRepository = SlowLocationRepository()
+            val fixture = Fixture(locationRepositoryOverride = slowRepository)
+
+            fixture.viewModel.onPermissionGranted(true, true)
             testScheduler.runCurrent()
-            assertEquals(AddPinUiState.Searching, viewModel.uiState.value)
-
-            viewModel.retryLocation()
+            fixture.viewModel.retryLocation()
             testScheduler.advanceUntilIdle()
 
-            assertEquals(1, slowRepo.completedCalls)
+            assertEquals(1, slowRepository.completedCalls)
         }
+
+    private suspend fun readyToSaveFixture(): Fixture {
+        val fixture = Fixture(locationResult = LocationResult.Success(testLocation()))
+        fixture.categoryRepository.categories.value = systemCategories()
+        fixture.viewModel.onPermissionGranted(true, true)
+        testDispatcher.scheduler.advanceUntilIdle()
+        fixture.viewModel.confirmPosition()
+        testDispatcher.scheduler.advanceUntilIdle()
+        return fixture
+    }
+
+    private fun testLocation() =
+        UserLocation(
+            position = GeoPoint(48.8566, 2.3522),
+            accuracyMeters = 5.0f,
+            altitudeMeters = 35.0,
+            timestampEpochMillis = 1_000L,
+        )
+
+    private fun systemCategories(): List<Category> = SystemCategoryIds.ALL.map { Category(id = it, isSystem = true) }
+
+    private inner class Fixture(
+        locationResult: LocationResult = LocationResult.Timeout,
+        locationRepositoryOverride: UserLocationRepository? = null,
+    ) {
+        val locationRepository = FakeLocationRepository(locationResult)
+        val categoryRepository = FakeCategoryRepository()
+        val pinRepository = FakePinRepository()
+        private val createPinUseCase =
+            CreatePinUseCase(
+                pinRepository = pinRepository,
+                idFactory = { PinId("created-pin") },
+                clock = { 10_000L },
+            )
+        val viewModel =
+            AddPinViewModel(
+                userLocationRepository = locationRepositoryOverride ?: locationRepository,
+                categoryRepository = categoryRepository,
+                createPinUseCase = createPinUseCase,
+            )
+    }
 
     private class FakeLocationRepository(
         var nextResult: LocationResult,
     ) : UserLocationRepository {
-        override suspend fun getCurrentLocation(): LocationResult {
-            return nextResult
-        }
+        override suspend fun getCurrentLocation(): LocationResult = nextResult
     }
 
     private class SlowLocationRepository : UserLocationRepository {
         var completedCalls = 0
 
         override suspend fun getCurrentLocation(): LocationResult {
-            delay(5000)
+            delay(5_000)
             completedCalls++
             return LocationResult.Timeout
+        }
+    }
+
+    private class FakeCategoryRepository : CategoryRepository {
+        val categories = MutableStateFlow<List<Category>>(emptyList())
+
+        override fun observeSystemCategories(): Flow<List<Category>> = categories
+    }
+
+    private class FakePinRepository : PinRepository {
+        var saveCalls = 0
+        var shouldFail = false
+        val pins = MutableStateFlow<List<Pin>>(emptyList())
+
+        override fun observePins(): Flow<List<Pin>> = pins
+
+        override fun observePin(pinId: PinId): Flow<Pin?> = MutableStateFlow(pins.value.find { it.id == pinId })
+
+        override suspend fun savePin(pin: Pin) {
+            saveCalls++
+            if (shouldFail) throw IOException("save failed")
+            pins.value = pins.value + pin
         }
     }
 }

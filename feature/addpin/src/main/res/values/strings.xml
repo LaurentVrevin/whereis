@@ -2,23 +2,28 @@
 <resources>
     <string name="addpin_title">Ajouter un lieu</string>
     <string name="addpin_permission_title">Localisation requise</string>
-    <string name="addpin_permission_rationale">Wheris a besoin d’accéder à ta position pour pouvoir enregistrer cet endroit et te permettre de le retrouver plus tard.</string>
+    <string name="addpin_permission_rationale">Wheris utilise ta position uniquement quand tu choisis d’enregistrer un lieu, afin de pouvoir le retrouver plus tard.</string>
 
     <string name="addpin_btn_grant_permission">Autoriser la localisation</string>
     <string name="addpin_btn_open_settings">Ouvrir les paramètres</string>
     <string name="addpin_btn_retry">Réessayer</string>
     <string name="addpin_btn_open_location_settings">Activer la localisation</string>
+    <string name="addpin_btn_confirm_position">Confirmer cette position</string>
+    <string name="addpin_btn_save">Enregistrer</string>
 
     <string name="addpin_permission_denied_title">Permission refusée</string>
-    <string name="addpin_permission_denied_msg">La localisation est nécessaire pour déterminer la position actuelle. Tu peux l’activer dans les paramètres de ton téléphone.</string>
+    <string name="addpin_permission_denied_msg">Wheris a besoin d’une localisation précise ou approximative pour enregistrer ta position actuelle.</string>
 
     <string name="addpin_searching_title">Recherche de ta position…</string>
-    <string name="addpin_searching_subtitle">Recherche de ta position en cours</string>
+    <string name="addpin_searching_subtitle">Wheris cherche une position actuelle sur ton appareil.</string>
 
-    <string name="addpin_success_title">Position trouvée</string>
+    <string name="addpin_success_title">Position détectée</string>
     <string name="addpin_approximate_badge">Position approximative</string>
     <string name="addpin_accuracy_format">Précision : ±%.0f m</string>
+    <string name="addpin_accuracy_unknown">Précision inconnue</string>
     <string name="addpin_altitude_format">Altitude : %.0f m</string>
+    <string name="addpin_map_unavailable">Carte indisponible</string>
+    <string name="addpin_coordinates_format">%.5f, %.5f</string>
 
     <string name="addpin_services_disabled_title">Services de localisation désactivés</string>
     <string name="addpin_services_disabled_msg">Active la localisation dans les paramètres de ton appareil pour continuer.</string>
@@ -28,4 +33,28 @@
 
     <string name="addpin_error_title">Erreur de localisation</string>
     <string name="addpin_error_msg">Une erreur technique est survenue lors de la récupération de la position.</string>
+
+    <string name="addpin_back_to_position">Retour à la position</string>
+    <string name="addpin_category_title">Quel type de lieu enregistres-tu ?</string>
+    <string name="addpin_category_selected">Catégorie sélectionnée</string>
+    <string name="addpin_category_load_error">Impossible de charger les catégories pour le moment.</string>
+    <string name="addpin_save_error">Le lieu n’a pas pu être enregistré. Ta position et ta catégorie sont conservées.</string>
+
+    <string name="category_car">Voiture</string>
+    <string name="category_tent">Tente</string>
+    <string name="category_bivouac">Bivouac</string>
+    <string name="category_restaurant">Restaurant</string>
+    <string name="category_photo_spot">Spot photo</string>
+    <string name="category_viewpoint">Point de vue</string>
+    <string name="category_bike">Vélo</string>
+    <string name="category_parking">Parking</string>
+    <string name="category_beach">Plage</string>
+    <string name="category_fishing">Pêche</string>
+    <string name="category_hiking">Randonnée</string>
+    <string name="category_meeting">Rendez-vous</string>
+    <string name="category_other">Autre</string>
+
+    <string name="addpin_saved_title">Lieu enregistré !</string>
+    <string name="addpin_view_on_map">Voir sur la carte</string>
+    <string name="addpin_finish">Terminer</string>
 </resources>

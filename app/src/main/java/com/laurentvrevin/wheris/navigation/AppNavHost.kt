@@ -7,7 +7,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.laurentvrevin.wheris.feature.addpin.AddPinRoute
-import com.laurentvrevin.wheris.ui.StartScreen
+import com.laurentvrevin.wheris.feature.home.HomeRoute
+
+private const val ROUTE_HOME = "home"
+private const val ROUTE_ADD_PIN = "add_pin"
 
 @Composable
 fun AppNavHost(
@@ -16,14 +19,23 @@ fun AppNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = "add_pin",
+        startDestination = ROUTE_HOME,
         modifier = modifier,
     ) {
-        composable("start") {
-            StartScreen()
+        composable(ROUTE_HOME) {
+            HomeRoute(
+                onAddPlace = { navController.navigate(ROUTE_ADD_PIN) },
+            )
         }
-        composable("add_pin") {
-            AddPinRoute()
+        composable(ROUTE_ADD_PIN) {
+            AddPinRoute(
+                onFinished = {
+                    navController.popBackStack(
+                        route = ROUTE_HOME,
+                        inclusive = false,
+                    )
+                },
+            )
         }
     }
 }

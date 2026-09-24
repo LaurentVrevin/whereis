@@ -25,13 +25,19 @@ abstract class WherisDatabase : RoomDatabase() {
     companion object {
         fun getCallback(): Callback {
             return object : Callback() {
-                override fun onCreate(db: SupportSQLiteDatabase) {
-                    super.onCreate(db)
-                    // Seed OTHER category with stable internal ID
-                    db.execSQL(
-                        "INSERT OR IGNORE INTO categories (id, isSystem) VALUES ('${SystemCategoryIds.OTHER.value}', 1)",
-                    )
+                override fun onOpen(db: SupportSQLiteDatabase) {
+                    super.onOpen(db)
+                    seedSystemCategories(db)
                 }
+            }
+        }
+
+        private fun seedSystemCategories(db: SupportSQLiteDatabase) {
+            SystemCategoryIds.ALL.forEach { categoryId ->
+                db.execSQL(
+                    "INSERT OR IGNORE INTO categories (id, isSystem) VALUES (?, 1)",
+                    arrayOf(categoryId.value),
+                )
             }
         }
     }

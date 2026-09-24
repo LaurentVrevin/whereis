@@ -46,14 +46,68 @@ class WherisDatabaseTest {
     }
 
     @Test
-    fun seed_shouldProvideOtherCategoryAutomatically() =
+    fun seed_shouldProvideAllSystemCategoriesAutomatically() =
         runBlocking {
-            // Proactive trigger to open the database and run the callback
             db.openHelper.writableDatabase
 
-            val category = categoryDao.getCategoryById(SystemCategoryIds.OTHER.value)
-            assertNotNull("System category OTHER should be seeded automatically", category)
-            assertTrue(category?.isSystem == true)
+            val categories = categoryDao.observeSystemCategories().first()
+
+            assertEquals(SystemCategoryIds.ALL.size, categories.size)
+            assertEquals(
+                SystemCategoryIds.ALL.toSet(),
+                categories.map { category -> category.id }.toSet().map { id ->
+                    com.laurentvrevin.wheris.core.model.CategoryId(id)
+                }.toSet(),
+            )
+            assertTrue(categories.all { it.isSystem })
+        }
+
+    @Test
+    fun seed_isIdempotent() =
+        runBlocking {
+            val sqliteDb = db.openHelper.writableDatabase
+            val callback = WherisDatabase.getCallback()
+
+            callback.onOpen(sqliteDb)
+            callback.onOpen(sqliteDb)
+
+            val categories = categoryDao.observeSystemCategories().first()
+            assertEquals(SystemCategoryIds.ALL.size, categories.size)
+            assertEquals(SystemCategoryIds.ALL.size, categories.map { it.id }.toSet().size)
+        }
+
+    @Test
+    fun reopeningExistingDatabase_restoresMissingSystemCategory() =
+        runBlocking {
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            val databaseName = "system-category-reopen-test.db"
+            context.deleteDatabase(databaseName)
+
+            try {
+                val firstOpen =
+                    Room.databaseBuilder(context, WherisDatabase::class.java, databaseName)
+                        .addCallback(WherisDatabase.getCallback())
+                        .build()
+                val missingId = SystemCategoryIds.CAR.value
+                firstOpen.openHelper.writableDatabase.execSQL(
+                    "DELETE FROM categories WHERE id = ?",
+                    arrayOf(missingId),
+                )
+                assertEquals(null, firstOpen.categoryDao().getCategoryById(missingId))
+                firstOpen.close()
+
+                val reopened =
+                    Room.databaseBuilder(context, WherisDatabase::class.java, databaseName)
+                        .addCallback(WherisDatabase.getCallback())
+                        .build()
+                val restored = reopened.categoryDao().getCategoryById(missingId)
+
+                assertNotNull(restored)
+                assertTrue(restored?.isSystem == true)
+                reopened.close()
+            } finally {
+                context.deleteDatabase(databaseName)
+            }
         }
 
     @Test
@@ -124,7 +178,6 @@ class WherisDatabaseTest {
     @Test
     fun deleteCategory_withAssociatedPin_shouldThrowConstraintException() =
         runBlocking {
-            // 1. Insert category and pin
             val catId = "protected_cat"
             categoryDao.insertCategory(CategoryEntity(catId, false))
             val pin =
@@ -140,12 +193,10 @@ class WherisDatabaseTest {
                 )
             pinDao.insertPin(pin)
 
-            // 2. Attempt to delete category via raw SQL since DAO has no delete yet
             assertThrows(SQLiteConstraintException::class.java) {
                 db.openHelper.writableDatabase.execSQL("DELETE FROM categories WHERE id = '$catId'")
             }
 
-            // 3. Verify Pin still exists
             val observed = pinDao.observePin("pin_linked").first()
             assertNotNull("Pin should still exist after failed category deletion", observed)
         }
