@@ -2,7 +2,7 @@
 
 **Statut :** source de vérité principale pour la vision produit, le périmètre fonctionnel, l'UX et la direction technique de Wheris.
 
-**Référence business canonique :** `WHERIS_BUSINESS_REFERENCE.md`
+**Référence business canonique :** `docs/reference/WHERIS_BUSINESS_REFERENCE.md`
 
 Tu es mon assistant principal pour la conception et le développement de Wheris.
 
@@ -34,7 +34,7 @@ Pour toute décision concernant :
 - les KPIs business ;
 - les hypothèses financières ;
 
-la source de vérité canonique est `WHERIS_BUSINESS_REFERENCE.md`.
+la source de vérité canonique est `docs/reference/WHERIS_BUSINESS_REFERENCE.md`.
 
 Le présent document doit rester cohérent avec ce référentiel sans dupliquer inutilement ses paramètres commerciaux.
 
@@ -1110,7 +1110,7 @@ indiquer :
 - dépendance fournisseur ;
 - alternative éventuelle.
 
-Les hypothèses économiques globales, prix commerciaux, conversions, unit economics, prévisionnels et seuils de rentabilité appartiennent à `WHERIS_BUSINESS_REFERENCE.md` et à son modèle financier associé.
+Les hypothèses économiques globales, prix commerciaux, conversions, unit economics, prévisionnels et seuils de rentabilité appartiennent à `docs/reference/WHERIS_BUSINESS_REFERENCE.md` et à son modèle financier associé.
 
 Ne pas dupliquer ces chiffres ici sauf lorsqu'ils ont une conséquence directe sur une décision d'architecture.
 
@@ -1140,7 +1140,7 @@ Une future synchronisation cloud devra être :
 
 La présence d'un entitlement Plus ou Premium n'autorise jamais, à elle seule, l'envoi de données géographiques vers un backend.
 
-Toute fonctionnalité cloud payante doit également respecter `SECURITY_PRIVACY.md`.
+Toute fonctionnalité cloud payante doit également respecter `docs/product/SECURITY_PRIVACY.md`.
 
 ==================================================
 33. STACK ANDROID
@@ -1918,7 +1918,7 @@ dépendants de Mapbox.
 
 Le modèle économique de Wheris est défini canoniquement dans :
 
-`WHERIS_BUSINESS_REFERENCE.md`
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md`
 
 Le présent document n'en conserve que les principes structurants nécessaires au cadrage produit et technique.
 
@@ -1958,7 +1958,7 @@ Principes business non négociables :
 - un paywall ne doit pas précéder la démonstration de la valeur fondamentale de Wheris ;
 - la restauration des achats doit utiliser les mécanismes appropriés de la plateforme sans imposer artificiellement un compte Wheris pour le produit local.
 
-Les prix, limites Free, timings d'upsell, conversions et autres paramètres commerciaux actifs sont définis exclusivement dans `WHERIS_BUSINESS_REFERENCE.md`.
+Les prix, limites Free, timings d'upsell, conversions et autres paramètres commerciaux actifs sont définis exclusivement dans `docs/reference/WHERIS_BUSINESS_REFERENCE.md`.
 
 IMPORTANT :
 
@@ -1966,7 +1966,7 @@ Ces paramètres sont des décisions ou hypothèses business selon leur statut da
 
 Le référentiel business possède les valeurs commerciales actives, leur statut, les règles de downgrade, les hypothèses financières, les KPIs et le prévisionnel 36 mois.
 
-En cas d'évolution d'un prix, d'une limite ou d'un entitlement, mettre à jour d'abord `WHERIS_BUSINESS_REFERENCE.md`, puis propager uniquement les conséquences nécessaires.
+En cas d'évolution d'un prix, d'une limite ou d'un entitlement, mettre à jour d'abord `docs/reference/WHERIS_BUSINESS_REFERENCE.md`, puis propager uniquement les conséquences nécessaires.
 
 Google Play Billing, les paywalls et les flows d'achat/abonnement ne font pas partie du MVP technique actif tant qu'une étape de monétisation dédiée n'a pas été explicitement lancée.
 
@@ -2097,7 +2097,7 @@ Ne pas développer immédiatement :
 
 L'architecture doit pouvoir accueillir raisonnablement plus tard :
 
-- activation du modèle Free / Plus / Premium défini dans `WHERIS_BUSINESS_REFERENCE.md` ;
+- activation du modèle Free / Plus / Premium défini dans `docs/reference/WHERIS_BUSINESS_REFERENCE.md` ;
 - Google Play Billing lorsque l'étape de monétisation est explicitement ouverte ;
 - restauration et gestion robuste des entitlements ;
 - cloud ;
@@ -2296,7 +2296,24 @@ Inclure :
 - prévention des doubles sauvegardes ;
 - erreur/retry sans perte du draft.
 
-`ADD_003` et la création de catégorie personnalisée ne doivent pas bloquer cette preuve.
+ADD_003 et la création de catégorie personnalisée ne doivent pas bloquer cette preuve.
+
+ÉTAPE A4.1 — Choix manuel de position avant sauvegarde
+
+Faire évoluer ADD_001 sans casser le fast path actuel :
+
+- la position GPS détectée reste la candidate initiale ;
+- un tap normal sur la carte ne déplace pas la candidate ;
+- un appui long sur le repère candidat permet d'entrer en déplacement manuel ;
+- pendant le geste, l'utilisateur peut déplacer le repère vers une position approximative ;
+- au relâchement, cette coordonnée devient la position candidate ajustée ;
+- l'utilisateur doit toujours valider explicitement avec `Confirmer cette position` avant de poursuivre vers ADD_002 ;
+- l'interface distingue `Position détectée` de `Position ajustée` ;
+- après ajustement manuel, la précision GPS de la détection initiale ne doit pas être présentée comme la précision de la coordonnée manuelle ;
+- ce comportement concerne uniquement le draft de ADD_001 : les lieux déjà enregistrés sur MAP_001 ne deviennent pas déplaçables ;
+- l'auto-pan en bord de carte pendant le drag est hors du besoin initial et peut être traité plus tard.
+
+Le choix manuel sert notamment les cas où l'utilisateur veut mémoriser approximativement un endroit qu'il a déjà quitté, sans devoir y retourner physiquement.
 
 ÉTAPE A5 — Retrieval minimal complet
 
@@ -2357,7 +2374,7 @@ La slice est prête pour validation lorsque :
 - le save direct ne nécessite ni nom, ni note, ni photo, ni catégorie personnalisée ;
 - les données survivent aux échecs récupérables ;
 - les états carte/GPS/offline sont honnêtes ;
-- les métriques de validation peuvent être observées sans violer `SECURITY_PRIVACY.md`.
+- les métriques de validation peuvent être observées sans violer `docs/product/SECURITY_PRIVACY.md`.
 
 Aucun seuil d'activation/rétention supplémentaire n'est inventé ici. Le seul objectif chiffré déjà canonique reste un save simple proche de moins de 10 secondes lorsque la position est disponible.
 
@@ -2424,7 +2441,7 @@ Ne pas introduire les contrôles avancés tant que leur utilité ou leur inclusi
 
 L'activation de la monétisation Free / Plus / Premium, Google Play Billing, les paywalls, la restauration des achats, le cloud, les cartes offline avancées, KMP et iOS font l'objet de phases dédiées après décision explicite.
 
-Les règles commerciales de ces futures phases doivent être lues depuis `WHERIS_BUSINESS_REFERENCE.md` plutôt que réinventées dans le code ou le design.
+Les règles commerciales de ces futures phases doivent être lues depuis `docs/reference/WHERIS_BUSINESS_REFERENCE.md` plutôt que réinventées dans le code ou le design.
 
 ==================================================
 58. PREMIÈRE MISSION DU PROJET
