@@ -240,7 +240,7 @@ When a task affects:
 - downgrade/expiration behavior;  
 - a recurring infrastructure cost tied to a paid capability;
 
-consult `WHERIS_BUSINESS_REFERENCE.md` before making or implementing the decision.
+consult `docs/reference/WHERIS_BUSINESS_REFERENCE.md` before making or implementing the decision.
 
 Do not convert a business hypothesis into immutable product architecture merely because it is currently used for planning or forecasting.
 
@@ -268,24 +268,28 @@ It must not justify speculative architecture.
 
 The project documentation is part of the engineering system.
 
+Repository entry rule: read `AGENT.md` first, then `docs/00_PROJECT_INDEX.md`, then only the canonical sources relevant to the task.
+
+Source priority is: product truth → mandatory rules/security → semantic design documentation → validated Figma as visual truth → implementation. Figma may refine visual execution but must not silently redefine product behavior, flows, navigation, data, scope or provider boundaries.
+
 Consult the relevant documents before making decisions.
 
-If you are unsure where a document lives, use `00_PROJECT_INDEX.md`. For design routing use `DESIGN/00_DESIGN_INDEX.md`; for engineering playbooks use `SKILLS/00_SKILLS_INDEX.md`.
+If you are unsure where a document lives, use `docs/00_PROJECT_INDEX.md`. For design routing use `docs/design/00_DESIGN_INDEX.md`; for engineering playbooks use `docs/engineering/skills/00_SKILLS_INDEX.md`.
 
 The main references are expected to include:
 
-- `WHERIS_MASTER.md`  
-- `WHERIS_BUSINESS_REFERENCE.md`  
+- `docs/product/WHERIS_MASTER.md`  
+- `docs/reference/WHERIS_BUSINESS_REFERENCE.md`  
 - `AGENT.md`  
-- `RULES.md`  
-- `SECURITY_PRIVACY.md`  
-- `USER_STORIES_REFERENCE.pdf`  
-- `DESIGN/01_DESIGN_FOUNDATIONS.md` through `DESIGN/07_SCREEN_SPECIFICATIONS.md`  
-- operational playbooks routed by `SKILLS/00_SKILLS_INDEX.md`
+- `docs/product/RULES.md`  
+- `docs/product/SECURITY_PRIVACY.md`  
+- `docs/reference/USER_STORIES_REFERENCE.pdf`  
+- `docs/design/01_DESIGN_FOUNDATIONS.md` through `docs/design/07_SCREEN_SPECIFICATIONS.md`  
+- operational playbooks routed by `docs/engineering/skills/00_SKILLS_INDEX.md`
 
 Their responsibilities are different.
 
-### WHERIS_MASTER.md
+### docs/product/WHERIS_MASTER.md
 
 Defines:
 
@@ -297,7 +301,7 @@ Defines:
 - major technical choices;  
 - development direction.
 
-### WHERIS_BUSINESS_REFERENCE.md
+### docs/reference/WHERIS_BUSINESS_REFERENCE.md
 
 Defines:
 
@@ -322,29 +326,29 @@ Defines:
 - your engineering mindset;  
 - how you approach work.
 
-### RULES.md
+### docs/product/RULES.md
 
 Defines mandatory engineering constraints and repository rules.
 
 Rules are not suggestions.
 
-### SECURITY_PRIVACY.md
+### docs/product/SECURITY_PRIVACY.md
 
 Defines mandatory security, privacy and sensitive-data requirements.
 
-### USER_STORIES_REFERENCE.pdf
+### docs/reference/USER_STORIES_REFERENCE.pdf
 
 Defines approved user needs, story-level scope and the boundary between active MVP stories and future stories.
 
-### DESIGN/
+### docs/design/
 
 The seven canonical design documents define foundations, tokens, components, screen inventory, user flows, Figma construction rules and detailed screen contracts. Together they are the semantic design specification; validated Figma is the visual reference.
 
-### SKILLS/
+### docs/engineering/skills/
 
 Contains task-specific operational procedures.
 
-Start with `SKILLS/00_SKILLS_INDEX.md`, then load only the playbook(s) required by the task.
+Start with `docs/engineering/skills/00_SKILLS_INDEX.md`, then load only the playbook(s) required by the task.
 
 Do not duplicate documentation unnecessarily.
 
@@ -631,7 +635,7 @@ Do not invent:
 - quotas;  
 - deprecation status.
 
-Do not invent Wheris commercial pricing, free limits or entitlements either. Their current status must come from `WHERIS_BUSINESS_REFERENCE.md`.
+Do not invent Wheris commercial pricing, free limits or entitlements either. Their current status must come from `docs/reference/WHERIS_BUSINESS_REFERENCE.md`.
 
 ---
 
