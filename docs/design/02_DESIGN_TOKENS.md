@@ -2,7 +2,7 @@
 
 > Canonical design-token specification for Wheris.
 >
-> This document translates `DESIGN/01_DESIGN_FOUNDATIONS.md` into reusable
+> This document translates `docs/design/01_DESIGN_FOUNDATIONS.md` into reusable
 > visual primitives for Figma and Jetpack Compose. It defines the token
 > vocabulary and the approved baseline values for the Android-first MVP.
 >
@@ -472,7 +472,7 @@ Typical intent:
 -   prominent sheets/large surfaces → `xl`;
 -   chips/circular/pill elements → `full`.
 
-Exact component mapping belongs to `DESIGN/03_DESIGN_COMPONENTS.md`.
+Exact component mapping belongs to `docs/design/03_DESIGN_COMPONENTS.md`.
 
 ------------------------------------------------------------------------
 
@@ -731,7 +731,7 @@ Accuracy feedback needs semantic visual states:
 The badge must include textual/iconographic information, not color
 alone.
 
-Exact state colors should be defined in `DESIGN/03_DESIGN_COMPONENTS.md` after
+Exact state colors should be defined in `docs/design/03_DESIGN_COMPONENTS.md` after
 checking contrast against both themes.
 
 Domain accuracy thresholds remain a product/domain rule, not a visual
@@ -973,9 +973,9 @@ This preserves brand hierarchy.
 
 Canonical ownership:
 
--   raw/semantic values → `DESIGN/02_DESIGN_TOKENS.md`;
--   component-specific mapping → `DESIGN/03_DESIGN_COMPONENTS.md`;
--   screen-specific composition → `DESIGN/07_SCREEN_SPECIFICATIONS.md`.
+-   raw/semantic values → `docs/design/02_DESIGN_TOKENS.md`;
+-   component-specific mapping → `docs/design/03_DESIGN_COMPONENTS.md`;
+-   screen-specific composition → `docs/design/07_SCREEN_SPECIFICATIONS.md`.
 
 A screen must not create a new global token silently.
 
@@ -1161,7 +1161,7 @@ Before freezing this checkpoint, verify:
 
 After this document is validated, the next design checkpoint is:
 
-> **`DESIGN/03_DESIGN_COMPONENTS.md`**
+> **`docs/design/03_DESIGN_COMPONENTS.md`**
 
 That document will map these tokens into actual reusable Wheris
 components and variants, including buttons, cards, chips, inputs,
