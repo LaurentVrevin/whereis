@@ -5,7 +5,7 @@
 **Statut :** Référence business initiale — décisions actées + hypothèses à valider  
 **Date :** 18 septembre 2026  
 **Périmètre :** modèle économique, monétisation, entitlements, règles commerciales, unit economics, prévisionnel 36 mois et KPIs business  
-**Document financier associé :** `WHERIS_PREVISIONNEL_FINANCIER_36M_V0_3.xlsx`
+**Document financier associé :** `docs/reference/WHERIS_PREVISIONNEL_FINANCIER_36M_V0_3.xlsx`
 
 ---
 
@@ -28,8 +28,8 @@ Il précise :
 
 Ce document ne remplace pas :
 
-- `WHERIS_MASTER.md` pour la vision produit et le périmètre fonctionnel ;
-- `SECURITY_PRIVACY.md` pour les règles de sécurité et de confidentialité ;
+- `docs/product/WHERIS_MASTER.md` pour la vision produit et le périmètre fonctionnel ;
+- `docs/product/SECURITY_PRIVACY.md` pour les règles de sécurité et de confidentialité ;
 - les documents Design pour les contrats UX/UI ;
 - `RULES` et `AGENT.md` pour les règles d’implémentation.
 
@@ -157,7 +157,7 @@ Les entitlements payants doivent pouvoir être mis en cache et restaurés de man
 
 Un futur service Premium de sauvegarde ou synchronisation ne doit jamais transformer silencieusement des données locales en données cloud.
 
-L’activation doit être explicite, compréhensible et cohérente avec les exigences de `SECURITY_PRIVACY.md`.
+L’activation doit être explicite, compréhensible et cohérente avec les exigences de `docs/product/SECURITY_PRIVACY.md`.
 
 ### 4.5 La monétisation doit intervenir après démonstration de valeur
 
@@ -210,7 +210,7 @@ RevenueCat peut fonctionner sans compte Wheris en générant un App User ID anon
 
 Tant que Wheris repose sur des App User IDs anonymes, la configuration RevenueCat de transfert/restauration doit permettre à un achat légitime d’être rattaché au nouvel identifiant anonyme après réinstallation. Le comportement exact doit être revalidé au moment de l’intégration ; la configuration recommandée par RevenueCat pour une application sans login est actuellement le transfert vers le nouvel App User ID.
 
-Un futur compte Wheris et un App User ID personnalisé ne doivent être introduits que si les besoins cloud/multi-appareils le justifient et après revue de `SECURITY_PRIVACY.md`.
+Un futur compte Wheris et un App User ID personnalisé ne doivent être introduits que si les besoins cloud/multi-appareils le justifient et après revue de `docs/product/SECURITY_PRIVACY.md`.
 
 RevenueCat ne doit recevoir aucun contenu géographique Wheris comme attribut client : pas de coordonnées, noms de lieux, notes, photos, catégories personnalisées ni historique de déplacement.
 
@@ -471,7 +471,7 @@ Wheris ne doit pas imposer un compte propriétaire uniquement pour restaurer un 
 
 L’identité anonyme RevenueCat ne doit pas être présentée comme un compte Wheris ni comme une identité utilisateur durable garantie à travers une désinstallation. Toute évolution vers des App User IDs personnalisés exige une décision dédiée sur les comptes et la synchronisation.
 
-La politique Android Backup ne doit pas être modifiée uniquement pour préserver un identifiant RevenueCat sans revue explicite de `SECURITY_PRIVACY.md`.
+La politique Android Backup ne doit pas être modifiée uniquement pour préserver un identifiant RevenueCat sans revue explicite de `docs/product/SECURITY_PRIVACY.md`.
 
 ### 11.3 Évolution de prix
 
@@ -518,7 +518,7 @@ Dans le prévisionnel financier, **M1 signifie le premier mois de version publiq
 
 Le fichier associé est :
 
-`WHERIS_PREVISIONNEL_FINANCIER_36M_V0_3.xlsx`
+`docs/reference/WHERIS_PREVISIONNEL_FINANCIER_36M_V0_3.xlsx`
 
 Le modèle est un outil de décision et non une prévision statistique certaine.
 
@@ -798,7 +798,7 @@ Les analytics ne doivent pas transmettre :
 - historique de mouvement ;
 - contenu permettant de reconstruire les habitudes géographiques personnelles.
 
-Toute solution analytics doit respecter `SECURITY_PRIVACY.md`.
+Toute solution analytics doit respecter `docs/product/SECURITY_PRIVACY.md`.
 
 Les Customer Attributes RevenueCat ne doivent jamais être utilisés pour transporter du contenu de lieu ou des données géographiques sensibles. Les identifiants publicitaires ou attributs d'attribution optionnels ne doivent pas être collectés par défaut uniquement parce que RevenueCat le permet.
 
@@ -951,13 +951,13 @@ Le produit ne doit pas être déformé pour servir le paywall.
 
 Ce référentiel s’appuie sur les principes et contraintes déjà définis dans :
 
-- `WHERIS_MASTER.md` — vision, MVP, architecture commerciale Free / Plus / Premium et évolutions futures ;
-- `SECURITY_PRIVACY.md` — local-first, données géographiques sensibles, cloud explicite, protection des données ;
+- `docs/product/WHERIS_MASTER.md` — vision, MVP, architecture commerciale Free / Plus / Premium et évolutions futures ;
+- `docs/product/SECURITY_PRIVACY.md` — local-first, données géographiques sensibles, cloud explicite, protection des données ;
 - `AGENT.md` — simplicité, intégrité des données, vie privée, résilience offline et maîtrise des coûts ;
-- `DESIGN/01_DESIGN_FOUNDATIONS.md` — Premium hors MVP actif, protection de l’usage local fondamental ;
-- `DESIGN/04_SCREEN_CATALOG.md` — surfaces Premium futures et état de limite Free ;
-- `DESIGN/05_USER_FLOWS.md` — Premium/billing hors flux MVP canonique ;
-- `WHERIS_PREVISIONNEL_FINANCIER_36M_V0_3.xlsx` — hypothèses chiffrées et calculs 36 mois.
+- `docs/design/01_DESIGN_FOUNDATIONS.md` — Premium hors MVP actif, protection de l’usage local fondamental ;
+- `docs/design/04_SCREEN_CATALOG.md` — surfaces Premium futures et état de limite Free ;
+- `docs/design/05_USER_FLOWS.md` — Premium/billing hors flux MVP canonique ;
+- `docs/reference/WHERIS_PREVISIONNEL_FINANCIER_36M_V0_3.xlsx` — hypothèses chiffrées et calculs 36 mois.
 
 ---
 
