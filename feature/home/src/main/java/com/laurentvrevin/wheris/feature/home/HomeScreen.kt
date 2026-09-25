@@ -22,17 +22,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.laurentvrevin.wheris.core.designsystem.foundation.WherisSpacing
 import com.laurentvrevin.wheris.core.map.WherisMap
+import com.laurentvrevin.wheris.core.model.PinId
 
 @Composable
 fun HomeScreen(
     uiState: HomeUiState,
     onAddPlace: () -> Unit,
+    onSavedPlaceSelected: (PinId) -> Unit,
+    onDetailsClick: (PinId) -> Unit,
+    onNavigateClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         WherisMap(
-            markers = uiState.pins.toMapMarkers(),
+            markers = uiState.pins.toMapMarkers(uiState.selectedPinId),
             modifier = Modifier.fillMaxSize(),
+            onSavedPlaceClick = onSavedPlaceSelected,
             unavailableContent = {
                 MapUnavailableContent(
                     hasSavedPlaces = uiState.pins.isNotEmpty(),
@@ -75,22 +80,36 @@ fun HomeScreen(
             }
         }
 
-        Button(
-            onClick = onAddPlace,
-            modifier =
-                Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(horizontal = WherisSpacing.lg, vertical = 32.dp)
-                    .fillMaxWidth(),
-        ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = null,
+        val selectedPin = uiState.selectedPin
+        if (selectedPin != null) {
+            MapQuickDetailCard(
+                pin = selectedPin,
+                distanceMeters = uiState.distanceMeters,
+                onNavigateClick = onNavigateClick,
+                onDetailsClick = onDetailsClick,
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(horizontal = WherisSpacing.lg, vertical = 32.dp),
             )
-            Text(
-                text = stringResource(R.string.home_add_place),
-                modifier = Modifier.padding(start = WherisSpacing.sm),
-            )
+        } else {
+            Button(
+                onClick = onAddPlace,
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(horizontal = WherisSpacing.lg, vertical = 32.dp)
+                        .fillMaxWidth(),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                )
+                Text(
+                    text = stringResource(R.string.home_add_place),
+                    modifier = Modifier.padding(start = WherisSpacing.sm),
+                )
+            }
         }
     }
 }

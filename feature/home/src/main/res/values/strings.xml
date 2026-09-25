@@ -6,4 +6,10 @@
     <string name="home_map_unavailable_empty">Tu peux toujours ajouter un lieu. Tes lieux enregistrés restent stockés localement.</string>
     <string name="home_map_unavailable_saved">Tes lieux enregistrés restent stockés localement. Tu peux toujours ajouter un lieu.</string>
     <string name="home_data_error">Impossible de charger les lieux enregistrés pour le moment.</string>
+    <string name="home_btn_navigate">Naviguer</string>
+    <string name="home_btn_details">Détails</string>
+    <string name="home_fallback_identity">Lieu enregistré</string>
+    <string name="home_distance_meters_value">%.0f m</string>
+    <string name="home_distance_km_value">%.1f km</string>
+    <string name="home_navigation_not_found">Aucune application de navigation n\'est installée.</string>
 </resources>

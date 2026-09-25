@@ -63,6 +63,9 @@ fun AppNavHost(
             composable(ROUTE_HOME) {
                 HomeRoute(
                     onAddPlace = { navController.navigate(ROUTE_ADD_PIN) },
+                    onPinClick = { pinId ->
+                        navController.navigate("$ROUTE_PIN_DETAIL/${pinId.value}")
+                    },
                 )
             }
 

@@ -24,9 +24,12 @@ android {
 
 dependencies {
     implementation(project(":core:model"))
+    implementation(project(":core:ui"))
+    implementation(project(":core:designsystem"))
 
     implementation(libs.compose.ui)
     implementation(libs.compose.foundation)
+    implementation(libs.compose.material3)
 
     implementation(libs.mapbox.maps)
     implementation(libs.mapbox.compose)

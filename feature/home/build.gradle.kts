@@ -10,6 +10,7 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":core:model"))
     implementation(project(":core:map"))
+    implementation(project(":core:ui"))
     implementation(project(":core:designsystem"))
 
     implementation(libs.androidx.core.ktx)

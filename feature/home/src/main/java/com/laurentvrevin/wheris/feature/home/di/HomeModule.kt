@@ -7,6 +7,9 @@ import org.koin.dsl.module
 val homeModule =
     module {
         viewModel {
-            HomeViewModel(pinRepository = get())
+            HomeViewModel(
+                pinRepository = get(),
+                userLocationRepository = get(),
+            )
         }
     }
