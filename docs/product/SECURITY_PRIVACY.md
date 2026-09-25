@@ -2,13 +2,13 @@
 
 > Mandatory security, privacy and sensitive-data policy for Wheris.
 
-This document complements `WHERIS_MASTER.md`,
-`WHERIS_BUSINESS_REFERENCE.md`, `AGENT.md` and `RULES.md`. It governs
+This document complements `docs/product/WHERIS_MASTER.md`,
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md`, `AGENT.md` and `docs/product/RULES.md`. It governs
 location data, saved places, photos, local storage, permissions, network
 communication, secrets, backups, logs, analytics, diagnostics, commercial
 entitlement infrastructure and future cloud functionality.
 
-`WHERIS_BUSINESS_REFERENCE.md` may define which capabilities are Free, Plus
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md` may define which capabilities are Free, Plus
 or Premium and how commercial eligibility behaves. It does **not** authorize
 collection, transmission, retention or deletion of sensitive data. Those
 conditions remain owned by this document and require the relevant security and
