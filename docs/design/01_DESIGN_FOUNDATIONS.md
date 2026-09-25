@@ -6,11 +6,11 @@
 >
 > It intentionally does not define exact token values, complete
 > component specifications, individual screen contracts or commercial
-> pricing/entitlements. Design details belong to `DESIGN/02_DESIGN_TOKENS.md`,
-> `DESIGN/03_DESIGN_COMPONENTS.md`, `DESIGN/04_SCREEN_CATALOG.md`, `DESIGN/05_USER_FLOWS.md`,
-> `DESIGN/06_FIGMA_BUILD_RULES.md` and `DESIGN/07_SCREEN_SPECIFICATIONS.md`.
+> pricing/entitlements. Design details belong to `docs/design/02_DESIGN_TOKENS.md`,
+> `docs/design/03_DESIGN_COMPONENTS.md`, `docs/design/04_SCREEN_CATALOG.md`, `docs/design/05_USER_FLOWS.md`,
+> `docs/design/06_FIGMA_BUILD_docs/product/RULES.md` and `docs/design/07_SCREEN_SPECIFICATIONS.md`.
 > Monetization rules and business hypotheses belong to
-> `WHERIS_BUSINESS_REFERENCE.md`.
+> `docs/reference/WHERIS_BUSINESS_REFERENCE.md`.
 
 ------------------------------------------------------------------------
 
@@ -379,7 +379,7 @@ emphasis where appropriate. Neutral surfaces carry most of the UI.
 Semantic colors communicate success, error/destructive and information.
 Category accent colors form a controlled separate system.
 
-Exact values and theme mappings belong to `DESIGN/02_DESIGN_TOKENS.md`.
+Exact values and theme mappings belong to `docs/design/02_DESIGN_TOKENS.md`.
 
 ## 33. Dark theme
 
@@ -500,7 +500,7 @@ mockups are exploratory/future references only. Do not place a free-limit,
 Wheris Plus, Wheris Premium, purchase, subscription or paywall surface in
 canonical MVP flows, navigation or handoff.
 
-`WHERIS_BUSINESS_REFERENCE.md` is the canonical source for the commercial
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md` is the canonical source for the commercial
 model, including the distinction between **Wheris Free**, the one-time
 local upgrade **Wheris Plus**, and the recurring-service offer **Wheris
 Premium**. Prices, exact free limits, billing periods and entitlement
@@ -536,9 +536,9 @@ shared design system.
 
 ## 48. Sources of truth
 
-`WHERIS_MASTER.md` is the product source of truth.
+`docs/product/WHERIS_MASTER.md` is the product source of truth.
 
-`WHERIS_BUSINESS_REFERENCE.md` is the source of truth for monetization
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md` is the source of truth for monetization
 architecture, plan roles, entitlements, business rules and the status of
 commercial hypotheses. Design documentation may reference those decisions
 but must not silently redefine them.
@@ -609,7 +609,7 @@ meaningful states, not every arbitrary property combination.
 Screens use instances. Validated instances should not be detached simply
 to make one screen easier to modify.
 
-Detailed construction rules belong to `DESIGN/06_FIGMA_BUILD_RULES.md`.
+Detailed construction rules belong to `docs/design/06_FIGMA_BUILD_docs/product/RULES.md`.
 
 ## 53. Auto Layout philosophy
 
@@ -696,7 +696,7 @@ statistics, collaboration, advanced offline-map management, Wear OS,
 iOS-specific flows or monetization rules.
 
 Pricing, free limits, plan names/roles and entitlements must come from
-`WHERIS_BUSINESS_REFERENCE.md` when monetization scope is explicitly
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md` when monetization scope is explicitly
 activated. Design the approved MVP rather than silently expanding it.
 
 ## 63. Design QA
