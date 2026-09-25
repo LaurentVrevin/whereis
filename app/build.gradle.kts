@@ -41,6 +41,8 @@ dependencies {
     implementation(project(":core:datastore"))
     implementation(project(":feature:addpin"))
     implementation(project(":feature:home"))
+    implementation(project(":feature:pins"))
+    implementation(project(":feature:pindetail"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
@@ -48,6 +50,7 @@ dependencies {
 
     implementation(libs.compose.ui)
     implementation(libs.compose.material3)
+    implementation(libs.compose.material.icons.extended)
     implementation(libs.navigation.compose)
 
     // DI

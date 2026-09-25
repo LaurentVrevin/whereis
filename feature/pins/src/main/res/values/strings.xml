@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pins_title">Mes lieux</string>
+    <string name="pins_empty_title">Aucun lieu enregistré</string>
+    <string name="pins_empty_description">Tes lieux enregistrés apparaîtront ici pour que tu puisses les retrouver facilement.</string>
+    <string name="pins_btn_add_place">Ajouter un lieu</string>
+    <string name="pins_loading">Chargement de tes lieux…</string>
+    <string name="pins_error_loading">Erreur lors du chargement de tes lieux.</string>
+</resources>

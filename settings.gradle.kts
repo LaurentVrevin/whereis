@@ -45,3 +45,5 @@ include(":core:datastore")
 
 include(":feature:addpin")
 include(":feature:home")
+include(":feature:pins")
+include(":feature:pindetail")

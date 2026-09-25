@@ -6,6 +6,8 @@ import com.laurentvrevin.wheris.core.location.di.locationModule
 import com.laurentvrevin.wheris.data.di.dataModule
 import com.laurentvrevin.wheris.feature.addpin.di.addPinModule
 import com.laurentvrevin.wheris.feature.home.di.homeModule
+import com.laurentvrevin.wheris.feature.pindetail.di.pinDetailModule
+import com.laurentvrevin.wheris.feature.pins.di.pinsModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -16,7 +18,6 @@ class App : Application() {
         super.onCreate()
 
         startKoin {
-            // Log Koin events in Debug
             if (BuildConfig.DEBUG) {
                 androidLogger(Level.DEBUG)
             }
@@ -27,6 +28,8 @@ class App : Application() {
                 locationModule,
                 addPinModule,
                 homeModule,
+                pinsModule,
+                pinDetailModule,
             )
         }
     }

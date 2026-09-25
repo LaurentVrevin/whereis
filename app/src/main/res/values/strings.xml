@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">Wheris</string>
 
-    <!-- Start Screen -->
+    <string name="nav_map">Carte</string>
+    <string name="nav_places">Lieux</string>
+
+    <!-- Legacy starter screen, currently not used by the WHERIS navigation graph. -->
     <string name="start_welcome">Welcome to Wheris 🚀</string>
 </resources>

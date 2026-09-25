@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pindetail_title">Détails du lieu</string>
+    <string name="pindetail_fallback_identity">Lieu enregistré</string>
+
+    <string name="pindetail_not_found_title">Lieu introuvable</string>
+    <string name="pindetail_not_found_description">Ce lieu a été supprimé ou n’existe plus.</string>
+
+    <string name="pindetail_error_title">Impossible de charger ce lieu</string>
+    <string name="pindetail_error_description">Tes autres lieux restent enregistrés. Reviens en arrière et réessaie.</string>
+
+    <string name="pindetail_btn_back">Retour</string>
+
+    <string name="pindetail_coordinates_title">Position enregistrée</string>
+    <string name="pindetail_coordinates_label">Coordonnées</string>
+    <string name="pindetail_coordinates_format">%1$.5f ; %2$.5f</string>
+
+    <string name="pindetail_accuracy_label">Précision</string>
+    <string name="pindetail_accuracy_value">±%.0f m</string>
+
+    <string name="pindetail_altitude_label">Altitude</string>
+    <string name="pindetail_altitude_value">%.0f m</string>
+
+    <string name="pindetail_from_current_location">Depuis ta position actuelle</string>
+    <string name="pindetail_distance_label">Distance</string>
+    <string name="pindetail_distance_meters_value">%.0f m</string>
+    <string name="pindetail_distance_km_value">%.1f km</string>
+    <string name="pindetail_direction_label">Direction</string>
+
+    <string name="cardinal_north">Nord</string>
+    <string name="cardinal_north_east">Nord-Est</string>
+    <string name="cardinal_east">Est</string>
+    <string name="cardinal_south_east">Sud-Est</string>
+    <string name="cardinal_south">Sud</string>
+    <string name="cardinal_south_west">Sud-Ouest</string>
+    <string name="cardinal_west">Ouest</string>
+    <string name="cardinal_north_west">Nord-Ouest</string>
+</resources>

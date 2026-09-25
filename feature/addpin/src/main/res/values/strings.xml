@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="addpin_title">Ajouter un lieu</string>
+
     <string name="addpin_permission_title">Localisation requise</string>
     <string name="addpin_permission_rationale">Wheris utilise ta position uniquement quand tu choisis d’enregistrer un lieu, afin de pouvoir le retrouver plus tard.</string>
 
@@ -23,7 +24,7 @@
     <string name="addpin_accuracy_unknown">Précision inconnue</string>
     <string name="addpin_altitude_format">Altitude : %.0f m</string>
     <string name="addpin_map_unavailable">Carte indisponible</string>
-    <string name="addpin_coordinates_format">%.5f, %.5f</string>
+    <string name="addpin_coordinates_format">%1$.5f, %2$.5f</string>
 
     <string name="addpin_services_disabled_title">Services de localisation désactivés</string>
     <string name="addpin_services_disabled_msg">Active la localisation dans les paramètres de ton appareil pour continuer.</string>
@@ -39,20 +40,6 @@
     <string name="addpin_category_selected">Catégorie sélectionnée</string>
     <string name="addpin_category_load_error">Impossible de charger les catégories pour le moment.</string>
     <string name="addpin_save_error">Le lieu n’a pas pu être enregistré. Ta position et ta catégorie sont conservées.</string>
-
-    <string name="category_car">Voiture</string>
-    <string name="category_tent">Tente</string>
-    <string name="category_bivouac">Bivouac</string>
-    <string name="category_restaurant">Restaurant</string>
-    <string name="category_photo_spot">Spot photo</string>
-    <string name="category_viewpoint">Point de vue</string>
-    <string name="category_bike">Vélo</string>
-    <string name="category_parking">Parking</string>
-    <string name="category_beach">Plage</string>
-    <string name="category_fishing">Pêche</string>
-    <string name="category_hiking">Randonnée</string>
-    <string name="category_meeting">Rendez-vous</string>
-    <string name="category_other">Autre</string>
 
     <string name="addpin_saved_title">Lieu enregistré !</string>
     <string name="addpin_view_on_map">Voir sur la carte</string>

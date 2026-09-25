@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="category_car">Voiture</string>
+    <string name="category_tent">Tente</string>
+    <string name="category_bivouac">Bivouac</string>
+    <string name="category_restaurant">Restaurant</string>
+    <string name="category_photo_spot">Spot photo</string>
+    <string name="category_viewpoint">Point de vue</string>
+    <string name="category_bike">Vélo</string>
+    <string name="category_parking">Parking</string>
+    <string name="category_beach">Plage</string>
+    <string name="category_fishing">Pêche</string>
+    <string name="category_hiking">Randonnée</string>
+    <string name="category_meeting">Rendez-vous</string>
+    <string name="category_other">Autre</string>
+</resources>
