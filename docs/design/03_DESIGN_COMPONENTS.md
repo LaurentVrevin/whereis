@@ -3,16 +3,16 @@
 > Canonical component specification for the Wheris Android-first design
 > system.
 >
-> This document translates `DESIGN/01_DESIGN_FOUNDATIONS.md` and
-> `DESIGN/02_DESIGN_TOKENS.md` into reusable UI components and patterns shared
+> This document translates `docs/design/01_DESIGN_FOUNDATIONS.md` and
+> `docs/design/02_DESIGN_TOKENS.md` into reusable UI components and patterns shared
 > by Figma and Jetpack Compose.
 >
 > It defines component responsibility, anatomy, variants, states,
 > behavior, accessibility and naming. It does **not** define complete
-> screen composition; that belongs to `DESIGN/07_SCREEN_SPECIFICATIONS.md`.
+> screen composition; that belongs to `docs/design/07_SCREEN_SPECIFICATIONS.md`.
 >
 > When a future monetization component is in scope, commercial semantics
-> come from `WHERIS_BUSINESS_REFERENCE.md`; this component specification
+> come from `docs/reference/WHERIS_BUSINESS_REFERENCE.md`; this component specification
 > must not invent or own prices, free limits or entitlements.
 
 ------------------------------------------------------------------------
@@ -36,7 +36,7 @@ content; - suitable for Figma instances and Compose APIs.
 
 Components consume the foundations and tokens. Monetization-aware
 components additionally consume approved commercial semantics from
-`WHERIS_BUSINESS_REFERENCE.md` without owning those business rules.
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md` without owning those business rules.
 
 Canonical relationship:
 
@@ -45,7 +45,7 @@ Canonical relationship:
 A component must not redefine global color, typography, spacing or shape
 rules locally.
 
-If a missing reusable value is discovered, update `DESIGN/02_DESIGN_TOKENS.md`
+If a missing reusable value is discovered, update `docs/design/02_DESIGN_TOKENS.md`
 intentionally.
 
 ------------------------------------------------------------------------
@@ -667,7 +667,7 @@ These values are category accents, not guaranteed text colors.
 Icons/text placed on or near these accents must use component-defined
 contrast-safe containers/content.
 
-This table is synchronized with `DESIGN/02_DESIGN_TOKENS.md`. `DESIGN/02_DESIGN_TOKENS.md` owns the canonical values; this component document owns how components consume them.
+This table is synchronized with `docs/design/02_DESIGN_TOKENS.md`. `docs/design/02_DESIGN_TOKENS.md` owns the canonical values; this component document owns how components consume them.
 
 ------------------------------------------------------------------------
 
@@ -1108,7 +1108,7 @@ row may present an approved Wheris Plus or Wheris Premium capability using:
 
 The row is presentation-only. It must not decide which plan owns a feature,
 compute entitlement state, or embed price/free-limit values. Those semantics
-belong to `WHERIS_BUSINESS_REFERENCE.md` and the owning feature layer.
+belong to `docs/reference/WHERIS_BUSINESS_REFERENCE.md` and the owning feature layer.
 
 The navigation destination `Plus` and the commercial offer `Wheris Plus`
 are different concepts. Component naming, examples and copy must keep that
@@ -1125,7 +1125,7 @@ If a free active-place limit is activated, the state must use `lieu`
 terminology and explain the actual active business rule.
 
 Do not freeze a numeric limit in the Design System. The limit is supplied by
-product/business configuration according to `WHERIS_BUSINESS_REFERENCE.md`.
+product/business configuration according to `docs/reference/WHERIS_BUSINESS_REFERENCE.md`.
 
 The state must not visually imply that existing places are deleted, locked
 or lost. It may block creation of an additional place according to the
@@ -1324,7 +1324,7 @@ accents in: - category icon; - category card; - category chip; - default
 marker; - selected marker; - Light; - Dark.
 
 If an accent fails recognition/contrast, adjust the palette centrally
-and update `DESIGN/02_DESIGN_TOKENS.md`.
+and update `docs/design/02_DESIGN_TOKENS.md`.
 
 Do not patch individual categories with local overrides.
 
@@ -1462,7 +1462,7 @@ System.
 
 After validation, proceed to:
 
-> **`DESIGN/04_SCREEN_CATALOG.md`**
+> **`docs/design/04_SCREEN_CATALOG.md`**
 
 That document will establish the canonical inventory of Wheris screens
 and states before detailed flows and per-screen specifications are
