@@ -36,20 +36,20 @@ consequential decisions.
 
 Expected project references include:
 
--   `WHERIS_MASTER.md` --- product, scope, architecture, domain and
+-   `docs/product/WHERIS_MASTER.md` --- product, scope, architecture, domain and
     technical direction;
--   `WHERIS_BUSINESS_REFERENCE.md` --- canonical business model, commercial
+-   `docs/reference/WHERIS_BUSINESS_REFERENCE.md` --- canonical business model, commercial
     architecture, monetization rules, entitlements, business hypotheses,
     downgrade rules and business KPIs;
 -   `AGENT.md` --- agent role and engineering mindset;
--   `RULES.md` --- mandatory engineering constraints;
--   `SECURITY_PRIVACY.md` --- security, privacy and sensitive-data
+-   `docs/product/RULES.md` --- mandatory engineering constraints;
+-   `docs/product/SECURITY_PRIVACY.md` --- security, privacy and sensitive-data
     requirements;
--   `USER_STORIES_REFERENCE.pdf` --- approved user needs, story-level scope and MVP/future-story boundary;
--   `DESIGN/01_DESIGN_FOUNDATIONS.md` through `DESIGN/07_SCREEN_SPECIFICATIONS.md` --- canonical design foundations, tokens, components, screens, flows, Figma build rules and screen contracts;
--   `SKILLS/00_SKILLS_INDEX.md` and `SKILLS/` --- operational routing and task-specific playbooks.
+-   `docs/reference/USER_STORIES_REFERENCE.pdf` --- approved user needs, story-level scope and MVP/future-story boundary;
+-   `docs/design/01_DESIGN_FOUNDATIONS.md` through `docs/design/07_SCREEN_SPECIFICATIONS.md` --- canonical design foundations, tokens, components, screens, flows, Figma build rules and screen contracts;
+-   `docs/engineering/skills/00_SKILLS_INDEX.md` and `docs/engineering/skills/` --- operational routing and task-specific playbooks.
 
-`WHERIS_BUSINESS_REFERENCE.md` owns commercial policy. Other documents MAY
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md` owns commercial policy. Other documents MAY
 reference its decisions, but MUST NOT create competing copies of prices,
 free limits, entitlement definitions or downgrade semantics.
 
@@ -57,9 +57,9 @@ The agent MUST NOT duplicate a source of truth unnecessarily.
 
 ### Documentation layout invariant
 
-Wheris-maintained design documentation MUST live under `DESIGN/` and operational engineering playbooks MUST live under `SKILLS/`. The canonical routing files are `DESIGN/00_DESIGN_INDEX.md` and `SKILLS/00_SKILLS_INDEX.md`.
+Wheris-maintained design documentation MUST live under `docs/design/` and operational engineering playbooks MUST live under `docs/engineering/skills/`. The canonical routing files are `docs/design/00_DESIGN_INDEX.md` and `docs/engineering/skills/00_SKILLS_INDEX.md`.
 
-Do not recreate a fragmented `skill-name/SKILL.md` tree for Wheris-maintained playbooks. Playbooks use descriptive, stable filenames directly under `SKILLS/`. If an external tool later requires a `SKILL.md` packaging convention, treat that as a generated adapter layer rather than the canonical documentation source.
+Do not recreate a fragmented `skill-name/SKILL.md` tree for Wheris-maintained playbooks. Playbooks use descriptive, stable filenames directly under `docs/engineering/skills/`. If an external tool later requires a `SKILL.md` packaging convention, treat that as a generated adapter layer rather than the canonical documentation source.
 
 When documentation and repository reality disagree materially, the agent
 MUST identify the discrepancy rather than silently inventing a third
@@ -120,7 +120,7 @@ convention already exists without verifying it in the repository.
 
 ## 5. Module architecture
 
-The target module structure is defined by `WHERIS_MASTER.md`.
+The target module structure is defined by `docs/product/WHERIS_MASTER.md`.
 
 Module boundaries MUST remain explicit.
 
@@ -645,14 +645,14 @@ application-controlled storage provide a safer alternative.
 
 Before release-related work, manifest permissions MUST be reviewed.
 
-Detailed sensitive-data requirements belong to `SECURITY_PRIVACY.md` and
+Detailed sensitive-data requirements belong to `docs/product/SECURITY_PRIVACY.md` and
 are mandatory.
 
 ------------------------------------------------------------------------
 
 ## 24. Security and privacy boundary
 
-`SECURITY_PRIVACY.md` is mandatory whenever a task affects:
+`docs/product/SECURITY_PRIVACY.md` is mandatory whenever a task affects:
 
 -   coordinates;
 -   location acquisition;
@@ -729,7 +729,7 @@ explicit product decision.
 
 When monetization is explicitly activated, RevenueCat is the currently
 approved target infrastructure for purchase and entitlement management as
-defined by `WHERIS_BUSINESS_REFERENCE.md`. This approval is scoped to the
+defined by `docs/reference/WHERIS_BUSINESS_REFERENCE.md`. This approval is scoped to the
 commercial infrastructure role only. It does not authorize RevenueCat to
 become a general application backend, user-data store, analytics sink for
 sensitive geographic content, or source of core place data.
@@ -1144,11 +1144,11 @@ documents without a clear reason.
 When adding a new permanent convention, it SHOULD be placed in the
 document that owns that concern. In particular:
 
--   product/scope rules belong to `WHERIS_MASTER.md`;
+-   product/scope rules belong to `docs/product/WHERIS_MASTER.md`;
 -   commercial architecture, prices, free limits, entitlements, downgrade
     semantics and business experiments belong to
-    `WHERIS_BUSINESS_REFERENCE.md`;
--   security/privacy requirements belong to `SECURITY_PRIVACY.md`;
+    `docs/reference/WHERIS_BUSINESS_REFERENCE.md`;
+-   security/privacy requirements belong to `docs/product/SECURITY_PRIVACY.md`;
 -   UI semantics belong to the owning design document.
 
 Temporary implementation notes MUST NOT silently become permanent
@@ -1225,7 +1225,7 @@ immediate intent to save a place.
 ## 49. MVP boundary
 
 The agent MUST respect the current MVP scope defined by
-`WHERIS_MASTER.md`.
+`docs/product/WHERIS_MASTER.md`.
 
 Unless explicitly requested as a new product decision, the agent MUST
 NOT introduce as part of ordinary MVP implementation:
@@ -1245,7 +1245,7 @@ NOT introduce as part of ordinary MVP implementation:
 The architecture MAY leave reasonable extension points, but MUST NOT
 build unused systems in advance.
 
-The existence of `WHERIS_BUSINESS_REFERENCE.md` does not itself activate
+The existence of `docs/reference/WHERIS_BUSINESS_REFERENCE.md` does not itself activate
 monetization in the MVP. Paywalls, purchases, subscriptions, purchase
 restoration, entitlement backends, accounts and cloud services remain outside
 the active MVP until explicitly brought into scope.
@@ -1254,7 +1254,7 @@ the active MVP until explicitly brought into scope.
 
 ## 50. Monetization boundary
 
-`WHERIS_BUSINESS_REFERENCE.md` is the canonical source for Wheris
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md` is the canonical source for Wheris
 commercial policy. The current reference architecture is
 **Free → Plus → Premium**, but the implementation MUST respect the decision
 status assigned by that document.
@@ -1301,7 +1301,7 @@ configuration/infrastructure and MUST be translated at the boundary.
 
 The agent MUST NOT duplicate prices, free limits or entitlement definitions in
 RevenueCat-facing code when those values are owned by
-`WHERIS_BUSINESS_REFERENCE.md` or remotely configured commercial metadata.
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md` or remotely configured commercial metadata.
 
 For the current target commercial model, a permanent Wheris Plus unlock MUST
 be represented by an appropriate non-consumable purchase model, while Wheris
@@ -1342,7 +1342,7 @@ The agent MUST preserve the following commercial data-integrity rules:
 A business entitlement defines what the user is commercially eligible to use.
 It MUST NOT be interpreted as authorization to collect, upload or retain
 sensitive data. Any such processing remains governed by
-`SECURITY_PRIVACY.md`.
+`docs/product/SECURITY_PRIVACY.md`.
 
 RevenueCat, Google Play Billing, purchase restoration, subscription
 infrastructure or an entitlement backend MUST NOT be introduced merely because
