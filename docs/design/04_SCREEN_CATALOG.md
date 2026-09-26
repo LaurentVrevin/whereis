@@ -5,15 +5,16 @@
 > This document establishes **what screens exist**, why they exist,
 > their stable IDs, their ownership and their meaningful states.
 >
-> It is intentionally less detailed than `DESIGN/07_SCREEN_SPECIFICATIONS.md`.
-> It does not prescribe every spacing value or complete layout. Its
-> purpose is to prevent duplicate screens, missing states and
-> inconsistent naming before user flows and detailed specifications are
-> produced.
+> It is intentionally less detailed than
+> `docs/design/07_SCREEN_SPECIFICATIONS.md`. It does not prescribe every
+> spacing value or complete layout. Its purpose is to prevent duplicate
+> screens, missing states and inconsistent naming before user flows and
+> detailed specifications are produced.
 >
 > Future monetization surfaces, when referenced here, derive their
-> commercial semantics from `WHERIS_BUSINESS_REFERENCE.md` and remain
-> outside the active MVP until explicitly activated.
+> commercial semantics from
+> `docs/reference/WHERIS_BUSINESS_REFERENCE.md` and remain outside the
+> active MVP until explicitly activated.
 
 ------------------------------------------------------------------------
 
@@ -214,9 +215,20 @@ saving/retrieving places.
 -   offline;
 -   selected marker.
 
-### Important rule
+### Important rules
 
 Map failure does not make saved places unavailable.
+
+When a usable current position becomes available on entry, `MAP_001`
+automatically centers once on it at a useful local zoom unless the user
+has already moved the camera. Do not leave the opening experience on a
+whole-Earth view when current position is usable. If current position is
+unavailable but saved places exist, prefer a useful framing of saved
+places.
+
+When `SURF_MAP_001` is open, tapping an empty map area clears selection
+and dismisses the quick detail. Tapping another saved marker replaces
+selection.
 
 ------------------------------------------------------------------------
 
@@ -283,13 +295,26 @@ This state must not be conflated with GPS failure.
 
 Marker → `Naviguer` in two interactions.
 
+### Dismissal
+
+Tap an empty area of the map → clear selected marker → dismiss
+`SURF_MAP_001`.
+
+Tap another saved marker → replace selection and update `SURF_MAP_001`.
+
 ------------------------------------------------------------------------
 
 ## 3.1 Validation-slice priority
 
-The catalog remains the inventory of the full approved MVP surface. Build order is narrower: first validate the complete `save → retrieve` loop using `MAP_001`, `ADD_001`, `ADD_002`, persistence, `ADD_004`, `PLACES_001` / place detail, external navigation and map-unavailable recovery.
+The catalog remains the inventory of the full approved MVP surface.
+Build order is narrower: first validate the complete `save → retrieve`
+loop using `MAP_001`, `ADD_001`, `ADD_002`, persistence, `ADD_004`,
+`PLACES_001` / place detail, external navigation and map-unavailable
+recovery.
 
-Secondary screens remain canonical, but their existence must not delay evidence that the North Star loop is fast, understandable and repeatedly useful.
+Secondary screens remain canonical, but their existence must not delay
+evidence that the North Star loop is fast, understandable and repeatedly
+useful.
 
 ------------------------------------------------------------------------
 
@@ -300,7 +325,8 @@ Secondary screens remain canonical, but their existence must not delay evidence 
 **Canonical user concept:** Add a place --- position
 
 **Purpose:** Acquire the user's current foreground location and show
-what point is about to be saved.
+what point is about to be saved, while allowing deliberate manual
+adjustment of the draft point before confirmation.
 
 ### Core content
 
@@ -308,7 +334,9 @@ what point is about to be saved.
 -   current location/search state;
 -   location status card;
 -   accuracy when available;
--   progression action when appropriate.
+-   progression action when appropriate;
+-   deliberate long-press + drag adjustment of the proposed position
+    marker when the map is available.
 
 ### Embedded states
 
@@ -319,11 +347,17 @@ what point is about to be saved.
 -   location disabled;
 -   permission required/denied;
 -   technical location error;
--   map unavailable while GPS remains usable.
+-   map unavailable while GPS remains usable;
+-   manually adjusted position candidate.
 
 This single screen replaces the need for multiple disconnected
 `gps-searching`, `position-found`, `position-imprecise`, `gps-error`
 full-screen routes.
+
+Manual adjustment is optional and must never add a mandatory step to the
+fast-save path. After the user drags the candidate marker, the UI must
+make clear that the point was manually adjusted and must not reuse the
+original GPS accuracy as if it described the new point.
 
 ------------------------------------------------------------------------
 
@@ -441,13 +475,17 @@ fixed grid.
 
 After a category is selected:
 
-- primary `Enregistrer` → persist the place directly → `ADD_004` on success;
-- secondary `Ajouter des détails` → `ADD_003`;
-- `Créer une catégorie` → `CAT_002`, then return with the new category selected.
+-   primary `Enregistrer` → persist the place directly → `ADD_004` on
+    success;
+-   secondary `Ajouter des détails` → `ADD_003`;
+-   `Créer une catégorie` → `CAT_002`, then return with the new category
+    selected.
 
 The optional-details screen is not mandatory in the ultra-fast path.
 
-A direct-save loading/error state remains owned by `ADD_002`; it must preserve the accepted position and selected category and allow retry without forcing `ADD_003`.
+A direct-save loading/error state remains owned by `ADD_002`; it must
+preserve the accepted position and selected category and allow retry
+without forcing `ADD_003`.
 
 ------------------------------------------------------------------------
 
@@ -611,8 +649,8 @@ Do not expose speculative filter dimensions.
 -   photo reference through approved local-photo flow;
 -   favorite.
 
-Location editing/repositioning should not be silently invented unless
-explicitly added to product behavior.
+Editing/repositioning an already saved place should not be silently
+invented unless explicitly added to product behavior.
 
 ### Actions
 
@@ -833,9 +871,10 @@ This is recoverable and should not affect saved data.
 
 ### Terminology rule
 
-`PLUS_001` is the navigation destination **Plus**. It is not the commercial
-offer **Wheris Plus** defined in `WHERIS_BUSINESS_REFERENCE.md`. Do not use
-plan entitlement or purchase state to redefine this navigation ID.
+`PLUS_001` is the navigation destination **Plus**. It is not the
+commercial offer **Wheris Plus** defined in
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md`. Do not use plan
+entitlement or purchase state to redefine this navigation ID.
 
 ### Potential entries
 
@@ -844,8 +883,8 @@ plan entitlement or purchase state to redefine this navigation ID.
 -   Confidentialité;
 -   About.
 
-Do not populate this screen with speculative future features or a current
-MVP monetization entry.
+Do not populate this screen with speculative future features or a
+current MVP monetization entry.
 
 ------------------------------------------------------------------------
 
@@ -887,63 +926,69 @@ Keep product copy concise.
 
 ### Core content
 
-- no account required for the local MVP;
-- saved places/categories/notes/local photos are locally managed;
-- no permanent movement tracking;
-- foreground location is used for user-requested geographic actions;
-- map/external providers may have their own network behavior;
-- privacy wording must remain accurate relative to Android backup configuration.
+-   no account required for the local MVP;
+-   saved places/categories/notes/local photos are locally managed;
+-   no permanent movement tracking;
+-   foreground location is used for user-requested geographic actions;
+-   map/external providers may have their own network behavior;
+-   privacy wording must remain accurate relative to Android backup
+    configuration.
 
 ### Rule
 
-Use the product promise `Tes lieux restent sur ton téléphone.` only with the qualification and implementation checks defined in `SECURITY_PRIVACY.md`. Do not claim that no data ever leaves the device.
+Use the product promise `Tes lieux restent sur ton téléphone.` only with
+the qualification and implementation checks defined in
+`docs/product/SECURITY_PRIVACY.md`. Do not claim that no data ever
+leaves the device.
 
 ------------------------------------------------------------------------
 
-# FUTURE MONETIZATION PRESENTATION — OUTSIDE ACTIVE MVP
+# FUTURE MONETIZATION PRESENTATION --- OUTSIDE ACTIVE MVP
 
-The legacy `PREMIUM_*` IDs are retained for reference stability. Their IDs
-do not imply a Premium-only business model. Commercial truth belongs to
-`WHERIS_BUSINESS_REFERENCE.md`.
+The legacy `PREMIUM_*` IDs are retained for reference stability. Their
+IDs do not imply a Premium-only business model. Commercial truth belongs
+to `docs/reference/WHERIS_BUSINESS_REFERENCE.md`.
 
 ## 52. PREMIUM_001 --- Plans & Upgrade
 
-**Purpose:** Present approved monetization value when monetization UI is in
-scope.
+**Purpose:** Present approved monetization value when monetization UI is
+in scope.
 
 ### Commercial roles
 
-The future surface may compare or present the currently approved roles of:
+The future surface may compare or present the currently approved roles
+of:
 
--   **Wheris Free** --- genuine discovery/core local use within the active
-    free rule;
--   **Wheris Plus** --- one-time local upgrade, currently intended to unlock
-    the approved local entitlement set;
--   **Wheris Premium** --- recurring-service offer for approved cloud/sync
-    and other recurring-value capabilities.
+-   **Wheris Free** --- genuine discovery/core local use within the
+    active free rule;
+-   **Wheris Plus** --- one-time local upgrade, currently intended to
+    unlock the approved local entitlement set;
+-   **Wheris Premium** --- recurring-service offer for approved
+    cloud/sync and other recurring-value capabilities.
 
 Exact prices, billing periods, free limits and entitlement lists are not
-owned by this catalog. They must be read from the active Business Reference
-or product configuration when this future scope is implemented.
+owned by this catalog. They must be read from the active Business
+Reference or product configuration when this future scope is
+implemented.
 
 ### Terminology rule
 
-Do not confuse **Wheris Plus** (commercial offer) with `PLUS_001` (**Plus**,
-the bottom-navigation destination).
+Do not confuse **Wheris Plus** (commercial offer) with `PLUS_001`
+(**Plus**, the bottom-navigation destination).
 
 ### Data/trust rule
 
-The surface must not suggest that payment is required to retain access to
-already-saved local places, nor that plan expiration deletes local user
-data.
+The surface must not suggest that payment is required to retain access
+to already-saved local places, nor that plan expiration deletes local
+user data.
 
 ------------------------------------------------------------------------
 
 ## 53. PREMIUM_002 --- Free Limit Reached
 
-**Purpose:** Explain the active free-place rule when the user attempts an
-action that the approved business model does not permit at their current
-entitlement level.
+**Purpose:** Explain the active free-place rule when the user attempts
+an action that the approved business model does not permit at their
+current entitlement level.
 
 ### Terminology
 
@@ -951,13 +996,15 @@ Use `lieux`, not `épingles`.
 
 ### Important rules
 
-No numeric limit is canonical in this catalog. The active value is owned by
-`WHERIS_BUSINESS_REFERENCE.md` / business configuration.
+No numeric limit is canonical in this catalog. The active value is owned
+by `docs/reference/WHERIS_BUSINESS_REFERENCE.md` / business
+configuration.
 
-Existing local places remain accessible. The state must explain what action
-is limited and must not imply deletion, loss of access to existing local places or loss of
-previous data. Future upgrade actions may present Wheris Plus and/or Wheris Premium
-when those purchase flows are explicitly in scope.
+Existing local places remain accessible. The state must explain what
+action is limited and must not imply deletion, loss of access to
+existing local places or loss of previous data. Future upgrade actions
+may present Wheris Plus and/or Wheris Premium when those purchase flows
+are explicitly in scope.
 
 This screen remains conditional and outside the active MVP.
 
@@ -1106,23 +1153,27 @@ screen/state ownership.
 
 `MAP_001` should ultimately account for:
 
-  ----------------------------------------------------------------------------------------
-  State          Map                          Places         Current        Main action
-                                                             location       
-  -------------- ---------------------------- -------------- -------------- --------------
-  First use      available/unavailable        none           optional       Add place
+  --------------------------------------------------------------------------------
+  State         Map                          Places      Current       Main action
+                                                         location      
+  ------------- ---------------------------- ----------- ------------- -----------
+  First use     available/unavailable        none        optional      Add place
 
-  Normal         available                    present        optional       Add place
+  Normal        available                    present     optional      Add place
 
-  Selected place available                    present        optional       quick detail
+  Selected      available                    present     optional      quick
+  place                                                                detail
 
-  Offline        cached/partial/unavailable   local present  GPS may work   local actions
+  Offline       cached/partial/unavailable   local       GPS may work  local
+                                             present                   actions
 
-  Map failure    unavailable                  local present  may work       local actions
+  Map failure   unavailable                  local       may work      local
+                                             present                   actions
 
-  Location       available                    present        unavailable    map/place
-  unavailable                                                               actions remain
-  ----------------------------------------------------------------------------------------
+  Location      available                    present     unavailable   map/place
+  unavailable                                                          actions
+                                                                       remain
+  --------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------
 
@@ -1130,24 +1181,25 @@ screen/state ownership.
 
 `ADD_001` should account for:
 
-  -----------------------------------------------------------------------------
-  State             Location          Map                     User decision
-  ----------------- ----------------- ----------------------- -----------------
-  Searching         pending           available/unavailable   wait/cancel
+  ------------------------------------------------------------------------
+  State           Location        Map                     User decision
+  --------------- --------------- ----------------------- ----------------
+  Searching       pending         available/unavailable   wait/cancel
 
-  Found             usable            available/unavailable   continue
+  Found           usable          available/unavailable   continue
 
-  Poor accuracy     usable but weak   available/unavailable   wait/continue
+  Poor accuracy   usable but weak available/unavailable   wait/continue
 
-  Services disabled unavailable       may load                enable/recover
+  Services        unavailable     may load                enable/recover
+  disabled                                                
 
-  Permission        unavailable       may load                permission flow
-  missing                                                     
+  Permission      unavailable     may load                permission flow
+  missing                                                 
 
-  Timeout           unavailable       available/unavailable   retry/exit
+  Timeout         unavailable     available/unavailable   retry/exit
 
-  Technical error   unavailable       available/unavailable   retry/exit
-  -----------------------------------------------------------------------------
+  Technical error unavailable     available/unavailable   retry/exit
+  ------------------------------------------------------------------------
 
 ------------------------------------------------------------------------
 
@@ -1249,15 +1301,15 @@ the V1 canonical catalog.
 
 ## 66. Monetization conditionality
 
-`PREMIUM_001` and `PREMIUM_002` are catalogued because future monetization
-is anticipated and legacy references already exist. They are **conditional**
-and outside the active MVP; they are not evidence that billing belongs in
-the initial engineering foundation.
+`PREMIUM_001` and `PREMIUM_002` are catalogued because future
+monetization is anticipated and legacy references already exist. They
+are **conditional** and outside the active MVP; they are not evidence
+that billing belongs in the initial engineering foundation.
 
 Their future content must remain synchronized with
-`WHERIS_BUSINESS_REFERENCE.md`. A change to pricing, free limits or
-entitlements is a business-reference change first, not a Screen Catalog
-change first.
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md`. A change to pricing, free
+limits or entitlements is a business-reference change first, not a
+Screen Catalog change first.
 
 ------------------------------------------------------------------------
 
@@ -1363,7 +1415,8 @@ The catalog is accepted when:
 -   custom category creation/edit/delete/reassignment is represented;
 -   bottom navigation is consistently `Carte / Lieux / Plus`;
 -   user-facing terminology uses `lieu`;
--   monetization/paywall surfaces are clearly marked as future and excluded from the active MVP;
+-   monetization/paywall surfaces are clearly marked as future and
+    excluded from the active MVP;
 -   speculative non-MVP screens are excluded;
 -   Figma and Android can reference the same stable IDs.
 
@@ -1373,7 +1426,7 @@ The catalog is accepted when:
 
 After this catalog is validated, proceed to:
 
-> **`DESIGN/05_USER_FLOWS.md`**
+> **`docs/design/05_USER_FLOWS.md`**
 
 That document will connect these stable screen/surface IDs into explicit
 user journeys, entry conditions, transitions, branches, recovery paths

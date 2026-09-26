@@ -3,7 +3,8 @@
 > Canonical UX flow specification for Wheris.
 >
 > This document connects the stable screen, state and surface IDs
-> defined in `DESIGN/04_SCREEN_CATALOG.md` into explicit user journeys.
+> defined in `docs/design/04_SCREEN_CATALOG.md` into explicit user
+> journeys.
 >
 > Functional basis: the Wheris reference user stories. The flows
 > preserve their intent while applying the canonical distinction between
@@ -12,12 +13,12 @@
 >
 > This document defines transitions, branches, recovery, preserved data
 > and completion conditions. Detailed per-screen layout belongs to
-> `DESIGN/07_SCREEN_SPECIFICATIONS.md`.
+> `docs/design/07_SCREEN_SPECIFICATIONS.md`.
 >
-> Monetization behavior is not defined by this file. Future Free / Wheris
-> Plus / Wheris Premium rules come from `WHERIS_BUSINESS_REFERENCE.md` and
-> are translated into flows only when monetization scope is explicitly
-> activated.
+> Monetization behavior is not defined by this file. Future Free /
+> Wheris Plus / Wheris Premium rules come from
+> `docs/reference/WHERIS_BUSINESS_REFERENCE.md` and are translated into
+> flows only when monetization scope is explicitly activated.
 
 ------------------------------------------------------------------------
 
@@ -352,7 +353,8 @@ correctness or memory simplicity.
 
 ## 18.1 Product-validation sequence
 
-Before secondary surface completeness becomes the priority, validate this end-to-end behavior with real usage:
+Before secondary surface completeness becomes the priority, validate
+this end-to-end behavior with real usage:
 
 ``` text
 MAP_001
@@ -367,7 +369,10 @@ MAP_001
 → Navigate externally when needed
 ```
 
-Collect at least first-save activation, fast-save median/p90, `1 → 3`, `3 → 10`, D30/D90 and retrieval usage. No fixed target is invented here except the existing sub-10-second fast-save objective under suitable location conditions.
+Collect at least first-save activation, fast-save median/p90, `1 → 3`,
+`3 → 10`, D30/D90 and retrieval usage. No fixed target is invented here
+except the existing sub-10-second fast-save objective under suitable
+location conditions.
 
 ------------------------------------------------------------------------
 
@@ -452,7 +457,8 @@ alone.
 
 ## 24. Fast-save decision
 
-The user must be able to save without entering the optional-details screen.
+The user must be able to save without entering the optional-details
+screen.
 
 Canonical ultra-fast requirement:
 
@@ -468,9 +474,13 @@ ADD_004 — Place Saved
 
 `Enregistrer` is the primary action once a category is selected.
 
-`Ajouter des détails` is a secondary action that opens `ADD_003` for users who want to enrich the draft before saving. Name, note, photo and favorite must never be required to complete the fast path.
+`Ajouter des détails` is a secondary action that opens `ADD_003` for
+users who want to enrich the draft before saving. Name, note, photo and
+favorite must never be required to complete the fast path.
 
-Validation must measure median and p90 save time when a usable position is already available, plus abandonment and persistence failure. The target remains approximately under 10 seconds in those conditions.
+Validation must measure median and p90 save time when a usable position
+is already available, plus abandonment and persistence failure. The
+target remains approximately under 10 seconds in those conditions.
 
 ------------------------------------------------------------------------
 
@@ -533,7 +543,8 @@ MAP_001
 → ADD_003
 ```
 
-The enriched path is an explicit secondary branch. Selecting a category alone must not force entry into `ADD_003`.
+The enriched path is an explicit secondary branch. Selecting a category
+alone must not force entry into `ADD_003`.
 
 At `ADD_003`, the user may independently:
 
@@ -914,7 +925,8 @@ ADD_002
   → or Ajouter des détails → ADD_003 → Enregistrer → ADD_004
 ```
 
-No Internet connection is required merely to persist the place, and map unavailability must not force the enriched branch.
+No Internet connection is required merely to persist the place, and map
+unavailability must not force the enriched branch.
 
 ------------------------------------------------------------------------
 
@@ -1026,7 +1038,8 @@ Make local persistence reliable and recoverable.
 
 ## 60. Save action
 
-The same canonical persistence operation is available from both save entry points:
+The same canonical persistence operation is available from both save
+entry points:
 
 ``` text
 ADD_002
@@ -1038,11 +1051,14 @@ ADD_003
   ACTION Enregistrer
 ```
 
-Immediately prevent duplicate submissions while save is active. Do not implement two divergent creation pipelines.
+Immediately prevent duplicate submissions while save is active. Do not
+implement two divergent creation pipelines.
 
-If persistence is effectively instantaneous, avoid flashing unnecessary loading UI.
+If persistence is effectively instantaneous, avoid flashing unnecessary
+loading UI.
 
-If it takes perceptible time, show saving feedback on the originating screen.
+If it takes perceptible time, show saving feedback on the originating
+screen.
 
 ------------------------------------------------------------------------
 
@@ -1086,6 +1102,29 @@ The user must not re-enter the whole place.
 
 ------------------------------------------------------------------------
 
+# FLOW-09A --- MAP ENTRY CAMERA
+
+## Goal
+
+Open `MAP_001` in a geographically useful context rather than an
+uninformative global Earth view.
+
+``` text
+MAP_001 opens
+  ↓
+usable current position becomes available
+  ↓
+if user has not already moved camera
+  → center once on current position at useful local/neighborhood zoom
+```
+
+If current position is unavailable but saved places exist, prefer
+framing the saved places. The recenter action remains the explicit way
+to return to current position after the user moves the camera. Automatic
+recentering must not fight deliberate user camera movement.
+
+------------------------------------------------------------------------
+
 # FLOW-10 --- RETRIEVE FROM MAP
 
 ## 63. Goal
@@ -1110,6 +1149,18 @@ SURF_MAP_001 — Marker Quick Detail opens
 ```
 
 Selected marker must be visually distinguishable from others.
+
+Selection is transient. While a marker is selected:
+
+``` text
+ACTION tap empty map area
+  ↓
+clear selected marker
+dismiss SURF_MAP_001
+```
+
+Tapping another saved marker replaces the current selection and
+refreshes `SURF_MAP_001`.
 
 ------------------------------------------------------------------------
 
@@ -1154,7 +1205,9 @@ SURF_MAP_001
 PLACE_001
 ```
 
-Closing/dismissing the quick sheet returns to map context.
+Closing/dismissing the quick sheet returns to map context. Tapping an
+empty map area is an explicit dismissal gesture and must clear the
+selected marker.
 
 ------------------------------------------------------------------------
 
@@ -1471,8 +1524,10 @@ Current approved edit scope:
 -   favorite;
 -   replace/remove local photo.
 
-Manual coordinate editing or dragging the saved position is **not** part
-of the approved flow.
+Manual coordinate editing or dragging an **already saved** position is
+**not** part of the approved edit flow. This does not prohibit the
+approved long-press + drag adjustment of the draft position in `ADD_001`
+before a new place is saved.
 
 ------------------------------------------------------------------------
 
@@ -1889,8 +1944,8 @@ Bottom Navigation
 PLUS_001
 ```
 
-`PLUS_001` is the navigation destination **Plus**. It must not be confused
-with the future commercial offer **Wheris Plus**.
+`PLUS_001` is the navigation destination **Plus**. It must not be
+confused with the future commercial offer **Wheris Plus**.
 
 Current approved entries include:
 
@@ -1935,7 +1990,8 @@ Reference behavior requires:
 "Follow system" is not currently established by the source stories and
 must not be silently treated as approved product behavior.
 
-Canonical destination: `SETTINGS_002` when appearance is opened from Settings.
+Canonical destination: `SETTINGS_002` when appearance is opened from
+Settings.
 
 ------------------------------------------------------------------------
 
@@ -1946,7 +2002,8 @@ application across Wheris.
 
 They do not define the exact choices.
 
-Therefore do not freeze Metric/Imperial in this flow without product validation. Canonical destination: `SETTINGS_003`.
+Therefore do not freeze Metric/Imperial in this flow without product
+validation. Canonical destination: `SETTINGS_003`.
 
 ------------------------------------------------------------------------
 
@@ -1989,7 +2046,8 @@ ACTION Confidentialité
 → PRIVACY_001
 ```
 
-`PRIVACY_001` is the canonical dedicated destination and must remain synchronized with the Screen Catalog and Screen Specifications.
+`PRIVACY_001` is the canonical dedicated destination and must remain
+synchronized with the Screen Catalog and Screen Specifications.
 
 ------------------------------------------------------------------------
 
@@ -2301,7 +2359,7 @@ Places may be saved without a name.
 
 The list/detail must present a comprehensible identity, likely using
 category context, but exact copy/pattern must be decided in
-`DESIGN/07_SCREEN_SPECIFICATIONS.md`.
+`docs/design/07_SCREEN_SPECIFICATIONS.md`.
 
 ------------------------------------------------------------------------
 
@@ -2349,14 +2407,16 @@ Do not create current MVP flows for:
 -   Premium cloud onboarding or sync setup.
 
 The commercial architecture is now documented in
-`WHERIS_BUSINESS_REFERENCE.md`, but documenting a future business model does
-**not** activate those flows in the MVP. Future monetization User Stories
-and flow IDs must be added only in a dedicated approved monetization phase.
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md`, but documenting a future
+business model does **not** activate those flows in the MVP. Future
+monetization User Stories and flow IDs must be added only in a dedicated
+approved monetization phase.
 
-When such a phase begins, flows must preserve the Business Reference rules:
-value before blocking monetization, access to already-saved local places, no
-data deletion on downgrade/expiration, explicit cloud opt-in, and clear
-distinction between navigation `Plus` and commercial `Wheris Plus`.
+When such a phase begins, flows must preserve the Business Reference
+rules: value before blocking monetization, access to already-saved local
+places, no data deletion on downgrade/expiration, explicit cloud opt-in,
+and clear distinction between navigation `Plus` and commercial
+`Wheris Plus`.
 
 This supersedes any implication in earlier visual cataloguing that a
 Premium/paywall mockup is an active MVP flow.
@@ -2367,69 +2427,70 @@ Premium/paywall mockup is an active MVP flow.
 
 ## 147. Flow-to-screen matrix
 
-  -----------------------------------------------------------------------
-  Flow                                Main canonical screens/surfaces
-  ----------------------------------- -----------------------------------
-  FLOW-01 First Launch                `LAUNCH_001`, `ONB_001–003`,
-                                      `PERM_001–002`, `MAP_001`
+  ---------------------------------------------------------------------
+  Flow                               Main canonical screens/surfaces
+  ---------------------------------- ----------------------------------
+  FLOW-01 First Launch               `LAUNCH_001`, `ONB_001–003`,
+                                     `PERM_001–002`, `MAP_001`
 
-  FLOW-02 Main Navigation             `MAP_001`, `PLACES_001`, `PLUS_001`
+  FLOW-02 Main Navigation            `MAP_001`, `PLACES_001`,
+                                     `PLUS_001`
 
-  FLOW-03 Fast Add                    `MAP_001`, `ADD_001–004`
+  FLOW-03 Fast Add                   `MAP_001`, `ADD_001–004`
 
-  FLOW-04 Enriched Add                `ADD_001–004` + system photo
-                                      interaction
+  FLOW-04 Enriched Add               `ADD_001–004` + system photo
+                                     interaction
 
-  FLOW-05 Location Recovery           `ADD_001` +
-                                      `STATE_ADD_001/004/005/006`
+  FLOW-05 Location Recovery          `ADD_001` +
+                                     `STATE_ADD_001/004/005/006`
 
-  FLOW-06 Accuracy                    `ADD_001` + `STATE_ADD_003`
+  FLOW-06 Accuracy                   `ADD_001` + `STATE_ADD_003`
 
-  FLOW-07 No Map / Offline Add        `ADD_001` + `STATE_ADD_007`,
-                                      `ADD_002–004`
+  FLOW-07 No Map / Offline Add       `ADD_001` + `STATE_ADD_007`,
+                                     `ADD_002–004`
 
-  FLOW-08 Category During Add         `ADD_002`, `CAT_002`
+  FLOW-08 Category During Add        `ADD_002`, `CAT_002`
 
-  FLOW-09 Save Failure                `ADD_003`, `ADD_004`
+  FLOW-09 Save Failure               `ADD_003`, `ADD_004`
 
-  FLOW-10 Retrieve Map                `MAP_001`, `SURF_MAP_001`,
-                                      `PLACE_001`
+  FLOW-10 Retrieve Map               `MAP_001`, `SURF_MAP_001`,
+                                     `PLACE_001`
 
-  FLOW-11 Retrieve List               `PLACES_001`, `PLACE_001`
+  FLOW-11 Retrieve List              `PLACES_001`, `PLACE_001`
 
-  FLOW-12 External Nav                `SURF_MAP_001` / `PLACE_001`,
-                                      `SURF_NAVEXT_001`
+  FLOW-12 External Nav               `SURF_MAP_001` / `PLACE_001`,
+                                     `SURF_NAVEXT_001`
 
-  FLOW-13 Place Detail                `PLACE_001`
+  FLOW-13 Place Detail               `PLACE_001`
 
-  FLOW-14 Favorites                   `PLACE_001` / approved controls,
-                                      `PLACES_001`
+  FLOW-14 Favorites                  `PLACE_001` / approved controls,
+                                     `PLACES_001`
 
-  FLOW-15 Edit Place                  `PLACE_001`, `PLACE_002`
+  FLOW-15 Edit Place                 `PLACE_001`, `PLACE_002`
 
-  FLOW-16 Delete Place                `PLACE_001`, `SURF_PLACE_001`
+  FLOW-16 Delete Place               `PLACE_001`, `SURF_PLACE_001`
 
-  FLOW-17 Category Management         `PLUS_001`, `CAT_001–003`
+  FLOW-17 Category Management        `PLUS_001`, `CAT_001–003`
 
-  FLOW-18 Delete Category             `CAT_001/003`, `SURF_CAT_001/002`
+  FLOW-18 Delete Category            `CAT_001/003`, `SURF_CAT_001/002`
 
-  FLOW-19 Search/Filter/Sort          `PLACES_001`, related
-                                      states/surfaces --- conditional
+  FLOW-19 Search/Filter/Sort         `PLACES_001`, related
+                                     states/surfaces --- conditional
 
-  FLOW-20 Settings                    `PLUS_001`, `SETTINGS_001–004`
+  FLOW-20 Settings                   `PLUS_001`, `SETTINGS_001–004`
 
-  FLOW-21 Privacy                     `PLUS_001`, `PRIVACY_001`
+  FLOW-21 Privacy                    `PLUS_001`, `PRIVACY_001`
 
-  FLOW-22 About                       `PLUS_001`, `ABOUT_001`
+  FLOW-22 About                      `PLUS_001`, `ABOUT_001`
 
-  FLOW-23 Offline                     cross-cutting
+  FLOW-23 Offline                    cross-cutting
 
-  FLOW-24 Errors                      cross-cutting
+  FLOW-24 Errors                     cross-cutting
 
-  FLOW-25 Accessibility               cross-cutting
+  FLOW-25 Accessibility              cross-cutting
 
-  FLOW-26 I18N                        cross-cutting
-  -----------------------------------------------------------------------
+  FLOW-26 I18N                       cross-cutting
+  ---------------------------------------------------------------------
 
 ------------------------------------------------------------------------
 
@@ -2445,7 +2506,8 @@ If a future story changes a flow materially:
 
 1.  update the source user-story corpus;
 2.  update this document;
-3.  update `DESIGN/04_SCREEN_CATALOG.md` if ownership/destination changes;
+3.  update `docs/design/04_SCREEN_CATALOG.md` if ownership/destination
+    changes;
 4.  update detailed screen specifications;
 5.  update Figma prototype;
 6.  update implementation/tests when applicable.
@@ -2631,11 +2693,11 @@ Offline flows fail review if:
 
 ## 158. Relationship with Screen Catalog
 
-`DESIGN/04_SCREEN_CATALOG.md` owns:
+`docs/design/04_SCREEN_CATALOG.md` owns:
 
 > What screens/states/surfaces exist?
 
-`DESIGN/05_USER_FLOWS.md` owns:
+`docs/design/05_USER_FLOWS.md` owns:
 
 > How does the user move through them?
 
@@ -2646,7 +2708,7 @@ Catalog rather than silently inventing an ID.
 
 ## 159. Relationship with Figma Build Rules
 
-`DESIGN/06_FIGMA_BUILD_RULES.md` will define:
+`docs/design/06_FIGMA_BUILD_RULES.md` will define:
 
 -   how these flows are represented in Figma;
 -   frame/component/variant construction rules;
@@ -2662,7 +2724,8 @@ It should not redefine the product behavior documented here.
 
 ## 160. Relationship with Screen Specifications
 
-`DESIGN/07_SCREEN_SPECIFICATIONS.md` will define each screen in detail:
+`docs/design/07_SCREEN_SPECIFICATIONS.md` will define each screen in
+detail:
 
 -   hierarchy;
 -   content;
@@ -2680,7 +2743,7 @@ It must implement the transitions and preservation rules defined here.
 
 ## 161. Acceptance criteria
 
-`DESIGN/05_USER_FLOWS.md` is accepted when:
+`docs/design/05_USER_FLOWS.md` is accepted when:
 
 -   the three reference journeys are explicit;
 -   onboarding and permission branches are explicit;
@@ -2695,7 +2758,8 @@ It must implement the transitions and preservation rules defined here.
 -   category deletion requires safe reassignment;
 -   settings/privacy/about are traceable;
 -   open product decisions are marked rather than invented;
--   monetization/paywall is outside the MVP flow set and future rules defer to `WHERIS_BUSINESS_REFERENCE.md`;
+-   monetization/paywall is outside the MVP flow set and future rules
+    defer to `docs/reference/WHERIS_BUSINESS_REFERENCE.md`;
 -   accessibility/offline/error resilience are cross-cutting
     requirements;
 -   Figma prototype requirements are explicit.
@@ -2706,7 +2770,7 @@ It must implement the transitions and preservation rules defined here.
 
 After validation, proceed to:
 
-> **`DESIGN/06_FIGMA_BUILD_RULES.md`**
+> **`docs/design/06_FIGMA_BUILD_RULES.md`**
 
 The next document will convert the foundations, tokens, components,
 screen catalog and user flows into strict rules for building the actual

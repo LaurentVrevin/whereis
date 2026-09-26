@@ -6,10 +6,13 @@
 >
 > It intentionally does not define exact token values, complete
 > component specifications, individual screen contracts or commercial
-> pricing/entitlements. Design details belong to `docs/design/02_DESIGN_TOKENS.md`,
-> `docs/design/03_DESIGN_COMPONENTS.md`, `docs/design/04_SCREEN_CATALOG.md`, `docs/design/05_USER_FLOWS.md`,
-> `docs/design/06_FIGMA_BUILD_docs/product/RULES.md` and `docs/design/07_SCREEN_SPECIFICATIONS.md`.
-> Monetization rules and business hypotheses belong to
+> pricing/entitlements. Design details belong to
+> `docs/design/02_DESIGN_TOKENS.md`,
+> `docs/design/03_DESIGN_COMPONENTS.md`,
+> `docs/design/04_SCREEN_CATALOG.md`, `docs/design/05_USER_FLOWS.md`,
+> `docs/design/06_FIGMA_BUILD_RULES.md` and
+> `docs/design/07_SCREEN_SPECIFICATIONS.md`. Monetization rules and
+> business hypotheses belong to
 > `docs/reference/WHERIS_BUSINESS_REFERENCE.md`.
 
 ------------------------------------------------------------------------
@@ -72,11 +75,18 @@ This target must never hide uncertainty such as poor GPS accuracy.
 
 ### Fast-save interaction contract
 
-Once a usable position is confirmed and a category is selected, the primary action is **`Enregistrer`**. The optional-details screen is not a mandatory step in the ultra-fast path.
+Once a usable position is confirmed and a category is selected, the
+primary action is **`Enregistrer`**. The optional-details screen is not
+a mandatory step in the ultra-fast path.
 
-`Ajouter des détails` is a secondary branch for users who want to add a name, note, local photo or favorite state before saving. This branch must preserve the same draft and return to a saveable state without introducing required metadata.
+`Ajouter des détails` is a secondary branch for users who want to add a
+name, note, local photo or favorite state before saving. This branch
+must preserve the same draft and return to a saveable state without
+introducing required metadata.
 
-Product validation should measure the real save path rather than infer simplicity from screen count: median and p90 save time when a usable location is available, save completion, and abandon/failure rate.
+Product validation should measure the real save path rather than infer
+simplicity from screen count: median and p90 save time when a usable
+location is available, save completion, and abandon/failure rate.
 
 ## 5. Design personality
 
@@ -134,6 +144,14 @@ The user should understand where Wheris believes they are, whether
 acquisition is ongoing, whether accuracy is sufficient and which point
 will be saved.
 
+The detected point remains the default fast-save candidate. Before
+confirmation, the user may deliberately adjust that candidate by
+long-pressing the proposed marker and dragging it to another point on
+the map. This must not add a mandatory step to fast save. Once manually
+adjusted, the UI must distinguish the candidate from the live current
+position and must not present the original GPS accuracy as the accuracy
+of the manually chosen point.
+
 The map provides spatial reassurance without competing with the primary
 action.
 
@@ -184,10 +202,10 @@ Principal bottom navigation:
     add place.
 -   **Lieux** --- saved-place library, search, filters, favorites and
     relevant retrieval tools.
--   **Plus** --- category management, settings, Confidentialité and About.
-    `Plus` here is the navigation destination, not the future commercial
-    offer **Wheris Plus**. Monetization presentation is future scope and
-    must not appear in the active MVP navigation.
+-   **Plus** --- category management, settings, Confidentialité and
+    About. `Plus` here is the navigation destination, not the future
+    commercial offer **Wheris Plus**. Monetization presentation is
+    future scope and must not appear in the active MVP navigation.
 
 The bottom navigation should remain stable and simple.
 
@@ -256,6 +274,18 @@ Marker design must remain scalable when many places exist.
 Target interaction:
 
 > Marker → quick detail → Naviguer
+
+Marker selection is transient map context. Tapping an empty area of the
+map clears the selected saved place and dismisses its quick detail.
+Tapping another saved marker replaces the current selection.
+
+On `MAP_001`, once a usable current position becomes available, the
+initial camera should automatically center once on that position at a
+useful local/neighborhood zoom unless the user has already moved the
+map. The experience must not remain on an unhelpful whole-Earth view
+when a usable current position is available. If current position is
+unavailable but saved places exist, prefer a useful framing of saved
+places.
 
 Quick detail prioritizes category/icon, place name, distance when
 available, `Naviguer` and `Détails`.
@@ -379,7 +409,8 @@ emphasis where appropriate. Neutral surfaces carry most of the UI.
 Semantic colors communicate success, error/destructive and information.
 Category accent colors form a controlled separate system.
 
-Exact values and theme mappings belong to `docs/design/02_DESIGN_TOKENS.md`.
+Exact values and theme mappings belong to
+`docs/design/02_DESIGN_TOKENS.md`.
 
 ## 33. Dark theme
 
@@ -496,15 +527,16 @@ shrinking controls below comfortable sizes.
 ## 46. Future monetization presentation
 
 Monetization is outside the active MVP design. Existing Premium/paywall
-mockups are exploratory/future references only. Do not place a free-limit,
-Wheris Plus, Wheris Premium, purchase, subscription or paywall surface in
-canonical MVP flows, navigation or handoff.
+mockups are exploratory/future references only. Do not place a
+free-limit, Wheris Plus, Wheris Premium, purchase, subscription or
+paywall surface in canonical MVP flows, navigation or handoff.
 
-`docs/reference/WHERIS_BUSINESS_REFERENCE.md` is the canonical source for the commercial
-model, including the distinction between **Wheris Free**, the one-time
-local upgrade **Wheris Plus**, and the recurring-service offer **Wheris
-Premium**. Prices, exact free limits, billing periods and entitlement
-details must not be duplicated as immutable design constants.
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md` is the canonical source
+for the commercial model, including the distinction between **Wheris
+Free**, the one-time local upgrade **Wheris Plus**, and the
+recurring-service offer **Wheris Premium**. Prices, exact free limits,
+billing periods and entitlement details must not be duplicated as
+immutable design constants.
 
 The navigation destination `Plus` is unrelated to entitlement state and
 must not be visually or semantically conflated with the commercial offer
@@ -538,10 +570,10 @@ shared design system.
 
 `docs/product/WHERIS_MASTER.md` is the product source of truth.
 
-`docs/reference/WHERIS_BUSINESS_REFERENCE.md` is the source of truth for monetization
-architecture, plan roles, entitlements, business rules and the status of
-commercial hypotheses. Design documentation may reference those decisions
-but must not silently redefine them.
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md` is the source of truth for
+monetization architecture, plan roles, entitlements, business rules and
+the status of commercial hypotheses. Design documentation may reference
+those decisions but must not silently redefine them.
 
 The design documentation is the **semantic source of truth** for UI
 structure and behavior.
@@ -609,7 +641,8 @@ meaningful states, not every arbitrary property combination.
 Screens use instances. Validated instances should not be detached simply
 to make one screen easier to modify.
 
-Detailed construction rules belong to `docs/design/06_FIGMA_BUILD_docs/product/RULES.md`.
+Detailed construction rules belong to
+`docs/design/06_FIGMA_BUILD_RULES.md`.
 
 ## 53. Auto Layout philosophy
 
@@ -696,8 +729,9 @@ statistics, collaboration, advanced offline-map management, Wear OS,
 iOS-specific flows or monetization rules.
 
 Pricing, free limits, plan names/roles and entitlements must come from
-`docs/reference/WHERIS_BUSINESS_REFERENCE.md` when monetization scope is explicitly
-activated. Design the approved MVP rather than silently expanding it.
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md` when monetization scope is
+explicitly activated. Design the approved MVP rather than silently
+expanding it.
 
 ## 63. Design QA
 

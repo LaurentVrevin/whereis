@@ -4,16 +4,18 @@
 > system.
 >
 > This document translates `docs/design/01_DESIGN_FOUNDATIONS.md` and
-> `docs/design/02_DESIGN_TOKENS.md` into reusable UI components and patterns shared
-> by Figma and Jetpack Compose.
+> `docs/design/02_DESIGN_TOKENS.md` into reusable UI components and
+> patterns shared by Figma and Jetpack Compose.
 >
 > It defines component responsibility, anatomy, variants, states,
 > behavior, accessibility and naming. It does **not** define complete
-> screen composition; that belongs to `docs/design/07_SCREEN_SPECIFICATIONS.md`.
+> screen composition; that belongs to
+> `docs/design/07_SCREEN_SPECIFICATIONS.md`.
 >
 > When a future monetization component is in scope, commercial semantics
-> come from `docs/reference/WHERIS_BUSINESS_REFERENCE.md`; this component specification
-> must not invent or own prices, free limits or entitlements.
+> come from `docs/reference/WHERIS_BUSINESS_REFERENCE.md`; this
+> component specification must not invent or own prices, free limits or
+> entitlements.
 
 ------------------------------------------------------------------------
 
@@ -36,7 +38,8 @@ content; - suitable for Figma instances and Compose APIs.
 
 Components consume the foundations and tokens. Monetization-aware
 components additionally consume approved commercial semantics from
-`docs/reference/WHERIS_BUSINESS_REFERENCE.md` without owning those business rules.
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md` without owning those
+business rules.
 
 Canonical relationship:
 
@@ -45,8 +48,8 @@ Canonical relationship:
 A component must not redefine global color, typography, spacing or shape
 rules locally.
 
-If a missing reusable value is discovered, update `docs/design/02_DESIGN_TOKENS.md`
-intentionally.
+If a missing reusable value is discovered, update
+`docs/design/02_DESIGN_TOKENS.md` intentionally.
 
 ------------------------------------------------------------------------
 
@@ -667,7 +670,9 @@ These values are category accents, not guaranteed text colors.
 Icons/text placed on or near these accents must use component-defined
 contrast-safe containers/content.
 
-This table is synchronized with `docs/design/02_DESIGN_TOKENS.md`. `docs/design/02_DESIGN_TOKENS.md` owns the canonical values; this component document owns how components consume them.
+This table is synchronized with `docs/design/02_DESIGN_TOKENS.md`.
+`docs/design/02_DESIGN_TOKENS.md` owns the canonical values; this
+component document owns how components consume them.
 
 ------------------------------------------------------------------------
 
@@ -805,6 +810,27 @@ Selection animation should be short and non-essential.
 
 ------------------------------------------------------------------------
 
+## 39.1 Add-location candidate marker interaction
+
+Within `ADD_001` only, the proposed save-position marker supports an
+intentional long-press + drag gesture. The gesture moves the draft
+coordinate that will be confirmed; it does not move the live
+user-location representation and does not edit an already-saved place.
+
+Interaction requirements:
+
+-   default detected position remains immediately confirmable;
+-   long press clearly enters a dragging state before movement is
+    accepted;
+-   dragging must preserve a usable touch target and visual feedback;
+-   release commits the new draft candidate, not the persisted place;
+-   after manual adjustment, GPS accuracy from the original fix must not
+    be shown as if it described the manually selected point;
+-   accessibility must provide an equivalent non-color indication that
+    the position was adjusted manually.
+
+------------------------------------------------------------------------
+
 ## 40. User-location marker
 
 The current user location is a separate map primitive.
@@ -842,6 +868,10 @@ Do not add map controls simply because the provider supports them.
 ## 42. Marker quick-detail sheet
 
 Reusable bottom-sheet pattern shown after tapping a place marker.
+
+The sheet is transient selection context: tapping an empty map area
+dismisses it and clears the selected marker; tapping another marker
+replaces the selection.
 
 ### Anatomy
 
@@ -1098,21 +1128,22 @@ Only implemented settings should be shown.
 
 ------------------------------------------------------------------------
 
-# FUTURE MONETIZATION PRESENTATION — OUTSIDE ACTIVE MVP
+# FUTURE MONETIZATION PRESENTATION --- OUTSIDE ACTIVE MVP
 
 ## 59. Monetization feature row
 
 If a future approved monetization scope is activated, a reusable benefit
-row may present an approved Wheris Plus or Wheris Premium capability using:
-- feature icon; - title; - short explanation.
+row may present an approved Wheris Plus or Wheris Premium capability
+using: - feature icon; - title; - short explanation.
 
-The row is presentation-only. It must not decide which plan owns a feature,
-compute entitlement state, or embed price/free-limit values. Those semantics
-belong to `docs/reference/WHERIS_BUSINESS_REFERENCE.md` and the owning feature layer.
+The row is presentation-only. It must not decide which plan owns a
+feature, compute entitlement state, or embed price/free-limit values.
+Those semantics belong to `docs/reference/WHERIS_BUSINESS_REFERENCE.md`
+and the owning feature layer.
 
 The navigation destination `Plus` and the commercial offer `Wheris Plus`
-are different concepts. Component naming, examples and copy must keep that
-distinction explicit.
+are different concepts. Component naming, examples and copy must keep
+that distinction explicit.
 
 Monetization components must remain separate from core place-saving and
 retrieval controls.
@@ -1124,12 +1155,14 @@ retrieval controls.
 If a free active-place limit is activated, the state must use `lieu`
 terminology and explain the actual active business rule.
 
-Do not freeze a numeric limit in the Design System. The limit is supplied by
-product/business configuration according to `docs/reference/WHERIS_BUSINESS_REFERENCE.md`.
+Do not freeze a numeric limit in the Design System. The limit is
+supplied by product/business configuration according to
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md`.
 
-The state must not visually imply that existing places are deleted, locked
-or lost. It may block creation of an additional place according to the
-approved business rule while preserving access to already-saved local data.
+The state must not visually imply that existing places are deleted,
+locked or lost. It may block creation of an additional place according
+to the approved business rule while preserving access to already-saved
+local data.
 
 This is a screen/business state, not a global component token.
 

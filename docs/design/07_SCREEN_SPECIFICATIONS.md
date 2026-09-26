@@ -9,8 +9,8 @@
 > shared by Figma and Android.
 >
 > It intentionally does **not** prescribe arbitrary pixel values already
-> owned by `DESIGN/02_DESIGN_TOKENS.md`, nor duplicate full component anatomy
-> owned by `DESIGN/03_DESIGN_COMPONENTS.md`.
+> owned by `docs/design/02_DESIGN_TOKENS.md`, nor duplicate full
+> component anatomy owned by `docs/design/03_DESIGN_COMPONENTS.md`.
 
 ------------------------------------------------------------------------
 
@@ -56,7 +56,8 @@ WHERIS_BUSINESS_REFERENCE.md
 If a screen requirement exposes a contradiction, fix the owning source
 rather than hiding the contradiction here. Monetization pricing, free
 limits, plan roles and entitlements are owned by
-`WHERIS_BUSINESS_REFERENCE.md`, not by this screen specification.
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md`, not by this screen
+specification.
 
 ------------------------------------------------------------------------
 
@@ -106,7 +107,8 @@ to the user.
 
 `Plus` in the canonical navigation terminology refers to `PLUS_001`, the
 bottom-navigation destination. It is distinct from the future commercial
-offer **Wheris Plus** defined in `WHERIS_BUSINESS_REFERENCE.md`.
+offer **Wheris Plus** defined in
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md`.
 
 ------------------------------------------------------------------------
 
@@ -476,11 +478,23 @@ This action must remain visually dominant over secondary map controls.
 
 Tap saved marker → select marker + open `SURF_MAP_001`.
 
+Tap empty map area while a marker is selected → clear selection +
+dismiss `SURF_MAP_001`.
+
+Tap another saved marker → replace selection + refresh `SURF_MAP_001`.
+
 ## STATES
 
 ### Normal / populated
 
 Map + saved markers.
+
+On entry, when a usable current position becomes available, center the
+camera once on it at a useful local/neighborhood zoom unless the user
+has already moved the camera. Do not leave the user on a whole-Earth
+view when a usable current position exists. If current position is
+unavailable but saved places exist, prefer a useful framing of saved
+places.
 
 ### Empty --- STATE_MAP_001
 
@@ -554,6 +568,9 @@ Expose the fastest useful actions after selecting a saved marker.
 
 Dismiss → `MAP_001`
 
+Tapping an empty map area is a canonical dismiss action and clears the
+selected marker.
+
 ## HIERARCHY
 
 `Naviguer` should be immediately visible.
@@ -587,8 +604,9 @@ performed by the stateless Screen.
 
 ## PURPOSE
 
-Acquire and confirm the current position that will become the saved
-place.
+Acquire and confirm the position that will become the saved place. The
+current foreground position is the default candidate; the user may
+deliberately adjust that draft point on the map before confirmation.
 
 ## ENTRY CONDITIONS
 
@@ -600,7 +618,8 @@ Preferred composition:
 
 1.  top bar with Back/Cancel;
 2.  map occupying the main geographic region when available;
-3.  current-position marker;
+3.  proposed-position marker, initially aligned with the detected
+    current position;
 4.  bottom status/action card or sheet;
 5.  primary/secondary actions according to state.
 
@@ -632,6 +651,11 @@ Copy: `Position détectée`
 Supporting content: `Précision : ± X m` when known.
 
 Primary action: `Confirmer cette position` → `ADD_002`
+
+Optional interaction: long-press the proposed marker, drag it to another
+point, then release. This changes only the draft coordinate. After
+manual adjustment, show a clear manually-adjusted state and do not
+present the original GPS accuracy as if it described the new point.
 
 ## STATE --- Poor Accuracy
 
@@ -706,8 +730,8 @@ color-only.
 
 ## FIGMA NOTES
 
-Build representative frames for Searching, Found, PoorAccuracy,
-LocationDisabled and MapUnavailable.
+Build representative frames for Searching, Found, ManuallyAdjusted,
+PoorAccuracy, LocationDisabled and MapUnavailable.
 
 ## ANDROID NOTES
 
@@ -767,23 +791,27 @@ Must use more than color:
 
 Select category → update draft and enable the fast-save actions.
 
-Primary `Enregistrer` → persist the draft directly → `ADD_004` on success.
+Primary `Enregistrer` → persist the draft directly → `ADD_004` on
+success.
 
 Secondary `Ajouter des détails` → `ADD_003`.
 
 `Créer une catégorie` → `CAT_002` with Add Place origin.
 
-The screen must never require opening `ADD_003` merely to expose the save action.
+The screen must never require opening `ADD_003` merely to expose the
+save action.
 
 ## DIRECT SAVE STATE
 
 While persistence is active from `ADD_002`:
 
-- prevent duplicate submission;
-- keep the selected category and accepted position visible/preserved;
-- show loading only if perceptible.
+-   prevent duplicate submission;
+-   keep the selected category and accepted position visible/preserved;
+-   show loading only if perceptible.
 
-If persistence fails, remain on `ADD_002`, explain the failure, and allow retry. The user must not be routed through `ADD_003` as an error-recovery workaround.
+If persistence fails, remain on `ADD_002`, explain the failure, and
+allow retry. The user must not be routed through `ADD_003` as an
+error-recovery workaround.
 
 ## RETURN FROM CAT_002
 
@@ -819,7 +847,8 @@ repository/domain models. Draft selection uses `CategoryId`.
 
 ## PURPOSE
 
-Allow optional enrichment for users who explicitly choose it, without being part of the mandatory ultra-fast path.
+Allow optional enrichment for users who explicitly choose it, without
+being part of the mandatory ultra-fast path.
 
 ## LAYOUT
 
@@ -892,7 +921,8 @@ favorite.
 
 ## BACK
 
-Back → `ADD_002` with draft preserved and the selected category still immediately saveable.
+Back → `ADD_002` with draft preserved and the selected category still
+immediately saveable.
 
 ## ACCESSIBILITY
 
@@ -1157,11 +1187,12 @@ Edit approved mutable metadata of an existing place.
 
 ## NOT CURRENTLY EDITABLE
 
--   coordinates;
--   manual marker position;
--   recorded creation location through map dragging.
+-   coordinates of an already saved place;
+-   manual repositioning of an already saved marker;
+-   recorded creation location after persistence.
 
-Do not invent position editing.
+Do not invent post-save position editing. The approved `ADD_001` draft
+marker adjustment before first save is a separate interaction.
 
 ## LAYOUT
 
@@ -1729,10 +1760,11 @@ Choose the implemented Wheris theme mode.
 
 ## REQUIRED OPTIONS
 
-- `Clair`;
-- `Sombre`.
+-   `Clair`;
+-   `Sombre`.
 
-A `Système` option remains an open product decision and must not be shown as canonical until approved.
+A `Système` option remains an open product decision and must not be
+shown as canonical until approved.
 
 ## ACTIONS
 
@@ -1740,7 +1772,8 @@ Select mode → apply immediately and persist. Back → `SETTINGS_001`.
 
 ## ANDROID NOTES
 
-Persist the preference in DataStore. Theme rendering remains semantic-token driven.
+Persist the preference in DataStore. Theme rendering remains
+semantic-token driven.
 
 ------------------------------------------------------------------------
 
@@ -1754,15 +1787,19 @@ Choose the unit system used consistently for displayed distances.
 
 ## CONTENT RULE
 
-The capability is required by the reference user stories, but the exact option set is still an explicit product decision. Do not invent a canonical option list in Figma or Compose.
+The capability is required by the reference user stories, but the exact
+option set is still an explicit product decision. Do not invent a
+canonical option list in Figma or Compose.
 
 ## ACTIONS
 
-Select approved unit mode → persist and apply consistently. Back → `SETTINGS_001`.
+Select approved unit mode → persist and apply consistently. Back →
+`SETTINGS_001`.
 
 ## ANDROID NOTES
 
-Persist in DataStore; formatting belongs to presentation/domain formatting logic rather than individual components.
+Persist in DataStore; formatting belongs to presentation/domain
+formatting logic rather than individual components.
 
 ------------------------------------------------------------------------
 
@@ -1776,7 +1813,8 @@ Manage the preferred compatible external navigation application.
 
 ## CONTENT
 
-Render only compatible applications actually available on the device plus the approved no-preference/default behavior.
+Render only compatible applications actually available on the device
+plus the approved no-preference/default behavior.
 
 ## ACTIONS
 
@@ -1784,11 +1822,13 @@ Select/change/remove preference. Back → `SETTINGS_001`.
 
 ## FAILURE
 
-If a preferred app later disappears, Wheris falls back to the runtime chooser/recovery path rather than failing silently.
+If a preferred app later disappears, Wheris falls back to the runtime
+chooser/recovery path rather than failing silently.
 
 ## ANDROID NOTES
 
-Installed-app discovery and launching remain platform concerns; persist only the neutral preference required to resolve the user's choice.
+Installed-app discovery and launching remain platform concerns; persist
+only the neutral preference required to resolve the user's choice.
 
 ------------------------------------------------------------------------
 
@@ -1829,7 +1869,8 @@ duplicated hardcoded UI text where practical.
 
 # 39. PRIVACY_001 --- Confidentialité
 
-**STATUS:** Canonical destination synchronized with `DESIGN/04_SCREEN_CATALOG.md`.\
+**STATUS:** Canonical destination synchronized with
+`docs/design/04_SCREEN_CATALOG.md`.\
 **FLOW:** FLOW-21
 
 ## PURPOSE
@@ -1869,8 +1910,9 @@ Plain language, readable sections, links with descriptive labels.
 
 ## ANDROID NOTES
 
-Security/privacy implementation must match `SECURITY_PRIVACY.md`. This
-screen does not itself enforce privacy; it describes actual behavior.
+Security/privacy implementation must match
+`docs/product/SECURITY_PRIVACY.md`. This screen does not itself enforce
+privacy; it describes actual behavior.
 
 ------------------------------------------------------------------------
 
@@ -1943,18 +1985,21 @@ visible.
 
 # 40.1 Fast-save evidence
 
-The canonical design must be testable as behavior, not only reviewed as static frames.
+The canonical design must be testable as behavior, not only reviewed as
+static frames.
 
 For the validation slice, record at minimum:
 
-- save completion from `ADD_002` without optional fields;
-- median and p90 time from usable-position state to persisted success;
-- abandonment before persistence;
-- persistence error / retry success;
-- later retrieval through Carte or Lieux;
-- D30 / D90 and `1 → 3 → 10` usage outside the UI specification when analytics are activated under privacy rules.
+-   save completion from `ADD_002` without optional fields;
+-   median and p90 time from usable-position state to persisted success;
+-   abandonment before persistence;
+-   persistence error / retry success;
+-   later retrieval through Carte or Lieux;
+-   D30 / D90 and `1 → 3 → 10` usage outside the UI specification when
+    analytics are activated under privacy rules.
 
-Do not add hidden tracking or sensitive geographic analytics merely to measure these outcomes.
+Do not add hidden tracking or sensitive geographic analytics merely to
+measure these outcomes.
 
 ------------------------------------------------------------------------
 
@@ -1977,7 +2022,9 @@ isFavorite
 ```
 
 Transitions among `ADD_001`, `ADD_002`, `CAT_002`, and `ADD_003` must
-preserve applicable values. A direct save from `ADD_002` consumes the same canonical draft/persistence path as a save from `ADD_003`; the product must not maintain two divergent creation models.
+preserve applicable values. A direct save from `ADD_002` consumes the
+same canonical draft/persistence path as a save from `ADD_003`; the
+product must not maintain two divergent creation models.
 
 ------------------------------------------------------------------------
 
@@ -2410,7 +2457,10 @@ consistent across Map quick detail, list and detail.
 
 # 72. Privacy Destination Synchronization
 
-`PRIVACY_001 — Confidentialité` is canonical across `DESIGN/04_SCREEN_CATALOG.md`, `DESIGN/05_USER_FLOWS.md` and this specification. Any future change to its ownership or destination type must update all three documents together.
+`PRIVACY_001 — Confidentialité` is canonical across
+`docs/design/04_SCREEN_CATALOG.md`, `docs/design/05_USER_FLOWS.md` and
+this specification. Any future change to its ownership or destination
+type must update all three documents together.
 
 ------------------------------------------------------------------------
 
@@ -2437,9 +2487,10 @@ Do not create detailed current-release screen specifications for:
 -   Wheris Premium subscription;
 -   purchase/subscription restoration or entitlement recovery.
 
-Future monetization work requires separate approved scope and must derive
-its commercial rules from `WHERIS_BUSINESS_REFERENCE.md`. The existence of
-a business model does not make these active MVP screen contracts.
+Future monetization work requires separate approved scope and must
+derive its commercial rules from
+`docs/reference/WHERIS_BUSINESS_REFERENCE.md`. The existence of a
+business model does not make these active MVP screen contracts.
 
 ------------------------------------------------------------------------
 
@@ -2640,8 +2691,8 @@ ABOUT_001    À propos
 PRIVACY_001  Confidentialité
 ```
 
-Conditional monetization/paywall screens are excluded from the active MVP
-specification.
+Conditional monetization/paywall screens are excluded from the active
+MVP specification.
 
 ------------------------------------------------------------------------
 
@@ -2694,14 +2745,18 @@ STATE_GLOBAL_003   Loading
 
 Before declaring the Design Specification frozen:
 
-1.  review `DESIGN/07_SCREEN_SPECIFICATIONS.md`;
+1.  review `docs/design/07_SCREEN_SPECIFICATIONS.md`;
 2.  resolve or explicitly defer all open decisions;
-3.  verify `PRIVACY_001` and `SETTINGS_002–004` remain synchronized across Catalog, Flows and Specifications;
-4.  ensure `DESIGN/05_USER_FLOWS.md` references stable IDs consistently;
-5.  ensure category palette values are synchronized between Tokens and Components;
+3.  verify `PRIVACY_001` and `SETTINGS_002–004` remain synchronized
+    across Catalog, Flows and Specifications;
+4.  ensure `docs/design/05_USER_FLOWS.md` references stable IDs
+    consistently;
+5.  ensure category palette values are synchronized between Tokens and
+    Components;
 6.  verify monetization/paywall, Wheris Plus purchase and Wheris Premium
-    subscription are excluded from active MVP design and future references
-    remain synchronized with `WHERIS_BUSINESS_REFERENCE.md`;
+    subscription are excluded from active MVP design and future
+    references remain synchronized with
+    `docs/reference/WHERIS_BUSINESS_REFERENCE.md`;
 7.  verify Figma build rules reference the final inventory;
 8.  then build/normalize the canonical Figma file.
 
