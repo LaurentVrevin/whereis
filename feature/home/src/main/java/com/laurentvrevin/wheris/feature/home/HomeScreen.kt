@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,22 +30,34 @@ fun HomeScreen(
     uiState: HomeUiState,
     onAddPlace: () -> Unit,
     onSavedPlaceSelected: (PinId) -> Unit,
+    onMapClick: () -> Unit,
     onDetailsClick: (PinId) -> Unit,
     onNavigateClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
-        WherisMap(
-            markers = uiState.pins.toMapMarkers(uiState.selectedPinId),
-            modifier = Modifier.fillMaxSize(),
-            onSavedPlaceClick = onSavedPlaceSelected,
-            unavailableContent = {
-                MapUnavailableContent(
-                    hasSavedPlaces = uiState.pins.isNotEmpty(),
-                    modifier = Modifier.fillMaxSize(),
-                )
-            },
-        )
+        if (!uiState.isReady) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
+            }
+        } else {
+            WherisMap(
+                markers = uiState.pins.toMapMarkers(uiState.selectedPinId, uiState.userLocation),
+                modifier = Modifier.fillMaxSize(),
+                focus = uiState.initialCameraFocus,
+                onSavedPlaceClick = onSavedPlaceSelected,
+                onMapClick = onMapClick,
+                unavailableContent = {
+                    MapUnavailableContent(
+                        hasSavedPlaces = uiState.pins.isNotEmpty(),
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                },
+            )
+        }
 
         if (uiState.pins.isEmpty() && !uiState.dataUnavailable) {
             Card(

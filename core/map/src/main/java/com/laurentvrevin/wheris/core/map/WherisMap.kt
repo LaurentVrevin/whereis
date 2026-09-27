@@ -1,5 +1,6 @@
 package com.laurentvrevin.wheris.core.map
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,9 +11,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.laurentvrevin.wheris.core.model.CategoryId
@@ -33,6 +40,7 @@ fun WherisMap(
     modifier: Modifier = Modifier,
     focus: GeoPoint? = null,
     onSavedPlaceClick: (PinId) -> Unit = {},
+    onMapClick: () -> Unit = {},
     unavailableContent: @Composable () -> Unit,
 ) {
     val accessToken = stringResource(R.string.mapbox_access_token).trim()
@@ -41,31 +49,53 @@ fun WherisMap(
         return
     }
 
-    val initialTarget = focus ?: markers.firstOrNull()?.position
+    Log.d("WHERIS_CAMERA", "WherisMap: focus=$focus")
+
     val viewportState =
         rememberMapViewportState {
             setCameraOptions {
-                if (initialTarget != null) {
-                    center(initialTarget.toPoint())
+                if (focus != null) {
+                    center(focus.toPoint())
                     zoom(DEFAULT_PLACE_ZOOM)
+                    Log.d("WHERIS_CAMERA", "Initial camera set to focus $focus at zoom $DEFAULT_PLACE_ZOOM")
                 } else {
                     zoom(DEFAULT_WORLD_ZOOM)
+                    Log.d("WHERIS_CAMERA", "Initial camera set to world view zoom $DEFAULT_WORLD_ZOOM")
                 }
             }
         }
 
+    var hasCenteredInitially by remember { mutableStateOf(focus != null) }
+    var userHasInteracted by remember { mutableStateOf(false) }
+
     LaunchedEffect(focus) {
-        focus?.let { point ->
+        if (!hasCenteredInitially && focus != null && !userHasInteracted) {
+            Log.d("WHERIS_CAMERA", "Triggering initial camera center on $focus at zoom $DEFAULT_PLACE_ZOOM")
             viewportState.setCameraOptions {
-                center(point.toPoint())
+                center(focus.toPoint())
                 zoom(DEFAULT_PLACE_ZOOM)
             }
+            hasCenteredInitially = true
         }
     }
 
     MapboxMap(
-        modifier = modifier,
+        modifier =
+            modifier.pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        if (event.type == PointerEventType.Press) {
+                            userHasInteracted = true
+                        }
+                    }
+                }
+            },
         mapViewportState = viewportState,
+        onMapClickListener = { _ ->
+            onMapClick()
+            true
+        },
     ) {
         markers.forEach { marker ->
             if (marker.isCurrentLocation) {

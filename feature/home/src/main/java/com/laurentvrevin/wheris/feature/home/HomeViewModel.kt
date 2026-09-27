@@ -34,13 +34,36 @@ class HomeViewModel(
                         _uiState.value.copy(
                             pins = pins,
                             selectedPinId = validSelected,
-                            userLocation = if (validSelected == null) null else _uiState.value.userLocation,
                         )
                 }
             } catch (exception: CancellationException) {
                 throw exception
             } catch (_: Exception) {
                 _uiState.value = _uiState.value.copy(dataUnavailable = true)
+            }
+        }
+
+        viewModelScope.launch {
+            try {
+                when (val result = userLocationRepository.getCurrentLocation()) {
+                    is LocationResult.Success -> {
+                        _uiState.value =
+                            _uiState.value.copy(
+                                userLocation = result.location,
+                                locationResolved = true,
+                            )
+                    }
+                    LocationResult.ServicesDisabled,
+                    LocationResult.Timeout,
+                    LocationResult.TechnicalError,
+                    -> {
+                        _uiState.value = _uiState.value.copy(locationResolved = true)
+                    }
+                }
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (_: Exception) {
+                _uiState.value = _uiState.value.copy(locationResolved = true)
             }
         }
     }
@@ -67,10 +90,6 @@ class HomeViewModel(
     }
 
     fun onMapSelectionCleared() {
-        _uiState.value =
-            _uiState.value.copy(
-                selectedPinId = null,
-                userLocation = null,
-            )
+        _uiState.value = _uiState.value.copy(selectedPinId = null)
     }
 }

@@ -26,6 +26,7 @@ fun HomeRoute(
         uiState = uiState,
         onAddPlace = onAddPlace,
         onSavedPlaceSelected = viewModel::onSavedPlaceSelected,
+        onMapClick = viewModel::onMapSelectionCleared,
         onDetailsClick = onPinClick,
         onNavigateClick = {
             uiState.selectedPin?.let { pin ->

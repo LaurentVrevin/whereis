@@ -18,8 +18,10 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -100,6 +102,24 @@ class HomeViewModelTest {
         }
 
     @Test
+    fun `onMapSelectionCleared resets selectedPinId to null`() =
+        runTest(dispatcher) {
+            val repository = FakePinRepository()
+            val locationRepository = FakeUserLocationRepository()
+            val viewModel = HomeViewModel(repository, locationRepository)
+            val pin = testPin("pin-1")
+
+            repository.pins.value = listOf(pin)
+            testScheduler.advanceUntilIdle()
+
+            viewModel.onSavedPlaceSelected(pin.id)
+            assertEquals(pin.id, viewModel.uiState.value.selectedPinId)
+
+            viewModel.onMapSelectionCleared()
+            assertNull(viewModel.uiState.value.selectedPinId)
+        }
+
+    @Test
     fun `selecting pin fetches location and computes distance`() =
         runTest(dispatcher) {
             val repository = FakePinRepository()
@@ -135,6 +155,38 @@ class HomeViewModelTest {
             assertEquals(pin.id, viewModel.uiState.value.selectedPinId)
             assertNotNull(viewModel.uiState.value.distanceMeters)
         }
+
+    @Test
+    fun `map readiness and initial camera focus logic`() {
+        val pin = testPin("pin-1")
+        val userLocation =
+            UserLocation(
+                position = GeoPoint(48.8584, 2.2945),
+                accuracyMeters = 5f,
+                altitudeMeters = 35.0,
+                timestampEpochMillis = 1L,
+            )
+
+        // Case A: Location acquiring, saved places available -> not ready, no focus yet (prevents saved place race)
+        val stateAcquiring = HomeUiState(pins = listOf(pin), userLocation = null, locationResolved = false)
+        assertFalse(stateAcquiring.isReady)
+        assertNull(stateAcquiring.initialCameraFocus)
+
+        // Case B: User Location available -> ready, focus is User Location
+        val stateWithUserLoc = HomeUiState(pins = listOf(pin), userLocation = userLocation, locationResolved = true)
+        assertTrue(stateWithUserLoc.isReady)
+        assertEquals(userLocation.position, stateWithUserLoc.initialCameraFocus)
+
+        // Case C: Location unavailable (resolved = true, userLocation = null), saved places available -> ready, focus is saved place fallback
+        val stateFallback = HomeUiState(pins = listOf(pin), userLocation = null, locationResolved = true)
+        assertTrue(stateFallback.isReady)
+        assertEquals(pin.position, stateFallback.initialCameraFocus)
+
+        // Case D: Location unavailable, no saved places -> ready, focus is null
+        val stateEmpty = HomeUiState(pins = emptyList(), userLocation = null, locationResolved = true)
+        assertTrue(stateEmpty.isReady)
+        assertNull(stateEmpty.initialCameraFocus)
+    }
 
     private fun testPin(id: String) =
         Pin(
