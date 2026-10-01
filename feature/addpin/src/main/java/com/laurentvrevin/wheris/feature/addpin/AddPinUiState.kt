@@ -1,6 +1,8 @@
 package com.laurentvrevin.wheris.feature.addpin
 
 import com.laurentvrevin.wheris.core.model.Category
+import com.laurentvrevin.wheris.core.model.CategoryColorKey
+import com.laurentvrevin.wheris.core.model.CategoryIconKey
 import com.laurentvrevin.wheris.core.model.CategoryId
 import com.laurentvrevin.wheris.core.model.Pin
 import com.laurentvrevin.wheris.core.model.UserLocation
@@ -34,6 +36,17 @@ sealed interface AddPinUiState {
         val isSaving: Boolean = false,
         val saveFailed: Boolean = false,
     ) : AddPinUiState
+
+    data class CategoryCreation(
+        val selection: CategorySelection,
+        val name: String = "",
+        val iconKey: CategoryIconKey = CategoryIconKey.PLACE,
+        val colorKey: CategoryColorKey = CategoryColorKey.ORANGE,
+        val isCreating: Boolean = false,
+        val creationFailed: Boolean = false,
+    ) : AddPinUiState {
+        val canCreate: Boolean get() = name.isNotBlank() && !isCreating
+    }
 
     data class Saved(
         val pin: Pin,

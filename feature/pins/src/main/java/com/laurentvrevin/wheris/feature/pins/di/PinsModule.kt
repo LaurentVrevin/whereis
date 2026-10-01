@@ -6,5 +6,5 @@ import org.koin.dsl.module
 
 val pinsModule =
     module {
-        viewModel { PinsViewModel(get()) }
+        viewModel { PinsViewModel(get(), get()) }
     }

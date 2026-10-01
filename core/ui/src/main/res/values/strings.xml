@@ -13,4 +13,21 @@
     <string name="category_hiking">Randonnée</string>
     <string name="category_meeting">Rendez-vous</string>
     <string name="category_other">Autre</string>
+    <string name="category_unavailable">Catégorie indisponible</string>
+    <string name="category_icon_place">Lieu</string>
+    <string name="category_icon_photo">Photo</string>
+    <string name="category_icon_park">Nature</string>
+    <string name="category_icon_restaurant">Restaurant</string>
+    <string name="category_color_orange">Orange</string>
+    <string name="category_color_amber">Ambre</string>
+    <string name="category_color_yellow">Jaune</string>
+    <string name="category_color_green">Vert</string>
+    <string name="category_color_teal">Sarcelle</string>
+    <string name="category_color_blue">Bleu</string>
+    <string name="category_color_indigo">Indigo</string>
+    <string name="category_color_purple">Violet</string>
+    <string name="category_color_pink">Rose</string>
+    <string name="category_color_red">Rouge</string>
+    <string name="category_color_brown">Brun</string>
+    <string name="category_color_slate">Ardoise</string>
 </resources>

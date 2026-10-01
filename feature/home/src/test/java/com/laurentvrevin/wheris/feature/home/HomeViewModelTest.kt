@@ -44,7 +44,7 @@ class HomeViewModelTest {
         runTest(dispatcher) {
             val repository = FakePinRepository()
             val locationRepository = FakeUserLocationRepository()
-            val viewModel = HomeViewModel(repository, locationRepository)
+            val viewModel = HomeViewModel(repository, locationRepository, FakeCategoryRepository())
             val pin = testPin("pin-1")
 
             repository.pins.value = listOf(pin)
@@ -59,7 +59,7 @@ class HomeViewModelTest {
         runTest(dispatcher) {
             val repository = FakePinRepository()
             val locationRepository = FakeUserLocationRepository()
-            val viewModel = HomeViewModel(repository, locationRepository)
+            val viewModel = HomeViewModel(repository, locationRepository, FakeCategoryRepository())
             val pinA = testPin("pin-A")
             val pinB = testPin("pin-B")
 
@@ -84,7 +84,7 @@ class HomeViewModelTest {
         runTest(dispatcher) {
             val repository = FakePinRepository()
             val locationRepository = FakeUserLocationRepository()
-            val viewModel = HomeViewModel(repository, locationRepository)
+            val viewModel = HomeViewModel(repository, locationRepository, FakeCategoryRepository())
             val pinA = testPin("pin-A")
             val pinB = testPin("pin-B")
 
@@ -106,7 +106,7 @@ class HomeViewModelTest {
         runTest(dispatcher) {
             val repository = FakePinRepository()
             val locationRepository = FakeUserLocationRepository()
-            val viewModel = HomeViewModel(repository, locationRepository)
+            val viewModel = HomeViewModel(repository, locationRepository, FakeCategoryRepository())
             val pin = testPin("pin-1")
 
             repository.pins.value = listOf(pin)
@@ -124,7 +124,7 @@ class HomeViewModelTest {
         runTest(dispatcher) {
             val repository = FakePinRepository()
             val locationRepository = FakeUserLocationRepository()
-            val viewModel = HomeViewModel(repository, locationRepository)
+            val viewModel = HomeViewModel(repository, locationRepository, FakeCategoryRepository())
             val pin =
                 Pin(
                     id = PinId("pin-1"),
@@ -187,6 +187,31 @@ class HomeViewModelTest {
         assertTrue(stateEmpty.isReady)
         assertNull(stateEmpty.initialCameraFocus)
     }
+
+    @Test
+    fun customCategoryIsResolvedForMapAndQuickDetail() =
+        runTest(dispatcher) {
+            val pinRepository = FakePinRepository()
+            val categories = FakeCategoryRepository()
+            val custom =
+                com.laurentvrevin.wheris.core.model.Category(
+                    CategoryId("custom"),
+                    false,
+                    "Champignons",
+                    com.laurentvrevin.wheris.core.model.CategoryIconKey.PARK,
+                    com.laurentvrevin.wheris.core.model.CategoryColorKey.PURPLE,
+                    1000L,
+                )
+            categories.categories.value = listOf(custom)
+            val pin = testPin("custom-pin").copy(categoryId = custom.id)
+            pinRepository.pins.value = listOf(pin)
+            val viewModel = HomeViewModel(pinRepository, FakeUserLocationRepository(), categories)
+            testScheduler.advanceUntilIdle()
+            viewModel.onSavedPlaceSelected(pin.id)
+            testScheduler.advanceUntilIdle()
+            assertEquals(custom, viewModel.uiState.value.categories[viewModel.uiState.value.selectedPin?.categoryId])
+            assertEquals(pin, viewModel.uiState.value.selectedPin)
+        }
 
     private fun testPin(id: String) =
         Pin(

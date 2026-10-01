@@ -10,6 +10,7 @@ val homeModule =
             HomeViewModel(
                 pinRepository = get(),
                 userLocationRepository = get(),
+                categoryRepository = get(),
             )
         }
     }

@@ -1,5 +1,6 @@
 package com.laurentvrevin.wheris.core.map
 
+import com.laurentvrevin.wheris.core.model.Category
 import com.laurentvrevin.wheris.core.model.CategoryId
 import com.laurentvrevin.wheris.core.model.GeoPoint
 import com.laurentvrevin.wheris.core.model.Pin
@@ -12,6 +13,7 @@ data class WherisMapMarker(
     val categoryId: CategoryId = SystemCategoryIds.OTHER,
     val isCurrentLocation: Boolean = false,
     val isSelected: Boolean = false,
+    val category: Category? = null,
 )
 
 fun Pin.toWherisMapMarker(isSelected: Boolean = false): WherisMapMarker =

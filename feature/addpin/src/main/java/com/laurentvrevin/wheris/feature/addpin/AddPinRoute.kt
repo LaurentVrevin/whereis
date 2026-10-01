@@ -113,6 +113,9 @@ fun AddPinRoute(
             viewModel.backToPosition()
         }
     }
+    BackHandler(enabled = uiState is AddPinUiState.CategoryCreation) {
+        viewModel.cancelCategoryCreation()
+    }
     BackHandler(enabled = uiState is AddPinUiState.Saved) {
         onFinished()
     }
@@ -128,6 +131,12 @@ fun AddPinRoute(
         onSave = viewModel::savePin,
         onBackToPosition = viewModel::backToPosition,
         onFinished = onFinished,
+        onOpenCategoryCreation = viewModel::openCategoryCreation,
+        onCategoryNameChange = viewModel::updateCategoryName,
+        onCategoryIconChange = viewModel::selectCategoryIcon,
+        onCategoryColorChange = viewModel::selectCategoryColor,
+        onCreateCategory = viewModel::createCategory,
+        onCancelCategoryCreation = viewModel::cancelCategoryCreation,
         modifier = modifier,
     )
 }

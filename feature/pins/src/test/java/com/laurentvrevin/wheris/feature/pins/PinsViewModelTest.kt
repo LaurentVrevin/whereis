@@ -38,7 +38,7 @@ class PinsViewModelTest {
     fun `empty repository produces Empty state`() =
         runTest {
             val fakeRepo = FakePinRepository(emptyList())
-            val viewModel = PinsViewModel(fakeRepo)
+            val viewModel = PinsViewModel(fakeRepo, FakeCategoryRepository())
 
             testDispatcher.scheduler.advanceUntilIdle()
 
@@ -73,7 +73,7 @@ class PinsViewModelTest {
                     ),
                 )
 
-            val viewModel = PinsViewModel(fakeRepo)
+            val viewModel = PinsViewModel(fakeRepo, FakeCategoryRepository())
 
             testDispatcher.scheduler.advanceUntilIdle()
 
@@ -87,6 +87,27 @@ class PinsViewModelTest {
             assertEquals(PinId("pin-2"), state.pins[1].id)
             assertEquals(pin1, state.pins[0].pin)
             assertEquals(pin2, state.pins[1].pin)
+        }
+
+    @Test
+    fun customCategoryIsResolvedForTheSavedPlaceRow() =
+        runTest {
+            val categories = FakeCategoryRepository()
+            val custom =
+                com.laurentvrevin.wheris.core.model.Category(
+                    com.laurentvrevin.wheris.core.model.CategoryId("custom"),
+                    false,
+                    "Champignons",
+                    com.laurentvrevin.wheris.core.model.CategoryIconKey.PARK,
+                    com.laurentvrevin.wheris.core.model.CategoryColorKey.PURPLE,
+                    1000L,
+                )
+            categories.categories.value = listOf(custom)
+            val pin = testPin(PinId("custom-pin"), GeoPoint(10.0, 20.0)).copy(categoryId = custom.id)
+            val viewModel = PinsViewModel(FakePinRepository(listOf(pin)), categories)
+            val state = viewModel.uiState.first { it is PinsUiState.Content } as PinsUiState.Content
+            assertEquals(custom, state.pins.single().category)
+            assertEquals(pin, state.pins.single().pin)
         }
 
     private fun testPin(

@@ -1,6 +1,7 @@
 package com.laurentvrevin.wheris.feature.pindetail
 
 import com.laurentvrevin.wheris.core.model.CardinalDirection
+import com.laurentvrevin.wheris.core.model.Category
 import com.laurentvrevin.wheris.core.model.Pin
 
 sealed interface PinDetailUiState {
@@ -14,6 +15,7 @@ sealed interface PinDetailUiState {
 
     data class Content(
         val pin: Pin,
+        val category: Category? = null,
         val distanceMeters: Double? = null,
         val cardinalDirection: CardinalDirection? = null,
         val deletion: PinDeletionState = PinDeletionState.None,

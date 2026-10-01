@@ -1,11 +1,8 @@
 package com.laurentvrevin.wheris.feature.addpin
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,7 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.LocationOff
@@ -23,7 +20,6 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -46,8 +42,7 @@ import com.laurentvrevin.wheris.core.model.Category
 import com.laurentvrevin.wheris.core.model.CategoryId
 import com.laurentvrevin.wheris.core.model.GeoPoint
 import com.laurentvrevin.wheris.core.model.UserLocation
-import com.laurentvrevin.wheris.core.ui.category.categoryIcon
-import com.laurentvrevin.wheris.core.ui.category.categoryLabel
+import com.laurentvrevin.wheris.core.ui.category.WherisCategoryCard
 
 @Composable
 fun AddPinScreen(
@@ -62,6 +57,12 @@ fun AddPinScreen(
     onBackToPosition: () -> Unit,
     onFinished: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenCategoryCreation: () -> Unit = {},
+    onCategoryNameChange: (String) -> Unit = {},
+    onCategoryIconChange: (com.laurentvrevin.wheris.core.model.CategoryIconKey) -> Unit = {},
+    onCategoryColorChange: (com.laurentvrevin.wheris.core.model.CategoryColorKey) -> Unit = {},
+    onCreateCategory: () -> Unit = {},
+    onCancelCategoryCreation: () -> Unit = {},
 ) {
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -118,6 +119,17 @@ fun AddPinScreen(
                     onSelectCategory = onSelectCategory,
                     onSave = onSave,
                     onBack = onBackToPosition,
+                    onCreateCategory = onOpenCategoryCreation,
+                )
+
+            is AddPinUiState.CategoryCreation ->
+                CreateCategoryScreen(
+                    state = uiState,
+                    onNameChange = onCategoryNameChange,
+                    onIconChange = onCategoryIconChange,
+                    onColorChange = onCategoryColorChange,
+                    onCreate = onCreateCategory,
+                    onCancel = onCancelCategoryCreation,
                 )
 
             is AddPinUiState.Saved ->
@@ -547,6 +559,7 @@ private fun CategorySelectionContent(
     onSelectCategory: (CategoryId) -> Unit,
     onSave: () -> Unit,
     onBack: () -> Unit,
+    onCreateCategory: () -> Unit,
 ) {
     Column(
         modifier =
@@ -621,7 +634,7 @@ private fun CategorySelectionContent(
                         items = state.categories,
                         key = { it.id.value },
                     ) { category ->
-                        CategoryRow(
+                        WherisCategoryCard(
                             category = category,
                             selected =
                                 state.selectedCategoryId ==
@@ -636,6 +649,15 @@ private fun CategorySelectionContent(
                     }
                 }
             }
+        }
+
+        OutlinedButton(
+            onClick = onCreateCategory,
+            enabled = !state.isSaving && !state.isLoadingCategories && !state.categoryLoadFailed,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Icon(Icons.Default.Add, contentDescription = null)
+            Text(stringResource(R.string.create_category_action), modifier = Modifier.padding(start = WherisSpacing.sm))
         }
 
         if (state.saveFailed) {
@@ -668,81 +690,6 @@ private fun CategorySelectionContent(
                     stringResource(
                         R.string.addpin_btn_save,
                     ),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun CategoryRow(
-    category: Category,
-    selected: Boolean,
-    enabled: Boolean,
-    onClick: () -> Unit,
-) {
-    Card(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .clickable(
-                    enabled = enabled,
-                    onClick = onClick,
-                ),
-        border =
-            if (selected) {
-                BorderStroke(
-                    2.dp,
-                    MaterialTheme.colorScheme.primary,
-                )
-            } else {
-                BorderStroke(
-                    1.dp,
-                    MaterialTheme.colorScheme.outlineVariant,
-                )
-            },
-        colors =
-            CardDefaults.cardColors(
-                containerColor =
-                    if (selected) {
-                        MaterialTheme.colorScheme.primaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.surface
-                    },
-            ),
-    ) {
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(WherisSpacing.md),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = categoryIcon(category.id),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-            )
-
-            Text(
-                text = categoryLabel(category.id),
-                modifier =
-                    Modifier
-                        .weight(1f)
-                        .padding(
-                            start = WherisSpacing.md,
-                        ),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-
-            if (selected) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription =
-                        stringResource(
-                            R.string.addpin_category_selected,
-                        ),
-                    tint = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -815,6 +762,40 @@ private fun AddPinScreenPreview() {
                             timestampEpochMillis = 1_000L,
                         ),
                     isApproximate = false,
+                ),
+            onRequestPermission = {},
+            onOpenSettings = {},
+            onOpenLocationSettings = {},
+            onRetryLocation = {},
+            onConfirmPosition = {},
+            onSelectCategory = {},
+            onSave = {},
+            onBackToPosition = {},
+            onFinished = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, fontScale = 1.5f)
+@Composable
+private fun CategorySelectionWithCustomPreview() {
+    val custom =
+        Category(
+            CategoryId("preview-custom"),
+            false,
+            "散歩 — Balades au bord de la rivière",
+            com.laurentvrevin.wheris.core.model.CategoryIconKey.PARK,
+            com.laurentvrevin.wheris.core.model.CategoryColorKey.TEAL,
+            1000L,
+        )
+    WherisTheme {
+        AddPinScreen(
+            uiState =
+                AddPinUiState.CategorySelection(
+                    location = UserLocation(GeoPoint(12.0, 24.0), 8f, 35.0, 1000L),
+                    categories = listOf(Category(com.laurentvrevin.wheris.core.model.SystemCategoryIds.CAR, true), custom),
+                    selectedCategoryId = custom.id,
+                    isLoadingCategories = false,
                 ),
             onRequestPermission = {},
             onOpenSettings = {},

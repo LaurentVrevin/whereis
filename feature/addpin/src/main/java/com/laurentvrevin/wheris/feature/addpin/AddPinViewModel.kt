@@ -2,6 +2,9 @@ package com.laurentvrevin.wheris.feature.addpin
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.laurentvrevin.wheris.core.model.Category
+import com.laurentvrevin.wheris.core.model.CategoryColorKey
+import com.laurentvrevin.wheris.core.model.CategoryIconKey
 import com.laurentvrevin.wheris.core.model.CategoryId
 import com.laurentvrevin.wheris.core.model.UserLocation
 import com.laurentvrevin.wheris.domain.location.LocationResult
@@ -26,6 +29,7 @@ class AddPinViewModel(
     private var locationJob: Job? = null
     private var categoryJob: Job? = null
     private var saveJob: Job? = null
+    private var pendingCreatedCategory: Category? = null
     private var isFineLocationGranted: Boolean = false
     private var isCoarseLocationGranted: Boolean = false
     private var acceptedLocation: UserLocation? = null
@@ -59,7 +63,10 @@ class AddPinViewModel(
         isFineGranted: Boolean = isFineLocationGranted,
         isCoarseGranted: Boolean = isCoarseLocationGranted,
     ) {
-        if (_uiState.value is AddPinUiState.CategorySelection || _uiState.value is AddPinUiState.Saved) return
+        when (_uiState.value) {
+            is AddPinUiState.CategorySelection, is AddPinUiState.CategoryCreation, is AddPinUiState.Saved -> return
+            else -> Unit
+        }
         isFineLocationGranted = isFineGranted
         isCoarseLocationGranted = isCoarseGranted
         if (isFineLocationGranted || isCoarseLocationGranted) {
@@ -86,6 +93,54 @@ class AddPinViewModel(
                 selectedCategoryId = categoryId,
                 saveFailed = false,
             )
+    }
+
+    fun openCategoryCreation() {
+        val selection = _uiState.value as? AddPinUiState.CategorySelection ?: return
+        if (selection.isSaving || selection.isLoadingCategories || selection.categoryLoadFailed) return
+        _uiState.value = AddPinUiState.CategoryCreation(selection)
+    }
+
+    fun updateCategoryName(name: String) = updateCreation { it.copy(name = name, creationFailed = false) }
+
+    fun selectCategoryIcon(key: CategoryIconKey) = updateCreation { it.copy(iconKey = key, creationFailed = false) }
+
+    fun selectCategoryColor(key: CategoryColorKey) = updateCreation { it.copy(colorKey = key, creationFailed = false) }
+
+    private fun updateCreation(transform: (AddPinUiState.CategoryCreation) -> AddPinUiState.CategoryCreation) {
+        val state = _uiState.value as? AddPinUiState.CategoryCreation ?: return
+        if (!state.isCreating) _uiState.value = transform(state)
+    }
+
+    fun cancelCategoryCreation() {
+        val state = _uiState.value as? AddPinUiState.CategoryCreation ?: return
+        if (!state.isCreating) _uiState.value = state.selection
+    }
+
+    fun createCategory() {
+        val state = _uiState.value as? AddPinUiState.CategoryCreation ?: return
+        if (!state.canCreate) return
+        _uiState.value = state.copy(isCreating = true, creationFailed = false)
+        viewModelScope.launch {
+            try {
+                val category = categoryRepository.createCustomCategory(state.name.trim(), state.iconKey, state.colorKey)
+                val current = _uiState.value as? AddPinUiState.CategoryCreation ?: return@launch
+                // The insert may complete before Room emits. Bridge that interval with the returned row.
+                pendingCreatedCategory = category.takeUnless { created -> current.selection.categories.any { it.id == created.id } }
+                _uiState.value =
+                    current.selection.copy(
+                        categories = (current.selection.categories + category).distinctBy { it.id },
+                        selectedCategoryId = category.id,
+                        isLoadingCategories = false,
+                        saveFailed = false,
+                    )
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (_: Exception) {
+                val current = _uiState.value as? AddPinUiState.CategoryCreation ?: return@launch
+                _uiState.value = current.copy(isCreating = false, creationFailed = true)
+            }
+        }
     }
 
     fun savePin() {
@@ -166,25 +221,27 @@ class AddPinViewModel(
         categoryJob =
             viewModelScope.launch {
                 try {
-                    categoryRepository.observeSystemCategories().collect { categories ->
-                        val current = _uiState.value as? AddPinUiState.CategorySelection ?: return@collect
-                        _uiState.value =
-                            current.copy(
-                                categories = categories,
-                                isLoadingCategories = false,
-                                categoryLoadFailed = false,
-                            )
+                    categoryRepository.observeCategories().collect { categories ->
+                        pendingCreatedCategory?.let { pending ->
+                            if (categories.any { it.id == pending.id }) pendingCreatedCategory = null
+                        }
+                        val available = (categories + listOfNotNull(pendingCreatedCategory)).distinctBy { it.id }
+                        updateSelection { it.copy(categories = available, isLoadingCategories = false, categoryLoadFailed = false) }
                     }
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (_: Exception) {
-                    val current = _uiState.value as? AddPinUiState.CategorySelection ?: return@launch
-                    _uiState.value =
-                        current.copy(
-                            isLoadingCategories = false,
-                            categoryLoadFailed = true,
-                        )
+                    updateSelection { it.copy(isLoadingCategories = false, categoryLoadFailed = true) }
                 }
+            }
+    }
+
+    private fun updateSelection(transform: (AddPinUiState.CategorySelection) -> AddPinUiState.CategorySelection) {
+        _uiState.value =
+            when (val current = _uiState.value) {
+                is AddPinUiState.CategorySelection -> transform(current)
+                is AddPinUiState.CategoryCreation -> current.copy(selection = transform(current.selection))
+                else -> current
             }
     }
 }

@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.laurentvrevin.wheris.core.model.CategoryId
 import com.laurentvrevin.wheris.core.model.GeoPoint
 import com.laurentvrevin.wheris.core.model.PinId
+import com.laurentvrevin.wheris.core.ui.category.categoryColor
 import com.laurentvrevin.wheris.core.ui.category.categoryIcon
 import com.mapbox.geojson.Point
 import com.mapbox.maps.AnnotatedFeature
@@ -135,6 +136,7 @@ fun WherisMap(
                 ) {
                     WherisPinMarkerComponent(
                         categoryId = marker.categoryId,
+                        category = marker.category,
                         isSelected = marker.isSelected,
                         onClick = {
                             marker.pinId?.let { pinId -> onSavedPlaceClick(pinId) }
@@ -149,6 +151,7 @@ fun WherisMap(
 @Composable
 internal fun WherisPinMarkerComponent(
     categoryId: CategoryId,
+    category: com.laurentvrevin.wheris.core.model.Category?,
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
@@ -173,15 +176,15 @@ internal fun WherisPinMarkerComponent(
                     )
                     .border(
                         width = borderWidth,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = categoryColor(category),
                         shape = CircleShape,
                     ),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = categoryIcon(categoryId),
+                imageVector = categoryIcon(categoryId, category),
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = if (category?.isSystem == false) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(iconSize),
             )
             if (isSelected) {

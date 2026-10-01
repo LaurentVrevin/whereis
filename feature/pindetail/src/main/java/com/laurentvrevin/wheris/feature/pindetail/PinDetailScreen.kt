@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -31,7 +30,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.laurentvrevin.wheris.core.designsystem.foundation.WherisSpacing
 import com.laurentvrevin.wheris.core.designsystem.theme.WherisTheme
@@ -40,6 +38,8 @@ import com.laurentvrevin.wheris.core.model.GeoPoint
 import com.laurentvrevin.wheris.core.model.Pin
 import com.laurentvrevin.wheris.core.model.PinId
 import com.laurentvrevin.wheris.core.model.SystemCategoryIds
+import com.laurentvrevin.wheris.core.ui.category.WherisCategoryIcon
+import com.laurentvrevin.wheris.core.ui.category.categoryColor
 import com.laurentvrevin.wheris.core.ui.category.categoryIcon
 import com.laurentvrevin.wheris.core.ui.category.categoryLabel
 
@@ -97,7 +97,7 @@ fun PinDetailScreen(
                     Text(
                         stringResource(
                             R.string.pindetail_delete_message,
-                            uiState.pin.name ?: categoryLabel(uiState.pin.categoryId),
+                            uiState.pin.name ?: categoryLabel(uiState.pin.categoryId, uiState.category),
                         ),
                     )
                     if (uiState.deletion == PinDeletionState.Failed) {
@@ -219,15 +219,13 @@ private fun Content(
                             .padding(WherisSpacing.lg),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(
-                        imageVector = categoryIcon(state.pin.categoryId),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(40.dp),
+                    WherisCategoryIcon(
+                        icon = categoryIcon(state.pin.categoryId, state.category),
+                        accent = categoryColor(state.category),
                     )
-                    Column(modifier = Modifier.padding(start = WherisSpacing.md)) {
+                    Column(modifier = Modifier.weight(1f).padding(start = WherisSpacing.md)) {
                         Text(
-                            text = state.pin.name ?: categoryLabel(state.pin.categoryId),
+                            text = state.pin.name ?: categoryLabel(state.pin.categoryId, state.category),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.SemiBold,
                         )
@@ -236,6 +234,7 @@ private fun Content(
                                 if (state.pin.name != null) {
                                     categoryLabel(
                                         state.pin.categoryId,
+                                        state.category,
                                     )
                                 } else {
                                     stringResource(R.string.pindetail_fallback_identity)

@@ -46,7 +46,10 @@ fun HomeScreen(
             }
         } else {
             WherisMap(
-                markers = uiState.pins.toMapMarkers(uiState.selectedPinId, uiState.userLocation),
+                markers =
+                    uiState.pins.toMapMarkers(uiState.selectedPinId, uiState.userLocation).map {
+                        it.copy(category = uiState.categories[it.categoryId])
+                    },
                 modifier = Modifier.fillMaxSize(),
                 focus = uiState.initialCameraFocus,
                 onSavedPlaceClick = onSavedPlaceSelected,
@@ -99,6 +102,7 @@ fun HomeScreen(
         if (selectedPin != null) {
             MapQuickDetailCard(
                 pin = selectedPin,
+                category = uiState.categories[selectedPin.categoryId],
                 distanceMeters = uiState.distanceMeters,
                 onNavigateClick = onNavigateClick,
                 onDetailsClick = onDetailsClick,

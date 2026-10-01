@@ -5,11 +5,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -22,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import com.laurentvrevin.wheris.core.designsystem.foundation.WherisSpacing
 import com.laurentvrevin.wheris.core.model.Pin
 import com.laurentvrevin.wheris.core.model.PinId
+import com.laurentvrevin.wheris.core.ui.category.WherisCategoryIcon
+import com.laurentvrevin.wheris.core.ui.category.categoryColor
 import com.laurentvrevin.wheris.core.ui.category.categoryIcon
 import com.laurentvrevin.wheris.core.ui.category.categoryLabel
 
@@ -32,6 +32,7 @@ internal fun MapQuickDetailCard(
     onNavigateClick: () -> Unit,
     onDetailsClick: (PinId) -> Unit,
     modifier: Modifier = Modifier,
+    category: com.laurentvrevin.wheris.core.model.Category? = null,
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -52,11 +53,9 @@ internal fun MapQuickDetailCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    imageVector = categoryIcon(pin.categoryId),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(40.dp),
+                WherisCategoryIcon(
+                    icon = categoryIcon(pin.categoryId, category),
+                    accent = categoryColor(category),
                 )
                 Column(
                     modifier =
@@ -65,12 +64,20 @@ internal fun MapQuickDetailCard(
                             .padding(start = WherisSpacing.md),
                 ) {
                     Text(
-                        text = pin.name ?: categoryLabel(pin.categoryId),
+                        text = pin.name ?: categoryLabel(pin.categoryId, category),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                     )
                     Text(
-                        text = if (pin.name != null) categoryLabel(pin.categoryId) else stringResource(R.string.home_fallback_identity),
+                        text =
+                            if (pin.name != null) {
+                                categoryLabel(
+                                    pin.categoryId,
+                                    category,
+                                )
+                            } else {
+                                stringResource(R.string.home_fallback_identity)
+                            },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

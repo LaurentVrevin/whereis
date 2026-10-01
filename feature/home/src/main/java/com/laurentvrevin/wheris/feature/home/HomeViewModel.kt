@@ -5,16 +5,19 @@ import androidx.lifecycle.viewModelScope
 import com.laurentvrevin.wheris.core.model.PinId
 import com.laurentvrevin.wheris.domain.PinRepository
 import com.laurentvrevin.wheris.domain.location.LocationResult
+import com.laurentvrevin.wheris.domain.repository.CategoryRepository
 import com.laurentvrevin.wheris.domain.repository.UserLocationRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class HomeViewModel(
     pinRepository: PinRepository,
     private val userLocationRepository: UserLocationRepository,
+    categoryRepository: CategoryRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -22,20 +25,22 @@ class HomeViewModel(
     init {
         viewModelScope.launch {
             try {
-                pinRepository.observePins().collect { pins ->
-                    val currentSelected = _uiState.value.selectedPinId
-                    val validSelected =
-                        if (currentSelected != null && pins.any { it.id == currentSelected }) {
-                            currentSelected
-                        } else {
-                            null
-                        }
-                    _uiState.value =
-                        _uiState.value.copy(
-                            pins = pins,
-                            selectedPinId = validSelected,
-                        )
-                }
+                combine(pinRepository.observePins(), categoryRepository.observeCategories()) { pins, categories -> pins to categories }
+                    .collect { (pins, categories) ->
+                        val currentSelected = _uiState.value.selectedPinId
+                        val validSelected =
+                            if (currentSelected != null && pins.any { it.id == currentSelected }) {
+                                currentSelected
+                            } else {
+                                null
+                            }
+                        _uiState.value =
+                            _uiState.value.copy(
+                                pins = pins,
+                                categories = categories.associateBy { it.id },
+                                selectedPinId = validSelected,
+                            )
+                    }
             } catch (exception: CancellationException) {
                 throw exception
             } catch (_: Exception) {

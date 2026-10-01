@@ -19,6 +19,7 @@ val pinDetailModule =
             PinDetailViewModel(
                 pinRepository = get(),
                 userLocationRepository = get(),
+                categoryRepository = get(),
             )
         }
     }

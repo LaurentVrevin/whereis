@@ -4,7 +4,11 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import com.laurentvrevin.wheris.core.designsystem.foundation.WherisShapes
+
+val LocalWherisDarkTheme = staticCompositionLocalOf { false }
 
 private val MaterialShapes =
     Shapes(
@@ -29,6 +33,6 @@ fun WherisTheme(
             },
         typography = WherisTypography,
         shapes = MaterialShapes,
-        content = content,
+        content = { CompositionLocalProvider(LocalWherisDarkTheme provides darkTheme, content = content) },
     )
 }

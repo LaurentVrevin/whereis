@@ -47,6 +47,7 @@ class PinDetailViewModelTest {
             val pin = testPin()
             val viewModel =
                 PinDetailViewModel(
+                    categoryRepository = FakeCategoryRepository(),
                     pinRepository = FakePinRepository(pin),
                     userLocationRepository = FakeLocationRepository(LocationResult.Timeout),
                 )
@@ -69,6 +70,7 @@ class PinDetailViewModelTest {
         runTest {
             val viewModel =
                 PinDetailViewModel(
+                    categoryRepository = FakeCategoryRepository(),
                     pinRepository = FakePinRepository(null),
                     userLocationRepository = FakeLocationRepository(LocationResult.Timeout),
                 )
@@ -87,6 +89,7 @@ class PinDetailViewModelTest {
         runTest {
             val viewModel =
                 PinDetailViewModel(
+                    categoryRepository = FakeCategoryRepository(),
                     pinRepository = ThrowingPinRepository(),
                     userLocationRepository = FakeLocationRepository(LocationResult.Timeout),
                 )
@@ -118,6 +121,7 @@ class PinDetailViewModelTest {
 
             val viewModel =
                 PinDetailViewModel(
+                    categoryRepository = FakeCategoryRepository(),
                     pinRepository = FakePinRepository(pin),
                     userLocationRepository =
                         FakeLocationRepository(
@@ -174,7 +178,7 @@ class PinDetailViewModelTest {
         runTest {
             val pin = testPin()
             val repository = FakePinRepository(pin)
-            val viewModel = PinDetailViewModel(repository, FakeLocationRepository(LocationResult.Timeout))
+            val viewModel = PinDetailViewModel(repository, FakeLocationRepository(LocationResult.Timeout), FakeCategoryRepository())
             viewModel.observePin(pin.id)
             testDispatcher.scheduler.advanceUntilIdle()
 
@@ -200,7 +204,7 @@ class PinDetailViewModelTest {
             val repository = FakePinRepository(pin)
             val completion = CompletableDeferred<Unit>()
             repository.deleteCompletion = completion
-            val viewModel = PinDetailViewModel(repository, FakeLocationRepository(LocationResult.Timeout))
+            val viewModel = PinDetailViewModel(repository, FakeLocationRepository(LocationResult.Timeout), FakeCategoryRepository())
             viewModel.observePin(pin.id)
             testDispatcher.scheduler.advanceUntilIdle()
 
@@ -229,7 +233,7 @@ class PinDetailViewModelTest {
             val pin = testPin()
             val repository = FakePinRepository(pin)
             repository.deleteFailure = IOException("storage unavailable")
-            val viewModel = PinDetailViewModel(repository, FakeLocationRepository(LocationResult.Timeout))
+            val viewModel = PinDetailViewModel(repository, FakeLocationRepository(LocationResult.Timeout), FakeCategoryRepository())
             viewModel.observePin(pin.id)
             testDispatcher.scheduler.advanceUntilIdle()
 
@@ -253,7 +257,7 @@ class PinDetailViewModelTest {
         runTest {
             val pin = testPin()
             val repository = FakePinRepository(pin)
-            val viewModel = PinDetailViewModel(repository, FakeLocationRepository(LocationResult.Timeout))
+            val viewModel = PinDetailViewModel(repository, FakeLocationRepository(LocationResult.Timeout), FakeCategoryRepository())
             viewModel.observePin(pin.id)
             testDispatcher.scheduler.advanceUntilIdle()
             viewModel.requestDeletion()
@@ -273,6 +277,7 @@ class PinDetailViewModelTest {
 
         val viewModel =
             PinDetailViewModel(
+                categoryRepository = FakeCategoryRepository(),
                 pinRepository = FakePinRepository(pin),
                 userLocationRepository = FakeLocationRepository(result),
             )
@@ -290,6 +295,30 @@ class PinDetailViewModelTest {
         assertNull(state.distanceMeters)
         assertNull(state.cardinalDirection)
     }
+
+    @Test
+    fun customCategoryIsResolvedAndKeptWhenLocationUpdates() =
+        runTest {
+            val categories = FakeCategoryRepository()
+            val custom =
+                com.laurentvrevin.wheris.core.model.Category(
+                    com.laurentvrevin.wheris.core.model.CategoryId("custom"),
+                    false,
+                    "Champignons",
+                    com.laurentvrevin.wheris.core.model.CategoryIconKey.PARK,
+                    com.laurentvrevin.wheris.core.model.CategoryColorKey.PURPLE,
+                    1000L,
+                )
+            categories.categories.value = listOf(custom)
+            val pin = testPin().copy(categoryId = custom.id)
+            val viewModel = PinDetailViewModel(FakePinRepository(pin), FakeLocationRepository(LocationResult.Timeout), categories)
+            viewModel.observePin(pin.id)
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(custom, (viewModel.uiState.value as PinDetailUiState.Content).category)
+            viewModel.requestCurrentLocation()
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(custom, (viewModel.uiState.value as PinDetailUiState.Content).category)
+        }
 
     private fun testPin(position: GeoPoint = GeoPoint(10.0, 20.0)): Pin =
         Pin(

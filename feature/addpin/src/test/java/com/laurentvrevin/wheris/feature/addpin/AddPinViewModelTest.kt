@@ -1,6 +1,9 @@
 package com.laurentvrevin.wheris.feature.addpin
 
 import com.laurentvrevin.wheris.core.model.Category
+import com.laurentvrevin.wheris.core.model.CategoryColorKey
+import com.laurentvrevin.wheris.core.model.CategoryIconKey
+import com.laurentvrevin.wheris.core.model.CategoryId
 import com.laurentvrevin.wheris.core.model.GeoPoint
 import com.laurentvrevin.wheris.core.model.Pin
 import com.laurentvrevin.wheris.core.model.PinId
@@ -359,6 +362,162 @@ class AddPinViewModelTest {
             timestampEpochMillis = 1_000L,
         )
 
+    @Test
+    fun customCategoryIsVisibleAndCreationCancellationRestoresTheWholeDraft() =
+        runTest(testDispatcher) {
+            val fixture = readyToSaveFixture()
+            val custom = Category(CategoryId("existing"), false, "散歩", CategoryIconKey.PARK, CategoryColorKey.GREEN, 1L)
+            fixture.categoryRepository.categories.value = systemCategories() + custom
+            testScheduler.runCurrent()
+            fixture.viewModel.selectCategory(custom.id)
+            val previous = fixture.viewModel.uiState.value as AddPinUiState.CategorySelection
+            fixture.viewModel.openCategoryCreation()
+            assertEquals(previous, (fixture.viewModel.uiState.value as AddPinUiState.CategoryCreation).selection)
+            fixture.viewModel.retryLocation()
+            fixture.viewModel.updateCategoryName("Draft")
+            fixture.viewModel.cancelCategoryCreation()
+            assertEquals(previous, fixture.viewModel.uiState.value)
+            assertEquals(1, fixture.locationRepository.calls)
+            fixture.viewModel.backToPosition()
+            assertEquals(previous.location, (fixture.viewModel.uiState.value as AddPinUiState.PositionFound).location)
+        }
+
+    @Test
+    fun whitespaceCannotCreateAndNameIconAndColorArePersistedAfterNormalization() =
+        runTest(testDispatcher) {
+            val fixture = readyToSaveFixture()
+            fixture.viewModel.openCategoryCreation()
+            fixture.viewModel.updateCategoryName(" \t\n ")
+            fixture.viewModel.createCategory()
+            testScheduler.runCurrent()
+            assertEquals(0, fixture.categoryRepository.createCalls)
+            fixture.viewModel.updateCategoryName("  茸 — Champignons  ")
+            fixture.viewModel.selectCategoryIcon(CategoryIconKey.PARK)
+            fixture.viewModel.selectCategoryColor(CategoryColorKey.PURPLE)
+            fixture.viewModel.createCategory()
+            testScheduler.runCurrent()
+            val category = requireNotNull(fixture.categoryRepository.created)
+            assertEquals("茸 — Champignons", category.name)
+            assertEquals(CategoryIconKey.PARK, category.iconKey)
+            assertEquals(CategoryColorKey.PURPLE, category.colorKey)
+            assertEquals(1, fixture.categoryRepository.createCalls)
+        }
+
+    @Test
+    fun creationBlocksDuplicateSubmissionEditingAndBackUntilPersistenceSucceeds() =
+        runTest(testDispatcher) {
+            val fixture = readyToSaveFixture()
+            val original = fixture.viewModel.uiState.value as AddPinUiState.CategorySelection
+            val completion = CompletableDeferred<Unit>()
+            fixture.categoryRepository.createCompletion = completion
+            fixture.viewModel.openCategoryCreation()
+            fixture.viewModel.updateCategoryName("Camping")
+            fixture.viewModel.createCategory()
+            fixture.viewModel.createCategory()
+            testScheduler.runCurrent()
+            fixture.viewModel.cancelCategoryCreation()
+            fixture.viewModel.updateCategoryName("Changed")
+            val creating = fixture.viewModel.uiState.value as AddPinUiState.CategoryCreation
+            assertTrue(creating.isCreating)
+            assertEquals("Camping", creating.name)
+            assertEquals(original.location, creating.selection.location)
+            assertEquals(1, fixture.categoryRepository.createCalls)
+            completion.complete(Unit)
+            testScheduler.runCurrent()
+            assertTrue(fixture.viewModel.uiState.value is AddPinUiState.CategorySelection)
+        }
+
+    @Test
+    fun creationErrorPreservesFormAndRetrySucceeds() =
+        runTest(testDispatcher) {
+            val fixture = readyToSaveFixture()
+            fixture.viewModel.openCategoryCreation()
+            fixture.viewModel.updateCategoryName("Camping")
+            fixture.viewModel.selectCategoryIcon(CategoryIconKey.PARK)
+            fixture.viewModel.selectCategoryColor(CategoryColorKey.TEAL)
+            fixture.categoryRepository.shouldFail = true
+            fixture.viewModel.createCategory()
+            testScheduler.runCurrent()
+            val failed = fixture.viewModel.uiState.value as AddPinUiState.CategoryCreation
+            assertTrue(failed.creationFailed)
+            assertFalse(failed.isCreating)
+            assertEquals("Camping", failed.name)
+            assertEquals(CategoryIconKey.PARK, failed.iconKey)
+            assertEquals(CategoryColorKey.TEAL, failed.colorKey)
+            assertEquals(testLocation(), failed.selection.location)
+            fixture.categoryRepository.shouldFail = false
+            fixture.viewModel.createCategory()
+            testScheduler.runCurrent()
+            assertEquals(
+                requireNotNull(fixture.categoryRepository.created).id,
+                (fixture.viewModel.uiState.value as AddPinUiState.CategorySelection).selectedCategoryId,
+            )
+        }
+
+    @Test
+    fun returnedCategoryIsImmediatelySelectedAndSurvivesDelayedFlowThenSavesThePlace() =
+        runTest(testDispatcher) {
+            val fixture = readyToSaveFixture()
+            fixture.viewModel.openCategoryCreation()
+            fixture.viewModel.updateCategoryName("Camping")
+            fixture.viewModel.createCategory()
+            testScheduler.runCurrent()
+            val category = requireNotNull(fixture.categoryRepository.created)
+            val immediate = fixture.viewModel.uiState.value as AddPinUiState.CategorySelection
+            assertEquals(category.id, immediate.selectedCategoryId)
+            assertTrue(category in immediate.categories)
+            assertEquals(testLocation(), immediate.location)
+            // Simulate a queued older Room emission before the new category is observed.
+            fixture.categoryRepository.categories.value = systemCategories().dropLast(1)
+            testScheduler.runCurrent()
+            assertTrue(category in (fixture.viewModel.uiState.value as AddPinUiState.CategorySelection).categories)
+            fixture.categoryRepository.categories.value = systemCategories() + category
+            testScheduler.runCurrent()
+            val canonical = fixture.viewModel.uiState.value as AddPinUiState.CategorySelection
+            assertEquals(category.id, canonical.selectedCategoryId)
+            assertEquals(1, canonical.categories.count { it.id == category.id })
+            fixture.viewModel.savePin()
+            testScheduler.runCurrent()
+            val pin = (fixture.viewModel.uiState.value as AddPinUiState.Saved).pin
+            assertEquals(category.id, pin.categoryId)
+            assertEquals(testLocation().position, pin.position)
+            assertEquals(testLocation().accuracyMeters, pin.accuracyMeters)
+            assertEquals(testLocation().altitudeMeters, pin.altitudeMeters)
+            assertEquals(1, fixture.locationRepository.calls)
+        }
+
+    @Test
+    fun categoryFlowContinuesWhileEditorIsOpenAndCancellationKeepsItsLatestList() =
+        runTest(testDispatcher) {
+            val fixture = readyToSaveFixture()
+            fixture.viewModel.selectCategory(SystemCategoryIds.PARKING)
+            fixture.viewModel.openCategoryCreation()
+            val custom = Category(CategoryId("external"), false, "Photo", CategoryIconKey.PHOTO_CAMERA, CategoryColorKey.BLUE, 1L)
+            fixture.categoryRepository.categories.value = systemCategories() + custom
+            testScheduler.runCurrent()
+            fixture.viewModel.cancelCategoryCreation()
+            val selection = fixture.viewModel.uiState.value as AddPinUiState.CategorySelection
+            assertTrue(custom in selection.categories)
+            assertEquals(SystemCategoryIds.PARKING, selection.selectedCategoryId)
+            assertEquals(testLocation(), selection.location)
+        }
+
+    @Test
+    fun categoryLoadingErrorIsNotAnEmptySuccessfulSelection() =
+        runTest(testDispatcher) {
+            val fixture = Fixture(locationResult = LocationResult.Success(testLocation()))
+            fixture.categoryRepository.observeFailure = true
+            fixture.viewModel.onPermissionGranted(true, true)
+            testScheduler.runCurrent()
+            fixture.viewModel.confirmPosition()
+            testScheduler.runCurrent()
+            val selection = fixture.viewModel.uiState.value as AddPinUiState.CategorySelection
+            assertTrue(selection.categoryLoadFailed)
+            assertFalse(selection.isLoadingCategories)
+            fixture.viewModel.openCategoryCreation()
+            assertEquals(selection, fixture.viewModel.uiState.value)
+        }
+
     private fun systemCategories(): List<Category> = SystemCategoryIds.ALL.map { Category(id = it, isSystem = true) }
 
     private inner class Fixture(
@@ -406,15 +565,27 @@ class AddPinViewModelTest {
     private class FakeCategoryRepository : CategoryRepository {
         val categories = MutableStateFlow<List<Category>>(emptyList())
 
-        override fun observeCategories(): Flow<List<Category>> = categories
+        var createCalls = 0
+        var shouldFail = false
+        var createCompletion: CompletableDeferred<Unit>? = null
+        var created: Category? = null
+        var observeFailure = false
+
+        override fun observeCategories(): Flow<List<Category>> =
+            if (observeFailure) kotlinx.coroutines.flow.flow { throw IOException("load failed") } else categories
 
         override suspend fun createCustomCategory(
             name: String,
             iconKey: com.laurentvrevin.wheris.core.model.CategoryIconKey,
             colorKey: com.laurentvrevin.wheris.core.model.CategoryColorKey,
-        ): Category = error("Not used by Add Pin in B2.1")
+        ): Category {
+            createCalls++
+            createCompletion?.await()
+            if (shouldFail) throw IOException("creation failed")
+            return Category(CategoryId("custom-$createCalls"), false, name, iconKey, colorKey, 42_000L).also { created = it }
+        }
 
-        override fun observeSystemCategories(): Flow<List<Category>> = categories
+        override fun observeSystemCategories(): Flow<List<Category>> = error("Add Pin must observe system and custom")
     }
 
     private class FakePinRepository : PinRepository {

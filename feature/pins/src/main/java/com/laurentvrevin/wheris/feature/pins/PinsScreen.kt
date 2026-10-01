@@ -38,6 +38,8 @@ import com.laurentvrevin.wheris.core.model.GeoPoint
 import com.laurentvrevin.wheris.core.model.Pin
 import com.laurentvrevin.wheris.core.model.PinId
 import com.laurentvrevin.wheris.core.model.SystemCategoryIds
+import com.laurentvrevin.wheris.core.ui.category.WherisCategoryIcon
+import com.laurentvrevin.wheris.core.ui.category.categoryColor
 import com.laurentvrevin.wheris.core.ui.category.categoryIcon
 import com.laurentvrevin.wheris.core.ui.category.categoryLabel
 
@@ -196,11 +198,9 @@ private fun PinCardRow(
                     .padding(WherisSpacing.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                imageVector = categoryIcon(pinItem.pin.categoryId),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(32.dp),
+            WherisCategoryIcon(
+                icon = categoryIcon(pinItem.pin.categoryId, pinItem.category),
+                accent = categoryColor(pinItem.category),
             )
             Column(
                 modifier =
@@ -209,7 +209,7 @@ private fun PinCardRow(
                         .padding(start = WherisSpacing.md),
             ) {
                 Text(
-                    text = pinItem.pin.name ?: categoryLabel(pinItem.pin.categoryId),
+                    text = pinItem.pin.name ?: categoryLabel(pinItem.pin.categoryId, pinItem.category),
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(

@@ -3,6 +3,7 @@ package com.laurentvrevin.wheris.feature.pindetail
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.laurentvrevin.wheris.core.model.CardinalDirection
+import com.laurentvrevin.wheris.core.model.Category
 import com.laurentvrevin.wheris.core.model.Pin
 import com.laurentvrevin.wheris.core.model.PinId
 import com.laurentvrevin.wheris.core.model.UserLocation
@@ -10,17 +11,20 @@ import com.laurentvrevin.wheris.core.model.bearingTo
 import com.laurentvrevin.wheris.core.model.distanceTo
 import com.laurentvrevin.wheris.domain.PinRepository
 import com.laurentvrevin.wheris.domain.location.LocationResult
+import com.laurentvrevin.wheris.domain.repository.CategoryRepository
 import com.laurentvrevin.wheris.domain.repository.UserLocationRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class PinDetailViewModel(
     private val pinRepository: PinRepository,
     private val userLocationRepository: UserLocationRepository,
+    private val categoryRepository: CategoryRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<PinDetailUiState>(PinDetailUiState.Loading)
     val uiState: StateFlow<PinDetailUiState> = _uiState.asStateFlow()
@@ -28,6 +32,7 @@ class PinDetailViewModel(
     private var pinJob: Job? = null
     private var locationJob: Job? = null
     private var currentLocation: UserLocation? = null
+    private var currentCategory: Category? = null
     private var observedPinId: PinId? = null
 
     fun observePin(pinId: PinId) {
@@ -41,24 +46,28 @@ class PinDetailViewModel(
         pinJob =
             viewModelScope.launch {
                 try {
-                    pinRepository.observePin(pinId).collect { pin ->
-                        val current = _uiState.value
-                        // Room may emit null before deletePin returns. Only its completion confirms success.
-                        if (
-                            current == PinDetailUiState.Deleted ||
-                            (current is PinDetailUiState.Content && current.deletion == PinDeletionState.InProgress)
-                        ) {
-                            return@collect
-                        }
-                        _uiState.value =
-                            if (pin == null) {
-                                PinDetailUiState.NotFound
-                            } else {
-                                pin.toContent(currentLocation).copy(
-                                    deletion = (current as? PinDetailUiState.Content)?.deletion ?: PinDeletionState.None,
-                                )
-                            }
+                    combine(pinRepository.observePin(pinId), categoryRepository.observeCategories()) { pin, categories ->
+                        pin to categories
                     }
+                        .collect { (pin, categories) ->
+                            val current = _uiState.value
+                            // Room may emit null before deletePin returns. Only its completion confirms success.
+                            if (
+                                current == PinDetailUiState.Deleted ||
+                                (current is PinDetailUiState.Content && current.deletion == PinDeletionState.InProgress)
+                            ) {
+                                return@collect
+                            }
+                            currentCategory = categories.firstOrNull { it.id == pin?.categoryId }
+                            _uiState.value =
+                                if (pin == null) {
+                                    PinDetailUiState.NotFound
+                                } else {
+                                    pin.toContent(currentLocation).copy(
+                                        deletion = (current as? PinDetailUiState.Content)?.deletion ?: PinDeletionState.None,
+                                    )
+                                }
+                        }
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (_: Exception) {
@@ -141,7 +150,7 @@ class PinDetailViewModel(
 
     private fun Pin.toContent(userLocation: UserLocation?): PinDetailUiState.Content {
         if (userLocation == null) {
-            return PinDetailUiState.Content(pin = this)
+            return PinDetailUiState.Content(pin = this, category = currentCategory)
         }
 
         val distance = userLocation.position.distanceTo(position)
@@ -154,6 +163,7 @@ class PinDetailViewModel(
 
         return PinDetailUiState.Content(
             pin = this,
+            category = currentCategory,
             distanceMeters = distance,
             cardinalDirection = direction,
         )

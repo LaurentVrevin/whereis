@@ -1,5 +1,7 @@
 package com.laurentvrevin.wheris.feature.home
 
+import com.laurentvrevin.wheris.core.model.Category
+import com.laurentvrevin.wheris.core.model.CategoryId
 import com.laurentvrevin.wheris.core.model.GeoPoint
 import com.laurentvrevin.wheris.core.model.Pin
 import com.laurentvrevin.wheris.core.model.PinId
@@ -8,6 +10,7 @@ import com.laurentvrevin.wheris.core.model.distanceTo
 
 data class HomeUiState(
     val pins: List<Pin> = emptyList(),
+    val categories: Map<CategoryId, Category> = emptyMap(),
     val selectedPinId: PinId? = null,
     val userLocation: UserLocation? = null,
     val locationResolved: Boolean = false,
