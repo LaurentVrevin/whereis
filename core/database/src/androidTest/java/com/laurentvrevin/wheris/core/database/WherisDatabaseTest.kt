@@ -25,6 +25,31 @@ import java.io.IOException
 
 @RunWith(AndroidJUnit4::class)
 class WherisDatabaseTest {
+    private fun customCategory(id: String): CategoryEntity = CategoryEntity(id, false, "Camping", "place", "category/orange", 1000L)
+
+    @Test
+    fun customCategoriesArePersistedOrderedAndDoNotReplaceSystemRows() =
+        runBlocking {
+            val later = customCategory("later").copy(createdAtEpochMillis = 2000L)
+            val earlier = customCategory("earlier")
+            categoryDao.insertCategory(later)
+            categoryDao.insertCategory(earlier)
+            assertEquals(earlier, categoryDao.getCategoryById(earlier.id))
+            assertEquals(
+                SystemCategoryIds.ALL.map { it.value } + listOf("earlier", "later"),
+                categoryDao.observeCategories().first().map { it.id },
+            )
+            assertEquals(SystemCategoryIds.ALL.map { it.value }, categoryDao.observeSystemCategories().first().map { it.id })
+            assertThrows(SQLiteConstraintException::class.java) {
+                runBlocking { categoryDao.insertCategory(earlier.copy(name = "Duplicate")) }
+            }
+            assertEquals(earlier, categoryDao.getCategoryById(earlier.id))
+            assertThrows(SQLiteConstraintException::class.java) {
+                runBlocking { categoryDao.insertCategory(CategoryEntity(SystemCategoryIds.CAR.value, true)) }
+            }
+            assertEquals(CategoryEntity(SystemCategoryIds.CAR.value, true), categoryDao.getCategoryById(SystemCategoryIds.CAR.value))
+        }
+
     private lateinit var pinDao: PinDao
     private lateinit var categoryDao: CategoryDao
     private lateinit var db: WherisDatabase
@@ -117,7 +142,7 @@ class WherisDatabaseTest {
     @Test
     fun insertAndObservePin() {
         runBlocking {
-            categoryDao.insertCategory(CategoryEntity("cat1", false))
+            categoryDao.insertCategory(customCategory("cat1"))
 
             val pin =
                 PinEntity(
@@ -162,7 +187,7 @@ class WherisDatabaseTest {
     @Test
     fun insertDuplicatePinId_shouldThrowConstraintException() {
         runBlocking {
-            categoryDao.insertCategory(CategoryEntity("cat1", false))
+            categoryDao.insertCategory(customCategory("cat1"))
             val pin =
                 PinEntity(
                     id = "pin1",
@@ -217,7 +242,7 @@ class WherisDatabaseTest {
     fun deleteCategory_withAssociatedPin_shouldThrowConstraintException() {
         runBlocking {
             val catId = "protected_cat"
-            categoryDao.insertCategory(CategoryEntity(catId, false))
+            categoryDao.insertCategory(customCategory(catId))
             val pin =
                 PinEntity(
                     id = "pin_linked",

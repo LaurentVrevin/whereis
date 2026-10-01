@@ -406,6 +406,14 @@ class AddPinViewModelTest {
     private class FakeCategoryRepository : CategoryRepository {
         val categories = MutableStateFlow<List<Category>>(emptyList())
 
+        override fun observeCategories(): Flow<List<Category>> = categories
+
+        override suspend fun createCustomCategory(
+            name: String,
+            iconKey: com.laurentvrevin.wheris.core.model.CategoryIconKey,
+            colorKey: com.laurentvrevin.wheris.core.model.CategoryColorKey,
+        ): Category = error("Not used by Add Pin in B2.1")
+
         override fun observeSystemCategories(): Flow<List<Category>> = categories
     }
 

@@ -18,6 +18,10 @@ dependencies {
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.android)
 
+    androidTestImplementation(libs.room.runtime)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.espresso.core)
+
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
 }
