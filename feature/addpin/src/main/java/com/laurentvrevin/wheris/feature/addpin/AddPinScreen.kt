@@ -276,10 +276,11 @@ private fun PositionFoundContent(
                     ),
                 focus = location.position,
                 modifier = Modifier.fillMaxSize(),
-                unavailableContent = {
+                unavailableContent = { onRetry ->
                     MapUnavailableLocationContent(
                         latitude = location.position.latitude,
                         longitude = location.position.longitude,
+                        onRetry = onRetry,
                         modifier = Modifier.fillMaxSize(),
                     )
                 },
@@ -377,6 +378,7 @@ private fun PositionFoundContent(
 private fun MapUnavailableLocationContent(
     latitude: Double,
     longitude: Double,
+    onRetry: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -416,6 +418,11 @@ private fun MapUnavailableLocationContent(
                     top = WherisSpacing.sm,
                 ),
         )
+        if (onRetry != null) {
+            OutlinedButton(onClick = onRetry) {
+                Text(stringResource(R.string.addpin_retry_map))
+            }
+        }
     }
 }
 

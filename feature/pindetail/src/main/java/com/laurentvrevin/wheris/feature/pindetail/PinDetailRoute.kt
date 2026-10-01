@@ -2,6 +2,7 @@ package com.laurentvrevin.wheris.feature.pindetail
 
 import android.Manifest
 import android.content.pm.PackageManager
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -16,6 +17,7 @@ import org.koin.androidx.compose.koinViewModel
 fun PinDetailRoute(
     pinId: PinId,
     onBack: () -> Unit,
+    onEdit: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: PinDetailViewModel = koinViewModel(),
 ) {
@@ -39,9 +41,21 @@ fun PinDetailRoute(
         }
     }
 
+    LaunchedEffect(uiState == PinDetailUiState.Deleted) {
+        if (uiState == PinDetailUiState.Deleted) onBack()
+    }
+
+    BackHandler(enabled = (uiState as? PinDetailUiState.Content)?.deletion == PinDeletionState.InProgress) {
+        // Keep this destination alive until persistence confirms the result.
+    }
+
     PinDetailScreen(
         uiState = uiState,
         onBack = onBack,
+        onEdit = onEdit,
+        onDelete = viewModel::requestDeletion,
+        onConfirmDeletion = viewModel::confirmDeletion,
+        onCancelDeletion = viewModel::cancelDeletion,
         modifier = modifier,
     )
 }

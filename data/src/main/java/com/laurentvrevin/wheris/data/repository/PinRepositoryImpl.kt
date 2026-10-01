@@ -27,4 +27,15 @@ class PinRepositoryImpl(
         // This will throw if ID already exists.
         pinDao.insertPin(pin.toEntity())
     }
+
+    override suspend fun deletePin(pinId: PinId) {
+        pinDao.deletePin(pinId.value)
+    }
+
+    override suspend fun updatePinDetails(
+        pinId: PinId,
+        name: String?,
+        note: String?,
+        updatedAtEpochMillis: Long,
+    ): Boolean = pinDao.updateDetails(pinId.value, name, note, updatedAtEpochMillis) == 1
 }

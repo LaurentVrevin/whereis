@@ -9,6 +9,7 @@ import com.laurentvrevin.wheris.core.model.UserLocation
 import com.laurentvrevin.wheris.domain.PinRepository
 import com.laurentvrevin.wheris.domain.location.LocationResult
 import com.laurentvrevin.wheris.domain.repository.UserLocationRepository
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -24,6 +25,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class PinDetailViewModelTest {
@@ -167,6 +169,105 @@ class PinDetailViewModelTest {
             )
         }
 
+    @Test
+    fun `deletion requires confirmation and cancelling preserves the place`() =
+        runTest {
+            val pin = testPin()
+            val repository = FakePinRepository(pin)
+            val viewModel = PinDetailViewModel(repository, FakeLocationRepository(LocationResult.Timeout))
+            viewModel.observePin(pin.id)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.confirmDeletion()
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(0, repository.deleteCalls)
+
+            viewModel.requestDeletion()
+            assertEquals(PinDeletionState.Confirmation, (viewModel.uiState.value as PinDetailUiState.Content).deletion)
+            viewModel.cancelDeletion()
+            viewModel.confirmDeletion()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            assertEquals(0, repository.deleteCalls)
+            assertEquals(pin, repository.pin.value)
+            assertEquals(PinDeletionState.None, (viewModel.uiState.value as PinDetailUiState.Content).deletion)
+        }
+
+    @Test
+    fun `deletion waits for persistence despite null emissions and ignores double confirmation`() =
+        runTest {
+            val pin = testPin()
+            val repository = FakePinRepository(pin)
+            val completion = CompletableDeferred<Unit>()
+            repository.deleteCompletion = completion
+            val viewModel = PinDetailViewModel(repository, FakeLocationRepository(LocationResult.Timeout))
+            viewModel.observePin(pin.id)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.requestDeletion()
+            viewModel.confirmDeletion()
+            testDispatcher.scheduler.runCurrent()
+            assertNull(repository.pin.value)
+            assertEquals(PinDeletionState.InProgress, (viewModel.uiState.value as PinDetailUiState.Content).deletion)
+
+            viewModel.confirmDeletion()
+            viewModel.cancelDeletion()
+            viewModel.observePin(pin.id)
+            viewModel.requestCurrentLocation()
+            testDispatcher.scheduler.runCurrent()
+            assertEquals(1, repository.deleteCalls)
+            assertEquals(PinDeletionState.InProgress, (viewModel.uiState.value as PinDetailUiState.Content).deletion)
+
+            completion.complete(Unit)
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(PinDetailUiState.Deleted, viewModel.uiState.value)
+        }
+
+    @Test
+    fun `delete failure keeps the place visible and permits retry`() =
+        runTest {
+            val pin = testPin()
+            val repository = FakePinRepository(pin)
+            repository.deleteFailure = IOException("storage unavailable")
+            val viewModel = PinDetailViewModel(repository, FakeLocationRepository(LocationResult.Timeout))
+            viewModel.observePin(pin.id)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.requestDeletion()
+            viewModel.confirmDeletion()
+            testDispatcher.scheduler.advanceUntilIdle()
+            val failed = viewModel.uiState.value as PinDetailUiState.Content
+            assertEquals(PinDeletionState.Failed, failed.deletion)
+            assertEquals(pin, failed.pin)
+            assertEquals(pin, repository.pin.value)
+
+            repository.deleteFailure = null
+            viewModel.confirmDeletion()
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(2, repository.deleteCalls)
+            assertEquals(PinDetailUiState.Deleted, viewModel.uiState.value)
+        }
+
+    @Test
+    fun `location and repository updates preserve the pending confirmation`() =
+        runTest {
+            val pin = testPin()
+            val repository = FakePinRepository(pin)
+            val viewModel = PinDetailViewModel(repository, FakeLocationRepository(LocationResult.Timeout))
+            viewModel.observePin(pin.id)
+            testDispatcher.scheduler.advanceUntilIdle()
+            viewModel.requestDeletion()
+
+            repository.pin.value = pin.copy(accuracyMeters = 12f)
+            viewModel.requestCurrentLocation()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            val state = viewModel.uiState.value as PinDetailUiState.Content
+            assertEquals(PinDeletionState.Confirmation, state.deletion)
+            assertEquals(12f, state.pin.accuracyMeters)
+            assertEquals(0, repository.deleteCalls)
+        }
+
     private suspend fun assertLocationFailurePreservesPin(result: LocationResult) {
         val pin = testPin()
 
@@ -204,7 +305,10 @@ class PinDetailViewModelTest {
     private class FakePinRepository(
         initialPin: Pin?,
     ) : PinRepository {
-        private val pin = MutableStateFlow(initialPin)
+        val pin = MutableStateFlow(initialPin)
+        var deleteCalls = 0
+        var deleteFailure: Exception? = null
+        var deleteCompletion: CompletableDeferred<Unit>? = null
 
         override fun observePins(): Flow<List<Pin>> =
             MutableStateFlow(
@@ -214,6 +318,20 @@ class PinDetailViewModelTest {
         override fun observePin(pinId: PinId): Flow<Pin?> = pin
 
         override suspend fun savePin(pin: Pin) = Unit
+
+        override suspend fun updatePinDetails(
+            pinId: PinId,
+            name: String?,
+            note: String?,
+            updatedAtEpochMillis: Long,
+        ): Boolean = error("Editing is not used by this test")
+
+        override suspend fun deletePin(pinId: PinId) {
+            deleteCalls++
+            deleteFailure?.let { throw it }
+            if (pin.value?.id == pinId) pin.value = null
+            deleteCompletion?.await()
+        }
     }
 
     private class ThrowingPinRepository : PinRepository {
@@ -228,6 +346,15 @@ class PinDetailViewModelTest {
             }
 
         override suspend fun savePin(pin: Pin) = Unit
+
+        override suspend fun updatePinDetails(
+            pinId: PinId,
+            name: String?,
+            note: String?,
+            updatedAtEpochMillis: Long,
+        ): Boolean = error("Editing is not used by this test")
+
+        override suspend fun deletePin(pinId: PinId) = error("boom")
     }
 
     private class FakeLocationRepository(

@@ -24,6 +24,7 @@ import com.laurentvrevin.wheris.R
 import com.laurentvrevin.wheris.core.model.PinId
 import com.laurentvrevin.wheris.feature.addpin.AddPinRoute
 import com.laurentvrevin.wheris.feature.home.HomeRoute
+import com.laurentvrevin.wheris.feature.pindetail.EditPinRoute
 import com.laurentvrevin.wheris.feature.pindetail.PinDetailRoute
 import com.laurentvrevin.wheris.feature.pins.PinsRoute
 
@@ -33,6 +34,8 @@ private const val ROUTE_ADD_PIN = "add_pin"
 private const val ROUTE_PIN_DETAIL = "pin_detail"
 private const val ARG_PIN_ID = "pinId"
 private const val ROUTE_PIN_DETAIL_PATTERN = "$ROUTE_PIN_DETAIL/{$ARG_PIN_ID}"
+private const val ROUTE_EDIT_PIN = "edit_pin"
+private const val ROUTE_EDIT_PIN_PATTERN = "$ROUTE_EDIT_PIN/{$ARG_PIN_ID}"
 
 @Composable
 fun AppNavHost(
@@ -96,6 +99,17 @@ fun AppNavHost(
                 val pinIdValue = requireNotNull(entry.arguments?.getString(ARG_PIN_ID))
                 PinDetailRoute(
                     pinId = PinId(pinIdValue),
+                    onBack = { navController.popBackStack() },
+                    onEdit = { navController.navigate("$ROUTE_EDIT_PIN/$pinIdValue") },
+                )
+            }
+
+            composable(
+                route = ROUTE_EDIT_PIN_PATTERN,
+                arguments = listOf(navArgument(ARG_PIN_ID) { type = NavType.StringType }),
+            ) { entry ->
+                EditPinRoute(
+                    pinId = PinId(requireNotNull(entry.arguments?.getString(ARG_PIN_ID))),
                     onBack = { navController.popBackStack() },
                 )
             }

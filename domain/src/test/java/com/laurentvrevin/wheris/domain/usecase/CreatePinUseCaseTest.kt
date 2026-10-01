@@ -80,5 +80,14 @@ class CreatePinUseCaseTest {
             saveError?.let { throw it }
             savedPin = pin
         }
+
+        override suspend fun updatePinDetails(
+            pinId: PinId,
+            name: String?,
+            note: String?,
+            updatedAtEpochMillis: Long,
+        ): Boolean = error("Editing is not used by this test")
+
+        override suspend fun deletePin(pinId: PinId) = Unit
     }
 }

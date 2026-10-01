@@ -498,6 +498,34 @@ Wheris doit rester une application extrêmement simple malgré la richesse poten
 
 Wheris est actuellement **en cours de développement**.
 
+### Point de reprise — 30 septembre 2026
+
+Le code couvre le parcours d’ajout GPS avec catégories système, la sauvegarde
+locale, la carte, la liste, la fiche et le lancement d’une navigation externe.
+
+Incrément suppression/carte : tests unitaires validés dans Android Studio
+selon le résultat communiqué par le développeur (53 tests dans les sept
+modules rapportés). Ce résultat ne couvre pas les tests instrumentés Room.
+
+Fonctions de cet incrément :
+
+- suppression d’un lieu depuis sa fiche, avec confirmation, annulation et nouvelle tentative en cas d’erreur ;
+- gestion des erreurs de chargement de carte avec nouvelle tentative ;
+- suppression des logs de coordonnées et utilisation de la règle de centrage testée ;
+- tests ajoutés pour la suppression ciblée, la préservation des autres lieux/catégories et les erreurs de carte.
+
+Nouvel incrément, **à compiler et tester dans Android Studio** : modification
+du nom et de la note depuis la fiche, affichage du nom dans la liste et sur
+la fiche rapide de la carte, conservation du brouillon en cas d’erreur.
+La base passe en version 2 avec une migration additive 1 → 2. Le schéma
+`2.json` sera exporté par KSP lors de la compilation Android Studio.
+Le test instrumenté `DatabaseMigrationTest` vérifie une ancienne base
+et la conservation de ses données ; les tests unitaires seuls ne le remplacent pas.
+
+La modification de catégorie, les favoris et photos,
+les catégories personnalisées, l’onboarding et les paramètres restent à développer.
+La présence du code ne constitue pas une validation sur appareil.
+
 Le projet est construit progressivement en privilégiant :
 
 1. simplicité utilisateur ;

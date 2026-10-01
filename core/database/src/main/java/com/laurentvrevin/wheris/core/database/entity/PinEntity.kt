@@ -28,4 +28,6 @@ data class PinEntity(
     val altitudeMeters: Double?,
     val createdAtEpochMillis: Long,
     val updatedAtEpochMillis: Long,
+    val name: String? = null,
+    val note: String? = null,
 )

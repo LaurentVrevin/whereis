@@ -1,6 +1,5 @@
 package com.laurentvrevin.wheris.core.map
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -33,6 +32,7 @@ import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.annotation.ViewAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotation
+import com.mapbox.maps.extension.compose.rememberMapState
 
 @Composable
 fun WherisMap(
@@ -41,15 +41,30 @@ fun WherisMap(
     focus: GeoPoint? = null,
     onSavedPlaceClick: (PinId) -> Unit = {},
     onMapClick: () -> Unit = {},
-    unavailableContent: @Composable () -> Unit,
+    unavailableContent: @Composable (onRetry: (() -> Unit)?) -> Unit,
 ) {
     val accessToken = stringResource(R.string.mapbox_access_token).trim()
     if (!accessToken.startsWith("pk.")) {
-        unavailableContent()
+        unavailableContent(null)
         return
     }
 
-    Log.d("WHERIS_CAMERA", "WherisMap: focus=$focus")
+    val mapState = rememberMapState()
+    var loadFailed by remember { mutableStateOf(false) }
+    var hasLoaded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(mapState) {
+        mapState.mapLoadedEvents.collect { hasLoaded = true }
+    }
+
+    LaunchedEffect(mapState) {
+        mapState.mapLoadingErrorEvents.collect {
+            // Provider errors may contain URLs or coordinates: never log their payload.
+            if (shouldShowMapFallback(hasLoaded, it.type)) {
+                loadFailed = true
+            }
+        }
+    }
 
     val viewportState =
         rememberMapViewportState {
@@ -57,10 +72,8 @@ fun WherisMap(
                 if (focus != null) {
                     center(focus.toPoint())
                     zoom(DEFAULT_PLACE_ZOOM)
-                    Log.d("WHERIS_CAMERA", "Initial camera set to focus $focus at zoom $DEFAULT_PLACE_ZOOM")
                 } else {
                     zoom(DEFAULT_WORLD_ZOOM)
-                    Log.d("WHERIS_CAMERA", "Initial camera set to world view zoom $DEFAULT_WORLD_ZOOM")
                 }
             }
         }
@@ -69,14 +82,21 @@ fun WherisMap(
     var userHasInteracted by remember { mutableStateOf(false) }
 
     LaunchedEffect(focus) {
-        if (!hasCenteredInitially && focus != null && !userHasInteracted) {
-            Log.d("WHERIS_CAMERA", "Triggering initial camera center on $focus at zoom $DEFAULT_PLACE_ZOOM")
+        if (focus != null && shouldCenterCamera(hasCenteredInitially, userHasInteracted, focus)) {
             viewportState.setCameraOptions {
                 center(focus.toPoint())
                 zoom(DEFAULT_PLACE_ZOOM)
             }
             hasCenteredInitially = true
         }
+    }
+
+    if (loadFailed) {
+        unavailableContent {
+            hasLoaded = false
+            loadFailed = false
+        }
+        return
     }
 
     MapboxMap(
@@ -92,6 +112,7 @@ fun WherisMap(
                 }
             },
         mapViewportState = viewportState,
+        mapState = mapState,
         onMapClickListener = { _ ->
             onMapClick()
             true

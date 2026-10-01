@@ -270,5 +270,16 @@ class AddPinViewModelTest {
             if (shouldFail) throw IOException("save failed")
             pins.value = pins.value + pin
         }
+
+        override suspend fun updatePinDetails(
+            pinId: PinId,
+            name: String?,
+            note: String?,
+            updatedAtEpochMillis: Long,
+        ): Boolean = error("Editing is not used by this test")
+
+        override suspend fun deletePin(pinId: PinId) {
+            pins.value = pins.value.filterNot { it.id == pinId }
+        }
     }
 }

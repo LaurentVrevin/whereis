@@ -5,6 +5,7 @@ plugins {
 
 android {
     namespace = "com.laurentvrevin.wheris.core.database"
+    sourceSets["androidTest"].assets.srcDir("$projectDir/schemas")
 }
 
 ksp {

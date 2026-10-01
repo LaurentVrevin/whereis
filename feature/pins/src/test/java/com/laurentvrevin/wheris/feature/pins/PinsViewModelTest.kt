@@ -121,5 +121,16 @@ class PinsViewModelTest {
         override suspend fun savePin(pin: Pin) {
             pins.value = pins.value + pin
         }
+
+        override suspend fun updatePinDetails(
+            pinId: PinId,
+            name: String?,
+            note: String?,
+            updatedAtEpochMillis: Long,
+        ): Boolean = error("Editing is not used by this test")
+
+        override suspend fun deletePin(pinId: PinId) {
+            pins.value = pins.value.filterNot { it.id == pinId }
+        }
     }
 }

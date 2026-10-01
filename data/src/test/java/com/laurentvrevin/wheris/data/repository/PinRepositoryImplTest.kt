@@ -39,6 +39,8 @@ class PinRepositoryImplTest {
                     altitudeMeters = 100.0,
                     createdAtEpochMillis = 1000L,
                     updatedAtEpochMillis = 2000L,
+                    name = "Camping",
+                    note = "Près du chemin",
                 )
 
             repository.savePin(pin)
@@ -52,6 +54,8 @@ class PinRepositoryImplTest {
             assertEquals(100.0, saved.altitudeMeters)
             assertEquals(1000L, saved.createdAtEpochMillis)
             assertEquals(2000L, saved.updatedAtEpochMillis)
+            assertEquals("Camping", saved.name)
+            assertEquals("Près du chemin", saved.note)
         }
 
     @Test
@@ -67,6 +71,8 @@ class PinRepositoryImplTest {
                     altitudeMeters = 100.0,
                     createdAtEpochMillis = 1000L,
                     updatedAtEpochMillis = 2000L,
+                    name = "Camping",
+                    note = "Près du chemin",
                 )
             fakeDao.emit(listOf(entity))
 
@@ -79,6 +85,8 @@ class PinRepositoryImplTest {
             assertEquals(100.0, observed.altitudeMeters)
             assertEquals(1000L, observed.createdAtEpochMillis)
             assertEquals(2000L, observed.updatedAtEpochMillis)
+            assertEquals("Camping", observed.name)
+            assertEquals("Près du chemin", observed.note)
         }
 
     @Test
@@ -127,6 +135,60 @@ class PinRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `deletePin forwards only the requested identifier`() =
+        runBlocking {
+            val entity =
+                PinEntity(
+                    id = "delete-me",
+                    latitude = 1.0,
+                    longitude = 2.0,
+                    categoryId = "category",
+                    accuracyMeters = null,
+                    altitudeMeters = null,
+                    createdAtEpochMillis = 100L,
+                    updatedAtEpochMillis = 100L,
+                )
+            val other = entity.copy(id = "keep-me")
+            fakeDao.emit(listOf(entity, other))
+
+            repository.deletePin(PinId(entity.id))
+
+            assertEquals(listOf(other), fakeDao.entities.value)
+        }
+
+    @Test
+    fun `deletePin propagates storage failure`() {
+        fakeDao.shouldFail = true
+
+        assertThrows(IOException::class.java) {
+            runBlocking { repository.deletePin(PinId("delete-me")) }
+        }
+    }
+
+    @Test
+    fun `updating details preserves other fields and reports a missing place`() =
+        runBlocking {
+            val original = PinEntity("edit-me", 10.0, 20.0, "category", 5f, 30.0, 1000L, 2000L)
+            fakeDao.emit(listOf(original))
+
+            assertEquals(true, repository.updatePinDetails(PinId("edit-me"), "Name", "Note", 3000L))
+            assertEquals(
+                listOf(original.copy(name = "Name", note = "Note", updatedAtEpochMillis = 3000L)),
+                fakeDao.entities.value,
+            )
+            assertEquals(false, repository.updatePinDetails(PinId("missing"), "Absent", null, 4000L))
+            assertEquals(1, fakeDao.entities.value.size)
+        }
+
+    @Test
+    fun `updating details propagates storage errors`() {
+        fakeDao.shouldFail = true
+        assertThrows(IOException::class.java) {
+            runBlocking { repository.updatePinDetails(PinId("edit-me"), "Name", "Note", 3000L) }
+        }
+    }
+
     private class FakePinDao : PinDao {
         val entities = MutableStateFlow<List<PinEntity>>(emptyList())
         var shouldFail = false
@@ -144,6 +206,20 @@ class PinRepositoryImplTest {
         override suspend fun insertPin(pin: PinEntity) {
             if (shouldFail) throw IOException("Fake DAO error")
             entities.value = entities.value + pin
+        }
+
+        override suspend fun deletePin(pinId: String) {
+            if (shouldFail) throw IOException("Fake DAO error")
+            entities.value = entities.value.filterNot { it.id == pinId }
+        }
+
+        override suspend fun updateDetails(pinId: String, name: String?, note: String?, updatedAt: Long): Int {
+            if (shouldFail) throw IOException("Fake DAO error")
+            if (entities.value.none { it.id == pinId }) return 0
+            entities.value = entities.value.map {
+                if (it.id == pinId) it.copy(name = name, note = note, updatedAtEpochMillis = updatedAt) else it
+            }
+            return 1
         }
     }
 }

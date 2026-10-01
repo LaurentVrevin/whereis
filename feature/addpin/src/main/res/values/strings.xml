@@ -44,4 +44,5 @@
     <string name="addpin_saved_title">Lieu enregistré !</string>
     <string name="addpin_view_on_map">Voir sur la carte</string>
     <string name="addpin_finish">Terminer</string>
+    <string name="addpin_retry_map">Réessayer la carte</string>
 </resources>

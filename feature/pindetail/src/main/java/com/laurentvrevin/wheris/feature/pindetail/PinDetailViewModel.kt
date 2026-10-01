@@ -28,8 +28,11 @@ class PinDetailViewModel(
     private var pinJob: Job? = null
     private var locationJob: Job? = null
     private var currentLocation: UserLocation? = null
+    private var observedPinId: PinId? = null
 
     fun observePin(pinId: PinId) {
+        if (observedPinId == pinId && (pinJob?.isActive == true || _uiState.value == PinDetailUiState.Deleted)) return
+        observedPinId = pinId
         pinJob?.cancel()
         locationJob?.cancel()
         currentLocation = null
@@ -39,17 +42,33 @@ class PinDetailViewModel(
             viewModelScope.launch {
                 try {
                     pinRepository.observePin(pinId).collect { pin ->
+                        val current = _uiState.value
+                        // Room may emit null before deletePin returns. Only its completion confirms success.
+                        if (
+                            current == PinDetailUiState.Deleted ||
+                            (current is PinDetailUiState.Content && current.deletion == PinDeletionState.InProgress)
+                        ) {
+                            return@collect
+                        }
                         _uiState.value =
                             if (pin == null) {
                                 PinDetailUiState.NotFound
                             } else {
-                                pin.toContent(currentLocation)
+                                pin.toContent(currentLocation).copy(
+                                    deletion = (current as? PinDetailUiState.Content)?.deletion ?: PinDeletionState.None,
+                                )
                             }
                     }
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (_: Exception) {
-                    _uiState.value = PinDetailUiState.Error
+                    val current = _uiState.value
+                    if (
+                        current != PinDetailUiState.Deleted &&
+                        !(current is PinDetailUiState.Content && current.deletion == PinDeletionState.InProgress)
+                    ) {
+                        _uiState.value = PinDetailUiState.Error
+                    }
                 }
             }
     }
@@ -78,9 +97,40 @@ class PinDetailViewModel(
 
                 val current = _uiState.value
                 if (current is PinDetailUiState.Content) {
-                    _uiState.value = current.pin.toContent(location)
+                    _uiState.value = current.pin.toContent(location).copy(deletion = current.deletion)
                 }
             }
+    }
+
+    fun requestDeletion() {
+        val current = _uiState.value as? PinDetailUiState.Content ?: return
+        if (current.deletion == PinDeletionState.InProgress) return
+        _uiState.value = current.copy(deletion = PinDeletionState.Confirmation)
+    }
+
+    fun cancelDeletion() {
+        val current = _uiState.value as? PinDetailUiState.Content ?: return
+        if (current.deletion == PinDeletionState.InProgress) return
+        _uiState.value = current.copy(deletion = PinDeletionState.None)
+    }
+
+    fun confirmDeletion() {
+        val current = _uiState.value as? PinDetailUiState.Content ?: return
+        if (current.deletion != PinDeletionState.Confirmation && current.deletion != PinDeletionState.Failed) return
+        _uiState.value = current.copy(deletion = PinDeletionState.InProgress)
+        viewModelScope.launch {
+            try {
+                pinRepository.deletePin(current.pin.id)
+                pinJob?.cancel()
+                locationJob?.cancel()
+                _uiState.value = PinDetailUiState.Deleted
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (_: Exception) {
+                val latest = _uiState.value as? PinDetailUiState.Content ?: current
+                _uiState.value = latest.copy(deletion = PinDeletionState.Failed)
+            }
+        }
     }
 
     override fun onCleared() {

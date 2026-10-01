@@ -24,4 +24,15 @@ interface PinRepository {
      * @throws Exception if a pin with the same ID already exists.
      */
     suspend fun savePin(pin: Pin)
+
+    /** Deletes only this place. An already absent place is treated as deleted. */
+    suspend fun deletePin(pinId: PinId)
+
+    /** Updates only editable text and modification time; false if the place no longer exists. */
+    suspend fun updatePinDetails(
+        pinId: PinId,
+        name: String?,
+        note: String?,
+        updatedAtEpochMillis: Long,
+    ): Boolean
 }

@@ -10,9 +10,19 @@ sealed interface PinDetailUiState {
 
     data object Error : PinDetailUiState
 
+    data object Deleted : PinDetailUiState
+
     data class Content(
         val pin: Pin,
         val distanceMeters: Double? = null,
         val cardinalDirection: CardinalDirection? = null,
+        val deletion: PinDeletionState = PinDeletionState.None,
     ) : PinDetailUiState
+}
+
+enum class PinDeletionState {
+    None,
+    Confirmation,
+    InProgress,
+    Failed,
 }

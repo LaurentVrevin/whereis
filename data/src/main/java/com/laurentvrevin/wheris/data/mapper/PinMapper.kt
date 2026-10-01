@@ -15,6 +15,8 @@ fun PinEntity.toDomain(): Pin {
         altitudeMeters = altitudeMeters,
         createdAtEpochMillis = createdAtEpochMillis,
         updatedAtEpochMillis = updatedAtEpochMillis,
+        name = name,
+        note = note,
     )
 }
 
@@ -28,5 +30,7 @@ fun Pin.toEntity(): PinEntity {
         altitudeMeters = altitudeMeters,
         createdAtEpochMillis = createdAtEpochMillis,
         updatedAtEpochMillis = updatedAtEpochMillis,
+        name = name,
+        note = note,
     )
 }

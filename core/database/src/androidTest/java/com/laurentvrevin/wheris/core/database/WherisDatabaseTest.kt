@@ -15,6 +15,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -173,6 +174,36 @@ class WherisDatabaseTest {
             assertThrows(SQLiteConstraintException::class.java) {
                 runBlocking { pinDao.insertPin(pin) }
             }
+        }
+
+    @Test
+    fun deletePin_preservesOtherPlacesAndTheirCategory() =
+        runBlocking {
+            val categoryId = SystemCategoryIds.PARKING.value
+            val pin =
+                PinEntity(
+                    id = "delete-me",
+                    latitude = 10.0,
+                    longitude = 20.0,
+                    categoryId = categoryId,
+                    accuracyMeters = 5f,
+                    altitudeMeters = null,
+                    createdAtEpochMillis = 1000L,
+                    updatedAtEpochMillis = 1000L,
+                )
+            val other = pin.copy(id = "keep-me")
+            pinDao.insertPin(pin)
+            pinDao.insertPin(other)
+
+            pinDao.deletePin(pin.id)
+
+            assertNull(pinDao.observePin(pin.id).first())
+            assertEquals(listOf(other), pinDao.observePins().first())
+            assertNotNull(categoryDao.getCategoryById(categoryId))
+
+            // Repeating the request must never affect a different place.
+            pinDao.deletePin(pin.id)
+            assertEquals(listOf(other), pinDao.observePins().first())
         }
 
     @Test

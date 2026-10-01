@@ -3,8 +3,9 @@
     <string name="home_add_place">Ajouter un lieu</string>
     <string name="home_empty_prompt">Quel lieu veux-tu retrouver ?</string>
     <string name="home_map_unavailable">Carte indisponible</string>
+    <string name="home_retry_map">Réessayer la carte</string>
     <string name="home_map_unavailable_empty">Tu peux toujours ajouter un lieu. Tes lieux enregistrés restent stockés localement.</string>
-    <string name="home_map_unavailable_saved">Tes lieux enregistrés restent stockés localement. Tu peux toujours ajouter un lieu.</string>
+    <string name="home_map_unavailable_saved">Retrouve tes lieux dans l’onglet Lieux. Tu peux toujours ajouter un lieu.</string>
     <string name="home_data_error">Impossible de charger les lieux enregistrés pour le moment.</string>
     <string name="home_btn_navigate">Naviguer</string>
     <string name="home_btn_details">Détails</string>

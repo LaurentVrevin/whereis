@@ -209,7 +209,7 @@ private fun PinCardRow(
                         .padding(start = WherisSpacing.md),
             ) {
                 Text(
-                    text = categoryLabel(pinItem.pin.categoryId),
+                    text = pinItem.pin.name ?: categoryLabel(pinItem.pin.categoryId),
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(

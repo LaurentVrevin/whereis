@@ -207,6 +207,17 @@ class HomeViewModelTest {
         override fun observePin(pinId: PinId): Flow<Pin?> = MutableStateFlow(null)
 
         override suspend fun savePin(pin: Pin) = Unit
+
+        override suspend fun updatePinDetails(
+            pinId: PinId,
+            name: String?,
+            note: String?,
+            updatedAtEpochMillis: Long,
+        ): Boolean = error("Editing is not used by this test")
+
+        override suspend fun deletePin(pinId: PinId) {
+            pins.value = pins.value.filterNot { it.id == pinId }
+        }
     }
 
     private class FakeUserLocationRepository : UserLocationRepository {

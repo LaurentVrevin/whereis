@@ -65,12 +65,12 @@ internal fun MapQuickDetailCard(
                             .padding(start = WherisSpacing.md),
                 ) {
                     Text(
-                        text = categoryLabel(pin.categoryId),
+                        text = pin.name ?: categoryLabel(pin.categoryId),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                     )
                     Text(
-                        text = stringResource(R.string.home_fallback_identity),
+                        text = if (pin.name != null) categoryLabel(pin.categoryId) else stringResource(R.string.home_fallback_identity),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

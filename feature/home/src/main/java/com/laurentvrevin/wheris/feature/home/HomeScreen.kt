@@ -14,6 +14,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -50,9 +51,10 @@ fun HomeScreen(
                 focus = uiState.initialCameraFocus,
                 onSavedPlaceClick = onSavedPlaceSelected,
                 onMapClick = onMapClick,
-                unavailableContent = {
+                unavailableContent = { onRetry ->
                     MapUnavailableContent(
                         hasSavedPlaces = uiState.pins.isNotEmpty(),
+                        onRetry = onRetry,
                         modifier = Modifier.fillMaxSize(),
                     )
                 },
@@ -130,6 +132,7 @@ fun HomeScreen(
 @Composable
 private fun MapUnavailableContent(
     hasSavedPlaces: Boolean,
+    onRetry: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -158,5 +161,10 @@ private fun MapUnavailableContent(
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = WherisSpacing.sm),
         )
+        if (onRetry != null) {
+            OutlinedButton(onClick = onRetry) {
+                Text(stringResource(R.string.home_retry_map))
+            }
+        }
     }
 }
