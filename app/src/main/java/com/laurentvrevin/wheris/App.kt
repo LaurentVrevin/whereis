@@ -2,8 +2,10 @@ package com.laurentvrevin.wheris
 
 import android.app.Application
 import com.laurentvrevin.wheris.core.database.di.databaseModule
+import com.laurentvrevin.wheris.core.datastore.di.dataStoreModule
 import com.laurentvrevin.wheris.core.location.di.locationModule
 import com.laurentvrevin.wheris.data.di.dataModule
+import com.laurentvrevin.wheris.di.appLaunchModule
 import com.laurentvrevin.wheris.feature.addpin.di.addPinModule
 import com.laurentvrevin.wheris.feature.home.di.homeModule
 import com.laurentvrevin.wheris.feature.pindetail.di.pinDetailModule
@@ -24,7 +26,9 @@ class App : Application() {
             androidContext(this@App)
             modules(
                 databaseModule,
+                dataStoreModule,
                 dataModule,
+                appLaunchModule,
                 locationModule,
                 addPinModule,
                 homeModule,
