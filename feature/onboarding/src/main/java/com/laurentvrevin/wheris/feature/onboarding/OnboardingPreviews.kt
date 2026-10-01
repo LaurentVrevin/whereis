@@ -32,3 +32,25 @@ private fun PrivacyPreview() {
         OnboardingScreen(page = OnboardingPage.PRIVACY, onContinue = {}, onBack = {})
     }
 }
+
+@Preview(name = "ONB_004 — Clair", showBackground = true)
+@Preview(name = "ONB_004 — Sombre", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun LocationPreview() {
+    WherisTheme {
+        OnboardingScreen(page = OnboardingPage.LOCATION, onContinue = {}, onBack = {})
+    }
+}
+
+@Preview(name = "ONB_004 — Refus, grand texte", showBackground = true, fontScale = 2f)
+@Composable
+private fun LocationDeniedPreview() {
+    WherisTheme {
+        OnboardingScreen(
+            page = OnboardingPage.LOCATION,
+            permissionState = LocationPermissionState.SettingsRequired,
+            onContinue = {},
+            onBack = {},
+        )
+    }
+}

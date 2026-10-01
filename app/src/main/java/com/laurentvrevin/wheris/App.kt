@@ -8,6 +8,7 @@ import com.laurentvrevin.wheris.data.di.dataModule
 import com.laurentvrevin.wheris.di.appLaunchModule
 import com.laurentvrevin.wheris.feature.addpin.di.addPinModule
 import com.laurentvrevin.wheris.feature.home.di.homeModule
+import com.laurentvrevin.wheris.feature.onboarding.di.onboardingModule
 import com.laurentvrevin.wheris.feature.pindetail.di.pinDetailModule
 import com.laurentvrevin.wheris.feature.pins.di.pinsModule
 import org.koin.android.ext.koin.androidContext
@@ -29,6 +30,7 @@ class App : Application() {
                 dataStoreModule,
                 dataModule,
                 appLaunchModule,
+                onboardingModule,
                 locationModule,
                 addPinModule,
                 homeModule,

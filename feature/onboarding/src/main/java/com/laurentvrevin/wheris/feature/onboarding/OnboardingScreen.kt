@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationOff
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.PersonOutline
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Shield
@@ -37,7 +38,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import com.laurentvrevin.wheris.core.designsystem.foundation.WherisSpacing
@@ -48,7 +51,15 @@ fun OnboardingScreen(
     onContinue: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    permissionState: LocationPermissionState = LocationPermissionState.NotRequested,
+    completionState: OnboardingCompletionState = OnboardingCompletionState.Idle,
+    onRequestPermission: () -> Unit = {},
+    onOpenSettings: () -> Unit = {},
+    onComplete: () -> Unit = {},
 ) {
+    val actionsEnabled =
+        completionState != OnboardingCompletionState.Saving &&
+            completionState != OnboardingCompletionState.Completed && permissionState != LocationPermissionState.Requesting
     Surface(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,
@@ -89,6 +100,7 @@ fun OnboardingScreen(
                         OnboardingPage.WELCOME -> Unit
                         OnboardingPage.CONCEPT -> ConceptContent()
                         OnboardingPage.PRIVACY -> PrivacyContent()
+                        OnboardingPage.LOCATION -> LocationContent(permissionState)
                     }
                 }
             }
@@ -97,15 +109,30 @@ fun OnboardingScreen(
                 modifier = Modifier.fillMaxWidth().padding(WherisSpacing.lg),
                 verticalArrangement = Arrangement.spacedBy(WherisSpacing.sm),
             ) {
-                Button(
-                    onClick = onContinue,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = WherisSpacing.xxxxl),
-                ) {
-                    Text(stringResource(R.string.onboarding_continue))
+                if (completionState == OnboardingCompletionState.Failed) {
+                    Text(
+                        text = stringResource(R.string.onboarding_completion_error),
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    )
+                    Button(onClick = onComplete, enabled = actionsEnabled, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.onboarding_completion_retry))
+                    }
+                } else if (page == OnboardingPage.LOCATION) {
+                    LocationActions(permissionState, completionState, onRequestPermission, onOpenSettings, onComplete)
+                } else {
+                    Button(
+                        onClick = onContinue,
+                        enabled = actionsEnabled,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = WherisSpacing.xxxxl),
+                    ) {
+                        Text(stringResource(R.string.onboarding_continue))
+                    }
                 }
                 if (page != OnboardingPage.WELCOME) {
                     TextButton(
                         onClick = onBack,
+                        enabled = actionsEnabled,
                         modifier = Modifier.fillMaxWidth().heightIn(min = WherisSpacing.xxxxl),
                     ) {
                         Text(stringResource(R.string.onboarding_back))
@@ -126,18 +153,21 @@ private fun PageIntroduction(
             OnboardingPage.WELCOME -> Icons.Default.Place
             OnboardingPage.CONCEPT -> Icons.Default.BookmarkBorder
             OnboardingPage.PRIVACY -> Icons.Default.Shield
+            OnboardingPage.LOCATION -> Icons.Default.MyLocation
         }
     val title =
         when (page) {
             OnboardingPage.WELCOME -> R.string.onboarding_welcome_title
             OnboardingPage.CONCEPT -> R.string.onboarding_concept_title
             OnboardingPage.PRIVACY -> R.string.onboarding_privacy_title
+            OnboardingPage.LOCATION -> R.string.onboarding_location_title
         }
     val description =
         when (page) {
             OnboardingPage.WELCOME -> R.string.onboarding_welcome_description
             OnboardingPage.CONCEPT -> R.string.onboarding_concept_description
             OnboardingPage.PRIVACY -> R.string.onboarding_privacy_description
+            OnboardingPage.LOCATION -> R.string.onboarding_location_description
         }
     Column(
         modifier = modifier.fillMaxWidth(),

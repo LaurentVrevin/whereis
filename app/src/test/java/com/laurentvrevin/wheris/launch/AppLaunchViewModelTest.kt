@@ -2,10 +2,13 @@ package com.laurentvrevin.wheris.launch
 
 import com.laurentvrevin.wheris.di.appLaunchModule
 import com.laurentvrevin.wheris.domain.repository.OnboardingRepository
+import com.laurentvrevin.wheris.feature.onboarding.OnboardingViewModel
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -74,6 +77,34 @@ class AppLaunchViewModelTest {
             repository.setOnboardingCompleted(false)
             testScheduler.runCurrent()
             assertEquals(AppLaunchState.OnboardingRequired, viewModel.uiState.value)
+        }
+
+    @Test
+    fun `onboarding completion switches launch only after successful persistence`() =
+        runTest(dispatcher) {
+            val completed = MutableStateFlow(false)
+            val writeGate = CompletableDeferred<Unit>()
+            val repository =
+                object : OnboardingRepository {
+                    override val isOnboardingCompleted = completed
+
+                    override suspend fun setOnboardingCompleted(completed: Boolean) {
+                        writeGate.await()
+                        this.isOnboardingCompleted.value = completed
+                    }
+                }
+            val launchViewModel = AppLaunchViewModel(repository)
+            val onboardingViewModel = OnboardingViewModel(repository)
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { launchViewModel.uiState.collect {} }
+            testScheduler.runCurrent()
+            assertEquals(AppLaunchState.OnboardingRequired, launchViewModel.uiState.value)
+
+            onboardingViewModel.complete()
+            testScheduler.runCurrent()
+            assertEquals(AppLaunchState.OnboardingRequired, launchViewModel.uiState.value)
+            writeGate.complete(Unit)
+            testScheduler.runCurrent()
+            assertEquals(AppLaunchState.MainApp, launchViewModel.uiState.value)
         }
 
     @Test

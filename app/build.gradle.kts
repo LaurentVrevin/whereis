@@ -43,6 +43,8 @@ dependencies {
     implementation(project(":feature:home"))
     implementation(project(":feature:pins"))
     implementation(project(":feature:pindetail"))
+    implementation(project(":feature:onboarding"))
+    implementation(libs.lifecycle.runtime.compose)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
@@ -64,4 +66,6 @@ dependencies {
     testImplementation(libs.koin.test)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    debugImplementation(libs.compose.ui.test.manifest)
 }

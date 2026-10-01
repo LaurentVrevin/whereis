@@ -18,4 +18,19 @@
     <string name="onboarding_continue">Continuer</string>
     <string name="onboarding_back">Retour</string>
     <string name="onboarding_progress">Étape %1$d / %2$d</string>
+    <string name="onboarding_location_title">Enregistre là où tu es</string>
+    <string name="onboarding_location_description">Wheris utilise ta position lorsque tu choisis d’enregistrer l’endroit où tu te trouves.</string>
+    <string name="onboarding_location_accuracy">Une position précise améliore la précision de l’enregistrement. Tu peux aussi choisir une position approximative.</string>
+    <string name="onboarding_location_tracking">Wheris n’a pas besoin de suivre tes déplacements en permanence.</string>
+    <string name="onboarding_location_precise">La localisation précise est autorisée.</string>
+    <string name="onboarding_location_approximate">La localisation approximative est autorisée. Tu peux utiliser Wheris avec ce choix.</string>
+    <string name="onboarding_location_denied">Wheris reste accessible sans localisation. Pour enregistrer ta position, tu devras l’autoriser. Tu pourras modifier ton choix plus tard.</string>
+    <string name="onboarding_allow_location">Autoriser la localisation</string>
+    <string name="onboarding_permission_retry">Réessayer</string>
+    <string name="onboarding_open_settings">Ouvrir les réglages</string>
+    <string name="onboarding_continue_without_location">Continuer sans localisation</string>
+    <string name="onboarding_finish">Terminer</string>
+    <string name="onboarding_saving">Enregistrement…</string>
+    <string name="onboarding_completion_error">Impossible de terminer pour le moment. Réessaie pour enregistrer ton choix.</string>
+    <string name="onboarding_completion_retry">Réessayer de terminer</string>
 </resources>

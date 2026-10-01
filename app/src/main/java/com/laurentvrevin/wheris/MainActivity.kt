@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import com.laurentvrevin.wheris.core.designsystem.theme.WherisTheme
-import com.laurentvrevin.wheris.navigation.AppNavHost
+import com.laurentvrevin.wheris.launch.AppRoot
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -15,7 +15,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val isDarkTheme = isSystemInDarkTheme()
             WherisTheme(darkTheme = isDarkTheme) {
-                AppNavHost()
+                AppRoot()
             }
         }
     }

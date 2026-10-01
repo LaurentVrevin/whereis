@@ -4,4 +4,5 @@ enum class OnboardingPage {
     WELCOME,
     CONCEPT,
     PRIVACY,
+    LOCATION,
 }
