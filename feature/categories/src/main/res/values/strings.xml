@@ -1,0 +1,35 @@
+<resources>
+    <string name="categories_title">Catégories</string>
+    <string name="categories_back">Retour</string>
+    <string name="categories_system">Catégories système</string>
+    <string name="categories_custom">Catégories personnalisées</string>
+    <string name="categories_default">Par défaut</string>
+    <string name="categories_edit">Modifier</string>
+    <string name="categories_edit_named">Modifier %1$s</string>
+    <string name="categories_create_action">Créer une catégorie</string>
+    <string name="categories_create_title">Nouvelle catégorie</string>
+    <string name="categories_edit_title">Modifier une catégorie</string>
+    <string name="categories_create">Créer</string>
+    <string name="categories_save">Enregistrer</string>
+    <string name="categories_cancel">Annuler</string>
+    <string name="categories_delete">Supprimer</string>
+    <string name="categories_delete_title">Supprimer la catégorie</string>
+    <string name="categories_delete_unused">Supprimer « %1$s » ? Aucun lieu n’utilise cette catégorie.</string>
+    <string name="categories_delete_used">« %1$s » sera supprimée. Tes lieux seront conservés et déplacés vers la catégorie choisie.</string>
+    <string name="categories_replacement">Choisis une catégorie de remplacement</string>
+    <string name="categories_confirm_reassign">Réaffecter et supprimer</string>
+    <string name="categories_retry">Réessayer</string>
+    <string name="categories_busy">En cours…</string>
+    <string name="categories_load_failed">Impossible de charger les catégories. Réessaie.</string>
+    <string name="categories_save_failed">La catégorie n’a pas pu être enregistrée. Tes choix sont conservés. Réessaie.</string>
+    <string name="categories_usage_failed">Impossible de vérifier les lieux de cette catégorie. Réessaie Supprimer.</string>
+    <string name="categories_delete_failed">La suppression n’a pas abouti. Tes lieux sont conservés. Réessaie.</string>
+    <string name="categories_not_found">Cette catégorie n’est plus disponible. La liste a été actualisée.</string>
+    <string name="categories_system_protected">Les catégories par défaut ne peuvent pas être modifiées ou supprimées.</string>
+    <string name="categories_replacement_missing">Cette catégorie de remplacement n’est plus disponible. Choisis-en une autre.</string>
+    <string name="categories_replacement_invalid">Choisis une catégorie différente de celle à supprimer.</string>
+    <plurals name="categories_usage_count">
+        <item quantity="one">%d lieu concerné</item>
+        <item quantity="other">%d lieux concernés</item>
+    </plurals>
+</resources>
