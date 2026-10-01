@@ -556,6 +556,7 @@ private fun CategorySelectionContent(
     ) {
         TextButton(
             onClick = onBack,
+            enabled = !state.isSaving,
         ) {
             Text(
                 stringResource(

@@ -149,21 +149,24 @@ class EditPinViewModelTest {
             assertEquals(null, repository.pin)
         }
 
-    private fun editor(repository: FakeRepository, handle: SavedStateHandle = SavedStateHandle()) =
-        EditPinViewModel(repository, UpdatePinDetailsUseCase(repository) { 5000L }, handle)
+    private fun editor(
+        repository: FakeRepository,
+        handle: SavedStateHandle = SavedStateHandle(),
+    ) = EditPinViewModel(repository, UpdatePinDetailsUseCase(repository) { 5000L }, handle)
 
     private class FakeRepository : PinRepository {
-        var pin: Pin? = Pin(
-            id = PinId("edit-test"),
-            position = GeoPoint(10.0, 20.0),
-            categoryId = SystemCategoryIds.PARKING,
-            accuracyMeters = 8f,
-            altitudeMeters = 30.0,
-            createdAtEpochMillis = 1000L,
-            updatedAtEpochMillis = 2000L,
-            name = "Original",
-            note = "Original note",
-        )
+        var pin: Pin? =
+            Pin(
+                id = PinId("edit-test"),
+                position = GeoPoint(10.0, 20.0),
+                categoryId = SystemCategoryIds.PARKING,
+                accuracyMeters = 8f,
+                altitudeMeters = 30.0,
+                createdAtEpochMillis = 1000L,
+                updatedAtEpochMillis = 2000L,
+                name = "Original",
+                note = "Original note",
+            )
         var fail = false
         var updateCalls = 0
         var completion: CompletableDeferred<Unit>? = null
@@ -176,7 +179,12 @@ class EditPinViewModelTest {
 
         override suspend fun deletePin(pinId: PinId) = error("Editor must never delete")
 
-        override suspend fun updatePinDetails(pinId: PinId, name: String?, note: String?, updatedAtEpochMillis: Long): Boolean {
+        override suspend fun updatePinDetails(
+            pinId: PinId,
+            name: String?,
+            note: String?,
+            updatedAtEpochMillis: Long,
+        ): Boolean {
             updateCalls++
             completion?.await()
             if (fail) throw IOException("storage unavailable")

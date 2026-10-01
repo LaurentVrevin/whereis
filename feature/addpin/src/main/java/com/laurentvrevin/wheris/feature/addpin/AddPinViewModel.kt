@@ -39,23 +39,29 @@ class AddPinViewModel(
         isCoarseLocationGranted = isCoarseGranted
 
         when (_uiState.value) {
-            is AddPinUiState.Searching,
-            is AddPinUiState.PositionFound,
-            is AddPinUiState.CategorySelection,
-            is AddPinUiState.Saved,
-            -> Unit
+            is AddPinUiState.PermissionRequired,
+            is AddPinUiState.PermissionDenied,
+            -> fetchLocation()
 
-            else -> fetchLocation()
+            else -> Unit
         }
     }
 
     fun onPermissionDenied(isPermanentlyDenied: Boolean = false) {
+        isFineLocationGranted = false
+        isCoarseLocationGranted = false
         locationJob?.cancel()
         locationJob = null
         _uiState.value = AddPinUiState.PermissionDenied(isPermanentlyDenied)
     }
 
-    fun retryLocation() {
+    fun retryLocation(
+        isFineGranted: Boolean = isFineLocationGranted,
+        isCoarseGranted: Boolean = isCoarseLocationGranted,
+    ) {
+        if (_uiState.value is AddPinUiState.CategorySelection || _uiState.value is AddPinUiState.Saved) return
+        isFineLocationGranted = isFineGranted
+        isCoarseLocationGranted = isCoarseGranted
         if (isFineLocationGranted || isCoarseLocationGranted) {
             fetchLocation()
         } else {
@@ -105,9 +111,9 @@ class AddPinViewModel(
     }
 
     fun backToPosition() {
+        val state = _uiState.value as? AddPinUiState.CategorySelection ?: return
+        if (state.isSaving) return
         val location = acceptedLocation ?: return
-        saveJob?.cancel()
-        saveJob = null
         categoryJob?.cancel()
         categoryJob = null
         _uiState.value =

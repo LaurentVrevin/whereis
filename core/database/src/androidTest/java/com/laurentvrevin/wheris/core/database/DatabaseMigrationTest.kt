@@ -32,13 +32,14 @@ class DatabaseMigrationTest {
                 )
                 close()
             }
+            helper.runMigrationsAndValidate(databaseName, 2, true, MIGRATION_1_2).close()
             val database =
                 Room.databaseBuilder(context, WherisDatabase::class.java, databaseName)
                     .addMigrations(MIGRATION_1_2)
                     .addCallback(WherisDatabase.getCallback())
                     .build()
             try {
-                // Opening through Room validates the migrated schema against the generated v2 schema.
+                // Reopening through Room also checks that the migrated data can be read and edited.
                 val original = requireNotNull(database.pinDao().observePin("old-pin").first())
                 assertEquals(10.0, original.latitude, 0.0)
                 assertEquals(20.0, original.longitude, 0.0)
@@ -49,7 +50,9 @@ class DatabaseMigrationTest {
                 assertEquals(2000L, original.updatedAtEpochMillis)
                 assertNull(original.name)
                 assertNull(original.note)
-                assertNotNull(database.categoryDao().getCategoryById("custom-category"))
+                val category = database.categoryDao().getCategoryById("custom-category")
+                assertNotNull(category)
+                assertEquals(false, category?.isSystem)
 
                 assertEquals(1, database.pinDao().updateDetails("old-pin", "Camping", "Près du chemin", 3000L))
                 assertEquals(

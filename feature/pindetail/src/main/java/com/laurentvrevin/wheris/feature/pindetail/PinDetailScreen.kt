@@ -232,7 +232,14 @@ private fun Content(
                             fontWeight = FontWeight.SemiBold,
                         )
                         Text(
-                            text = if (state.pin.name != null) categoryLabel(state.pin.categoryId) else stringResource(R.string.pindetail_fallback_identity),
+                            text =
+                                if (state.pin.name != null) {
+                                    categoryLabel(
+                                        state.pin.categoryId,
+                                    )
+                                } else {
+                                    stringResource(R.string.pindetail_fallback_identity)
+                                },
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

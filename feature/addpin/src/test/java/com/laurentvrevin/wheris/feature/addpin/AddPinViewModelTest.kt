@@ -11,6 +11,7 @@ import com.laurentvrevin.wheris.domain.location.LocationResult
 import com.laurentvrevin.wheris.domain.repository.CategoryRepository
 import com.laurentvrevin.wheris.domain.repository.UserLocationRepository
 import com.laurentvrevin.wheris.domain.usecase.CreatePinUseCase
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -193,6 +194,153 @@ class AddPinViewModelTest {
             assertEquals(1, slowRepository.completedCalls)
         }
 
+    @Test
+    fun `explicit retry replaces found position and saves the new location`() =
+        runTest(testDispatcher) {
+            val fixture = Fixture(LocationResult.Success(testLocation()))
+            fixture.categoryRepository.categories.value = systemCategories()
+            fixture.viewModel.onPermissionGranted(true, true)
+            testScheduler.advanceUntilIdle()
+            val newLocation = testLocation().copy(position = GeoPoint(12.0, 24.0), timestampEpochMillis = 2_000L)
+            fixture.locationRepository.nextResult = LocationResult.Success(newLocation)
+
+            fixture.viewModel.retryLocation(isFineGranted = false, isCoarseGranted = true)
+            assertEquals(AddPinUiState.Searching, fixture.viewModel.uiState.value)
+            testScheduler.advanceUntilIdle()
+            val found = fixture.viewModel.uiState.value as AddPinUiState.PositionFound
+            assertEquals(newLocation, found.location)
+            assertTrue(found.isApproximate)
+            fixture.viewModel.confirmPosition()
+            testScheduler.advanceUntilIdle()
+            fixture.viewModel.selectCategory(SystemCategoryIds.PARKING)
+            fixture.viewModel.savePin()
+            testScheduler.advanceUntilIdle()
+
+            val saved = fixture.viewModel.uiState.value as AddPinUiState.Saved
+            assertEquals(newLocation.position, saved.pin.position)
+            assertEquals(newLocation.accuracyMeters, saved.pin.accuracyMeters)
+            assertEquals(newLocation.altitudeMeters, saved.pin.altitudeMeters)
+            assertEquals(2, fixture.locationRepository.calls)
+        }
+
+    @Test
+    fun `permission notifications preserve position category and location failure`() =
+        runTest(testDispatcher) {
+            val fixture = Fixture(LocationResult.Success(testLocation()))
+            fixture.categoryRepository.categories.value = systemCategories()
+            fixture.viewModel.onPermissionGranted(true, true)
+            testScheduler.advanceUntilIdle()
+            val found = fixture.viewModel.uiState.value
+            fixture.viewModel.onPermissionGranted(true, true)
+            testScheduler.advanceUntilIdle()
+            assertEquals(found, fixture.viewModel.uiState.value)
+
+            fixture.viewModel.confirmPosition()
+            testScheduler.advanceUntilIdle()
+            fixture.viewModel.selectCategory(SystemCategoryIds.PARKING)
+            val selected = fixture.viewModel.uiState.value
+            fixture.viewModel.onPermissionGranted(true, true)
+            testScheduler.advanceUntilIdle()
+            assertEquals(selected, fixture.viewModel.uiState.value)
+            assertEquals(1, fixture.locationRepository.calls)
+
+            fixture.viewModel.backToPosition()
+            fixture.locationRepository.nextResult = LocationResult.Timeout
+            fixture.viewModel.retryLocation()
+            testScheduler.advanceUntilIdle()
+            fixture.viewModel.onPermissionGranted(true, true)
+            testScheduler.advanceUntilIdle()
+            assertEquals(AddPinUiState.Timeout, fixture.viewModel.uiState.value)
+            assertEquals(2, fixture.locationRepository.calls)
+        }
+
+    @Test
+    fun `retry without permission requests permission and denial remains recoverable`() =
+        runTest(testDispatcher) {
+            val fixture = Fixture(LocationResult.Success(testLocation()))
+            fixture.viewModel.onPermissionGranted(true, true)
+            testScheduler.advanceUntilIdle()
+            fixture.viewModel.onPermissionDenied(true)
+            fixture.viewModel.retryLocation()
+            assertEquals(AddPinUiState.PermissionRequired, fixture.viewModel.uiState.value)
+            assertEquals(1, fixture.locationRepository.calls)
+            fixture.viewModel.retryLocation(isFineGranted = false, isCoarseGranted = false)
+            assertEquals(AddPinUiState.PermissionRequired, fixture.viewModel.uiState.value)
+            fixture.viewModel.onPermissionDenied(true)
+            fixture.viewModel.retryLocation()
+            assertEquals(AddPinUiState.PermissionRequired, fixture.viewModel.uiState.value)
+            assertEquals(1, fixture.locationRepository.calls)
+            fixture.viewModel.onPermissionGranted(false, true)
+            testScheduler.advanceUntilIdle()
+            assertTrue((fixture.viewModel.uiState.value as AddPinUiState.PositionFound).isApproximate)
+        }
+
+    @Test
+    fun `back and double click during suspended save preserve draft until persistence succeeds`() =
+        runTest(testDispatcher) {
+            val fixture = readyToSaveFixture()
+            fixture.viewModel.selectCategory(SystemCategoryIds.PARKING)
+            val completion = CompletableDeferred<Unit>()
+            fixture.pinRepository.saveCompletion = completion
+            fixture.viewModel.savePin()
+            testScheduler.runCurrent()
+            val saving = fixture.viewModel.uiState.value as AddPinUiState.CategorySelection
+            assertTrue(saving.isSaving)
+            assertTrue(fixture.pinRepository.pins.value.isEmpty())
+
+            fixture.viewModel.backToPosition()
+            fixture.viewModel.savePin()
+            fixture.viewModel.selectCategory(SystemCategoryIds.RESTAURANT)
+            fixture.viewModel.onPermissionGranted(true, true)
+            fixture.viewModel.retryLocation()
+            testScheduler.runCurrent()
+            assertEquals(saving, fixture.viewModel.uiState.value)
+            assertEquals(1, fixture.pinRepository.saveCalls)
+
+            completion.complete(Unit)
+            testScheduler.advanceUntilIdle()
+            val saved = fixture.viewModel.uiState.value as AddPinUiState.Saved
+            assertEquals(listOf(saved.pin), fixture.pinRepository.pins.value)
+            assertEquals(SystemCategoryIds.PARKING, saved.pin.categoryId)
+            assertEquals(testLocation().position, saved.pin.position)
+            fixture.viewModel.savePin()
+            fixture.viewModel.backToPosition()
+            assertEquals(saved, fixture.viewModel.uiState.value)
+            assertEquals(1, fixture.pinRepository.saveCalls)
+        }
+
+    @Test
+    fun `suspended save failure retains draft and retry creates only one place`() =
+        runTest(testDispatcher) {
+            val fixture = readyToSaveFixture()
+            fixture.viewModel.selectCategory(SystemCategoryIds.RESTAURANT)
+            val draft = fixture.viewModel.uiState.value as AddPinUiState.CategorySelection
+            val completion = CompletableDeferred<Unit>()
+            fixture.pinRepository.saveCompletion = completion
+            fixture.viewModel.savePin()
+            testScheduler.runCurrent()
+            fixture.viewModel.backToPosition()
+            fixture.viewModel.savePin()
+            completion.completeExceptionally(IOException("save failed"))
+            testScheduler.advanceUntilIdle()
+            assertEquals(draft.copy(saveFailed = true), fixture.viewModel.uiState.value)
+            assertTrue(fixture.pinRepository.pins.value.isEmpty())
+            assertEquals(1, fixture.pinRepository.saveCalls)
+
+            val retryCompletion = CompletableDeferred<Unit>()
+            fixture.pinRepository.saveCompletion = retryCompletion
+            fixture.viewModel.savePin()
+            fixture.viewModel.savePin()
+            testScheduler.runCurrent()
+            assertEquals(2, fixture.pinRepository.saveCalls)
+            assertTrue((fixture.viewModel.uiState.value as AddPinUiState.CategorySelection).isSaving)
+            retryCompletion.complete(Unit)
+            testScheduler.advanceUntilIdle()
+            assertTrue(fixture.viewModel.uiState.value is AddPinUiState.Saved)
+            assertEquals(1, fixture.pinRepository.pins.value.size)
+            assertEquals(SystemCategoryIds.RESTAURANT, fixture.pinRepository.pins.value.single().categoryId)
+        }
+
     private suspend fun readyToSaveFixture(): Fixture {
         val fixture = Fixture(locationResult = LocationResult.Success(testLocation()))
         fixture.categoryRepository.categories.value = systemCategories()
@@ -237,7 +385,12 @@ class AddPinViewModelTest {
     private class FakeLocationRepository(
         var nextResult: LocationResult,
     ) : UserLocationRepository {
-        override suspend fun getCurrentLocation(): LocationResult = nextResult
+        var calls = 0
+
+        override suspend fun getCurrentLocation(): LocationResult {
+            calls++
+            return nextResult
+        }
     }
 
     private class SlowLocationRepository : UserLocationRepository {
@@ -259,6 +412,7 @@ class AddPinViewModelTest {
     private class FakePinRepository : PinRepository {
         var saveCalls = 0
         var shouldFail = false
+        var saveCompletion: CompletableDeferred<Unit>? = null
         val pins = MutableStateFlow<List<Pin>>(emptyList())
 
         override fun observePins(): Flow<List<Pin>> = pins
@@ -267,6 +421,7 @@ class AddPinViewModelTest {
 
         override suspend fun savePin(pin: Pin) {
             saveCalls++
+            saveCompletion?.await()
             if (shouldFail) throw IOException("save failed")
             pins.value = pins.value + pin
         }

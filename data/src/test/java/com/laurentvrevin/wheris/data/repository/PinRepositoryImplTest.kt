@@ -213,12 +213,18 @@ class PinRepositoryImplTest {
             entities.value = entities.value.filterNot { it.id == pinId }
         }
 
-        override suspend fun updateDetails(pinId: String, name: String?, note: String?, updatedAt: Long): Int {
+        override suspend fun updateDetails(
+            pinId: String,
+            name: String?,
+            note: String?,
+            updatedAt: Long,
+        ): Int {
             if (shouldFail) throw IOException("Fake DAO error")
             if (entities.value.none { it.id == pinId }) return 0
-            entities.value = entities.value.map {
-                if (it.id == pinId) it.copy(name = name, note = note, updatedAtEpochMillis = updatedAt) else it
-            }
+            entities.value =
+                entities.value.map {
+                    if (it.id == pinId) it.copy(name = name, note = note, updatedAtEpochMillis = updatedAt) else it
+                }
             return 1
         }
     }

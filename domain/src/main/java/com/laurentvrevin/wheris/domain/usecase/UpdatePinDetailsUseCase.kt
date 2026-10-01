@@ -7,7 +7,11 @@ class UpdatePinDetailsUseCase(
     private val pinRepository: PinRepository,
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
-    suspend operator fun invoke(pinId: PinId, name: String, note: String): Boolean =
+    suspend operator fun invoke(
+        pinId: PinId,
+        name: String,
+        note: String,
+    ): Boolean =
         pinRepository.updatePinDetails(
             pinId = pinId,
             name = name.trim().takeIf { it.isNotEmpty() },

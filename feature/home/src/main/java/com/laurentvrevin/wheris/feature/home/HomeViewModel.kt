@@ -85,7 +85,8 @@ class HomeViewModel(
                 }
             } catch (exception: CancellationException) {
                 throw exception
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
         }
     }
 

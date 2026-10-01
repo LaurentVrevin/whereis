@@ -47,7 +47,7 @@ class WherisDatabaseTest {
     }
 
     @Test
-    fun seed_shouldProvideAllSystemCategoriesAutomatically() =
+    fun seed_shouldProvideAllSystemCategoriesAutomatically() {
         runBlocking {
             db.openHelper.writableDatabase
 
@@ -62,9 +62,10 @@ class WherisDatabaseTest {
             )
             assertTrue(categories.all { it.isSystem })
         }
+    }
 
     @Test
-    fun seed_isIdempotent() =
+    fun seed_isIdempotent() {
         runBlocking {
             val sqliteDb = db.openHelper.writableDatabase
             val callback = WherisDatabase.getCallback()
@@ -76,9 +77,10 @@ class WherisDatabaseTest {
             assertEquals(SystemCategoryIds.ALL.size, categories.size)
             assertEquals(SystemCategoryIds.ALL.size, categories.map { it.id }.toSet().size)
         }
+    }
 
     @Test
-    fun reopeningExistingDatabase_restoresMissingSystemCategory() =
+    fun reopeningExistingDatabase_restoresMissingSystemCategory() {
         runBlocking {
             val context = ApplicationProvider.getApplicationContext<Context>()
             val databaseName = "system-category-reopen-test.db"
@@ -110,9 +112,10 @@ class WherisDatabaseTest {
                 context.deleteDatabase(databaseName)
             }
         }
+    }
 
     @Test
-    fun insertAndObservePin() =
+    fun insertAndObservePin() {
         runBlocking {
             categoryDao.insertCategory(CategoryEntity("cat1", false))
 
@@ -133,9 +136,10 @@ class WherisDatabaseTest {
             assertEquals(1, observed.size)
             assertEquals("pin1", observed[0].id)
         }
+    }
 
     @Test
-    fun insertPinWithInvalidCategory_shouldThrowConstraintException() =
+    fun insertPinWithInvalidCategory_shouldThrowConstraintException() {
         runBlocking {
             val pin =
                 PinEntity(
@@ -153,9 +157,10 @@ class WherisDatabaseTest {
                 runBlocking { pinDao.insertPin(pin) }
             }
         }
+    }
 
     @Test
-    fun insertDuplicatePinId_shouldThrowConstraintException() =
+    fun insertDuplicatePinId_shouldThrowConstraintException() {
         runBlocking {
             categoryDao.insertCategory(CategoryEntity("cat1", false))
             val pin =
@@ -175,9 +180,10 @@ class WherisDatabaseTest {
                 runBlocking { pinDao.insertPin(pin) }
             }
         }
+    }
 
     @Test
-    fun deletePin_preservesOtherPlacesAndTheirCategory() =
+    fun deletePin_preservesOtherPlacesAndTheirCategory() {
         runBlocking {
             val categoryId = SystemCategoryIds.PARKING.value
             val pin =
@@ -205,9 +211,10 @@ class WherisDatabaseTest {
             pinDao.deletePin(pin.id)
             assertEquals(listOf(other), pinDao.observePins().first())
         }
+    }
 
     @Test
-    fun deleteCategory_withAssociatedPin_shouldThrowConstraintException() =
+    fun deleteCategory_withAssociatedPin_shouldThrowConstraintException() {
         runBlocking {
             val catId = "protected_cat"
             categoryDao.insertCategory(CategoryEntity(catId, false))
@@ -231,4 +238,5 @@ class WherisDatabaseTest {
             val observed = pinDao.observePin("pin_linked").first()
             assertNotNull("Pin should still exist after failed category deletion", observed)
         }
+    }
 }

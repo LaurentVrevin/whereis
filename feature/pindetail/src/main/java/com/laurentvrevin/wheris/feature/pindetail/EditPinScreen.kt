@@ -62,9 +62,10 @@ fun EditPinScreen(
                     )
                     if (uiState.saveFailed || uiState.noLongerExists) {
                         Text(
-                            text = stringResource(
-                                if (uiState.noLongerExists) R.string.editpin_missing else R.string.editpin_save_error,
-                            ),
+                            text =
+                                stringResource(
+                                    if (uiState.noLongerExists) R.string.editpin_missing else R.string.editpin_save_error,
+                                ),
                             color = MaterialTheme.colorScheme.error,
                         )
                     }

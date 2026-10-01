@@ -62,16 +62,20 @@ fun AddPinRoute(
             }
         }
 
-    fun checkAndRequestPermissions() {
+    fun checkAndRequestPermissions(retryLocation: Boolean = false) {
         val hasFine = context.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)
         val hasCoarse = context.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
 
         if (hasFine || hasCoarse) {
-            viewModel.onPermissionGranted(
-                isFineGranted = hasFine,
-                isCoarseGranted = hasCoarse,
-            )
+            if (retryLocation) {
+                viewModel.retryLocation(isFineGranted = hasFine, isCoarseGranted = hasCoarse)
+            } else {
+                viewModel.onPermissionGranted(isFineGranted = hasFine, isCoarseGranted = hasCoarse)
+            }
         } else {
+            if (retryLocation) {
+                viewModel.retryLocation(isFineGranted = false, isCoarseGranted = false)
+            }
             permissionLauncher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
@@ -105,7 +109,9 @@ fun AddPinRoute(
     }
 
     BackHandler(enabled = uiState is AddPinUiState.CategorySelection) {
-        viewModel.backToPosition()
+        if ((uiState as? AddPinUiState.CategorySelection)?.isSaving == false) {
+            viewModel.backToPosition()
+        }
     }
     BackHandler(enabled = uiState is AddPinUiState.Saved) {
         onFinished()
@@ -116,7 +122,7 @@ fun AddPinRoute(
         onRequestPermission = { checkAndRequestPermissions() },
         onOpenSettings = { openAppSettings(context) },
         onOpenLocationSettings = { openLocationSettings(context) },
-        onRetryLocation = { checkAndRequestPermissions() },
+        onRetryLocation = { checkAndRequestPermissions(retryLocation = true) },
         onConfirmPosition = viewModel::confirmPosition,
         onSelectCategory = viewModel::selectCategory,
         onSave = viewModel::savePin,
