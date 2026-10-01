@@ -148,6 +148,24 @@ class CreateCategoryFlowTest {
 
         override fun observeCategories(): Flow<List<Category>> = rows
 
+        override suspend fun updateCustomCategory(
+            categoryId: com.laurentvrevin.wheris.core.model.CategoryId,
+            name: String,
+            iconKey: CategoryIconKey,
+            colorKey: CategoryColorKey,
+        ): com.laurentvrevin.wheris.domain.repository.CategoryMutationResult = error("Not used")
+
+        override suspend fun getCategoryUsageCount(categoryId: com.laurentvrevin.wheris.core.model.CategoryId): Int = error("Not used")
+
+        override suspend fun deleteCustomCategory(
+            categoryId: com.laurentvrevin.wheris.core.model.CategoryId,
+        ): com.laurentvrevin.wheris.domain.repository.CategoryMutationResult = error("Not used")
+
+        override suspend fun reassignAndDeleteCustomCategory(
+            sourceCategoryId: com.laurentvrevin.wheris.core.model.CategoryId,
+            replacementCategoryId: com.laurentvrevin.wheris.core.model.CategoryId,
+        ): com.laurentvrevin.wheris.domain.repository.CategoryMutationResult = error("Not used")
+
         override fun observeSystemCategories(): Flow<List<Category>> = error("Must observe all")
 
         override suspend fun createCustomCategory(

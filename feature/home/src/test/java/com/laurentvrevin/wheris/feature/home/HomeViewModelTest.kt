@@ -211,6 +211,16 @@ class HomeViewModelTest {
             testScheduler.advanceUntilIdle()
             assertEquals(custom, viewModel.uiState.value.categories[viewModel.uiState.value.selectedPin?.categoryId])
             assertEquals(pin, viewModel.uiState.value.selectedPin)
+            val updated =
+                custom.copy(
+                    name = "Promenades",
+                    iconKey = com.laurentvrevin.wheris.core.model.CategoryIconKey.PLACE,
+                    colorKey = com.laurentvrevin.wheris.core.model.CategoryColorKey.TEAL,
+                )
+            categories.categories.value = listOf(updated)
+            testScheduler.advanceUntilIdle()
+            assertEquals(updated, viewModel.uiState.value.categories[pin.categoryId])
+            assertEquals(pin, viewModel.uiState.value.selectedPin)
         }
 
     private fun testPin(id: String) =

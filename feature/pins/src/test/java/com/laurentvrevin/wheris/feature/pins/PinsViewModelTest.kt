@@ -108,6 +108,16 @@ class PinsViewModelTest {
             val state = viewModel.uiState.first { it is PinsUiState.Content } as PinsUiState.Content
             assertEquals(custom, state.pins.single().category)
             assertEquals(pin, state.pins.single().pin)
+            val updated =
+                custom.copy(
+                    name = "Promenades",
+                    iconKey = com.laurentvrevin.wheris.core.model.CategoryIconKey.PLACE,
+                    colorKey = com.laurentvrevin.wheris.core.model.CategoryColorKey.TEAL,
+                )
+            categories.categories.value = listOf(updated)
+            val next = viewModel.uiState.first { it is PinsUiState.Content && it.pins.single().category == updated } as PinsUiState.Content
+            assertEquals(updated, next.pins.single().category)
+            assertEquals(pin, next.pins.single().pin)
         }
 
     private fun testPin(

@@ -315,9 +315,19 @@ class PinDetailViewModelTest {
             viewModel.observePin(pin.id)
             testDispatcher.scheduler.advanceUntilIdle()
             assertEquals(custom, (viewModel.uiState.value as PinDetailUiState.Content).category)
+            val updated =
+                custom.copy(
+                    name = "Promenades",
+                    iconKey = com.laurentvrevin.wheris.core.model.CategoryIconKey.PLACE,
+                    colorKey = com.laurentvrevin.wheris.core.model.CategoryColorKey.TEAL,
+                )
+            categories.categories.value = listOf(updated)
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(updated, (viewModel.uiState.value as PinDetailUiState.Content).category)
+            assertEquals(pin, (viewModel.uiState.value as PinDetailUiState.Content).pin)
             viewModel.requestCurrentLocation()
             testDispatcher.scheduler.advanceUntilIdle()
-            assertEquals(custom, (viewModel.uiState.value as PinDetailUiState.Content).category)
+            assertEquals(updated, (viewModel.uiState.value as PinDetailUiState.Content).category)
         }
 
     private fun testPin(position: GeoPoint = GeoPoint(10.0, 20.0)): Pin =
