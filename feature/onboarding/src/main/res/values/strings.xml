@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_brand">Wheris</string>
+    <string name="onboarding_welcome_title">Enregistre un lieu en quelques secondes</string>
+    <string name="onboarding_welcome_description">Ta mémoire géographique personnelle. Garde les endroits qui comptent pour les retrouver plus tard.</string>
+    <string name="onboarding_concept_title">Retrouve tous tes lieux</string>
+    <string name="onboarding_concept_description">Un endroit à garder en mémoire ? Wheris t’aide à le retrouver, quel que soit le lieu.</string>
+    <string name="onboarding_concept_here">Je suis ici</string>
+    <string name="onboarding_concept_interest">Cet endroit m’intéresse</string>
+    <string name="onboarding_concept_save">Je l’enregistre</string>
+    <string name="onboarding_concept_find">Je peux le retrouver</string>
+    <string name="onboarding_privacy_title">Tes lieux, sur ton téléphone</string>
+    <string name="onboarding_privacy_description">Enregistre maintenant, retrouve plus tard. Tu gardes la main sur tes lieux.</string>
+    <string name="onboarding_privacy_local">Tes lieux restent par défaut sur ton téléphone.</string>
+    <string name="onboarding_privacy_account">Aucun compte obligatoire.</string>
+    <string name="onboarding_privacy_tracking">Pas de suivi permanent de tes déplacements.</string>
+    <string name="onboarding_privacy_server">Aucun serveur Wheris nécessaire pour enregistrer et retrouver tes lieux.</string>
+    <string name="onboarding_continue">Continuer</string>
+    <string name="onboarding_back">Retour</string>
+    <string name="onboarding_progress">Étape %1$d / %2$d</string>
+</resources>
