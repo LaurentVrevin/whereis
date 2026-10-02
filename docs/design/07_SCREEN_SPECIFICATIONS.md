@@ -1201,6 +1201,18 @@ marker adjustment before first save is a separate interaction.
 
 Similar field language to `ADD_003` to reduce cognitive load.
 
+B4.2 uses a scrollable form with optional single-line name, dynamic system/custom
+category cards, optional multiline note, accessible favorite checkbox and local photo.
+Category selection uses stable IDs, selected semantics and a checkmark. No category
+creation action is added here. The save/cancel actions remain reachable with the keyboard.
+
+Both `Choisir une photo` (system Photo Picker, images only) and `Prendre une photo`
+(external system camera) are available. The current photo and any new replacement
+have descriptive previews. Removing the original records a draft intention until save.
+`Retirer la nouvelle photo` cleans only that replacement and restores the original,
+unless the original's removal had already been requested. Picker/camera cancellation
+preserves all preceding edits. Missing/corrupt preview does not modify persisted data.
+
 ## ACTIONS
 
 `Enregistrer` → update → `PLACE_001`\
@@ -1211,7 +1223,9 @@ explicitly approved.
 
 ## SAVE ERROR
 
-Preserve edits and offer retry.
+Preserve edits and offer retry. Missing categories can be reloaded/reselected;
+a disappeared place cannot be recreated by save. A committed update with deferred
+photo cleanup is successful and returns to detail, without displaying a save failure.
 
 ## ACCESSIBILITY
 

@@ -87,6 +87,9 @@ class AndroidPhotoStorage(
             )
         }
 
+    /** Reads an attached photo without manufacturing a draft or acquiring a lease. */
+    suspend fun preview(photo: PhotoReference): Bitmap = io { decode(File(permanent, photo.value)) }
+
     override suspend fun promote(draft: PhotoDraftReference): PhotoReference =
         io {
             check(draft.value in active)

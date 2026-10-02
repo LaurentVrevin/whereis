@@ -1,4 +1,4 @@
-# Local photo lifecycle — B3.2 / B4.1
+# Local photo lifecycle — B3.2 / B4.1 / B4.2
 
 ## Product decision and boundaries
 
@@ -139,8 +139,48 @@ points to them; unreferenced pending old photos are cleaned if Room points to th
 photo. A live replacement lease protects a failed save's new bytes. A fresh process
 has no such lease and removes an unreferenced new photo, preserving every DB reference.
 
-B4.2 category/photo editing UI is not implemented. The B3.2 manual Picker/camera smoke
-is intentionally deferred to consolidation QA/B7; it has not been executed.
+## Editing draft and UI — B4.2
+
+PLACE_002 now owns a full canonical draft (raw name/note, selected stable CategoryId,
+favorite, dynamic categories, original PhotoReference and explicit photo intention).
+Unchanged maps to Keep, Removed maps to Remove, Replacement(PhotoDraftReference)
+promotes before mapping to Replace. A replacement records whether the original had
+already been marked Removed; removing that replacement restores the previous intention.
+Picking B then C abandons only B. Neither selecting nor removing a draft physically
+touches the original photo. It is only retired by the canonical repository during save.
+
+EditPinRoute owns PickVisualMedia(ImageOnly) and TakePicture, using the same Android
+import/prepare/validate/FileProvider primitives as AddPin. An application coroutine
+scope keeps copying/validation alive across rotation. Cancel cleans only a new camera
+target, preserving every prior field/replacement. Late callbacks after abandoning the
+editor clean their new draft. Back/Cancel and ViewModel clearing clean unattached new
+drafts, including promoted ones after failed updates, after any running save finishes.
+Saved drafts are never discarded. Save is guarded through promotion and DB mutation;
+retry caches the draft-to-permanent reference without repeatedly promoting.
+
+Permanent preview uses the Android-only `preview(PhotoReference)` overload, without
+turning the persisted photo into a draft or acquiring a lease. Draft preview uses the
+existing overload, including promoted-pending-save and pending bytes. Both use the
+same decoder and the shared `core:ui` preview slot. No feature depends on another
+feature. Preview failure changes only UI state and still permits removal/replacement;
+it never silently clears a database reference.
+
+Success and success-with-pending-cleanup return to PLACE_001 through the existing
+navigation route. Missing Pin disables save; missing category allows reload/selection;
+photo ownership and technical failures retain the whole draft for retry. Category
+subscriptions update choices without overwriting edits, and category failures never
+fabricate a category. The stateless screen resolves no files/repositories/launchers.
+
+The navigation-scoped ViewModel preserves the whole draft during rotation/background.
+SavedStateHandle restores simple name/note/category/favorite values after recreation;
+photo intentions/replacement leases and pending system-camera results are not serialized.
+Full photo editing UX restoration after process death is not guaranteed: the editor
+reloads the persisted original and reconciliation cleans unreferenced old-process drafts.
+The persisted Pin/photo remain protected by B4.1 recovery. A fresh photo must be selected
+again if a replacement was not committed. No Bitmap, Uri, Context or File is serialized.
+
+The B3.2 manual Picker/camera smoke is intentionally deferred to consolidation QA/B7;
+it has not been executed and B4.2 does not claim otherwise.
 
 `android:allowBackup="false"` disables cloud backup but does not guarantee exclusion
 from every manufacturer device-to-device transfer. Before production release, Room
