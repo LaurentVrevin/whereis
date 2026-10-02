@@ -10,7 +10,7 @@ import org.koin.dsl.module
 
 val dataModule =
     module {
-        single<PinRepository> { PinRepositoryImpl(get()) }
+        single<PinRepository> { PinRepositoryImpl(get(), get()) }
         single<CategoryRepository> { CategoryRepositoryImpl(get()) }
         single<OnboardingRepository> { OnboardingRepositoryImpl(get()) }
     }

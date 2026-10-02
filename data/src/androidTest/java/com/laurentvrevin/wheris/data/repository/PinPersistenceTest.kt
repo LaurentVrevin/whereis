@@ -33,7 +33,7 @@ class PinPersistenceTest {
                     .addCallback(WherisDatabase.getCallback()).build()
             var database = openDatabase()
             try {
-                val repository = PinRepositoryImpl(database.pinDao())
+                val repository = PinRepositoryImpl(database.pinDao(), FakePhotoStorage())
                 val location = UserLocation(GeoPoint(10.0, 20.0), 7f, 35.0, 1000L)
                 val plain = CreatePinUseCase(repository, { PinId("plain") }, { 2000L })(location, SystemCategoryIds.OTHER)
                 val enriched =
@@ -56,7 +56,7 @@ class PinPersistenceTest {
                 assertEquals(4, database.openHelper.writableDatabase.version)
                 database.close()
                 database = openDatabase()
-                val reopened = PinRepositoryImpl(database.pinDao())
+                val reopened = PinRepositoryImpl(database.pinDao(), FakePhotoStorage())
                 assertEquals(listOf(enriched, plain), reopened.observePins().first())
                 assertEquals(enriched, reopened.observePin(enriched.id).first())
                 assertEquals(plain, reopened.observePin(plain.id).first())

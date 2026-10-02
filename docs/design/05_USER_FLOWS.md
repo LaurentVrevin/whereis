@@ -605,14 +605,11 @@ failure → explain failure, preserve draft, allow continue without photo
 cancel  → return to ADD_003 unchanged
 ```
 
-The reference stories intentionally do **not** decide whether MVP uses:
-
--   camera;
--   system photo picker;
--   both.
-
-Therefore this flow specifies the behavior but does not invent two
-Wheris photo screens.
+B3.2 resolves the historical open decision: ADD_003 offers both
+`Choisir une photo` (Android Photo Picker, images only) and `Prendre une
+photo` (system camera / TakePicture). Both converge on an owned private
+draft and the same save. No separate Wheris camera/gallery screens.
+The reference PDF is historical and unchanged.
 
 ------------------------------------------------------------------------
 
@@ -2303,15 +2300,10 @@ introducing a language-selection screen now.
 
 # PRODUCT DECISIONS STILL OPEN
 
-## 139. Open decision --- photo source
+## 139. Resolved decision --- photo source (B3.2)
 
-Not decided:
-
--   system photo picker only;
--   camera only;
--   both.
-
-Do not add separate Wheris flows until product behavior is validated.
+Both sources are available in the MVP: Android Photo Picker and external
+system camera. See section 32 and LOCAL_PHOTO_LIFECYCLE.md.
 
 ------------------------------------------------------------------------
 

@@ -20,6 +20,7 @@ interface PinRepository {
 
     /**
      * Saves a new pin including optional details. A photo reference must already be permanent.
+     * Its physical photo must not be shared with another Pin.
      *
      * @throws Exception if a pin with the same ID already exists.
      */
@@ -27,8 +28,9 @@ interface PinRepository {
 
     /**
      * Deletes only this place. An already absent place is treated as deleted.
-     * Before real photo acquisition is introduced, data must coordinate owned photo cleanup
-     * here, with recoverable failures; Room cannot make file deletion atomic.
+     * Coordinates owned photo cleanup through recoverable pending deletion. A database
+     * failure preserves the photo; a final file failure remains durable for retry/recovery.
+     * Room and the filesystem are not one atomic transaction.
      * See docs/engineering/LOCAL_PHOTO_LIFECYCLE.md.
      */
     suspend fun deletePin(pinId: PinId)

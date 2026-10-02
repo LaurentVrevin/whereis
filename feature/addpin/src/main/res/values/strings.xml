@@ -39,7 +39,21 @@
     <string name="addpin_category_title">Quel type de lieu enregistres-tu ?</string>
     <string name="addpin_category_selected">Catégorie sélectionnée</string>
     <string name="addpin_category_load_error">Impossible de charger les catégories pour le moment.</string>
-    <string name="addpin_save_error">Le lieu n’a pas pu être enregistré. Ta position et ta catégorie sont conservées.</string>
+    <string name="addpin_save_error">Le lieu n’a pas pu être enregistré. Tes informations sont conservées. Réessaie.</string>
+    <string name="addpin_saving">Enregistrement…</string>
+    <string name="details_action">Ajouter des détails</string>
+    <string name="details_title">Détails du lieu</string>
+    <string name="details_back">Retour aux catégories</string>
+    <string name="details_name">Nom (facultatif)</string>
+    <string name="details_note">Note (facultative)</string>
+    <string name="details_photo">Photo (facultative)</string>
+    <string name="details_choose_photo">Choisir une photo</string>
+    <string name="details_take_photo">Prendre une photo</string>
+    <string name="details_remove_photo">Supprimer la photo</string>
+    <string name="details_preview">Photo du lieu</string>
+    <string name="details_favorite">Favori (facultatif)</string>
+    <string name="details_acquiring">Ajout de la photo…</string>
+    <string name="details_photo_error">Impossible d’ajouter cette photo. Tu peux réessayer ou continuer sans photo.</string>
 
     <string name="addpin_saved_title">Lieu enregistré !</string>
     <string name="addpin_view_on_map">Voir sur la carte</string>

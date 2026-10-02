@@ -57,6 +57,8 @@ class CreateCategoryFlowTest {
                     },
                     categories,
                     CreatePinUseCase(pins),
+                    FakePhotoStorage(),
+                    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main.immediate),
                 )
             viewModel.onPermissionGranted(true, true)
         }
@@ -120,8 +122,11 @@ class CreateCategoryFlowTest {
         compose.onNodeWithText("Voiture").assertIsSelected()
         compose.onNodeWithText("Créer une catégorie").performClick()
         compose.onNodeWithText("Nouvelle catégorie").assertIsDisplayed()
+        // The system Back must exercise navigation rather than an asynchronously closing IME.
+        androidx.test.espresso.Espresso.closeSoftKeyboard()
         compose.waitForIdle()
         androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK)
+        compose.waitUntil { viewModel.uiState.value is AddPinUiState.CategorySelection }
         compose.onNodeWithText("Voiture").assertIsSelected()
         compose.runOnIdle {
             assertEquals(location, (viewModel.uiState.value as AddPinUiState.CategorySelection).location)

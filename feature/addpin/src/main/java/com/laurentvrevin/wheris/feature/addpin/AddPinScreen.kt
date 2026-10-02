@@ -63,6 +63,15 @@ fun AddPinScreen(
     onCategoryColorChange: (com.laurentvrevin.wheris.core.model.CategoryColorKey) -> Unit = {},
     onCreateCategory: () -> Unit = {},
     onCancelCategoryCreation: () -> Unit = {},
+    onOpenDetails: () -> Unit = {},
+    onBackFromDetails: () -> Unit = {},
+    onNameChange: (String) -> Unit = {},
+    onNoteChange: (String) -> Unit = {},
+    onFavoriteChange: (Boolean) -> Unit = {},
+    onChoosePhoto: () -> Unit = {},
+    onTakePhoto: () -> Unit = {},
+    onRemovePhoto: () -> Unit = {},
+    photoPreview: @Composable () -> Unit = {},
 ) {
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -120,6 +129,17 @@ fun AddPinScreen(
                     onSave = onSave,
                     onBack = onBackToPosition,
                     onCreateCategory = onOpenCategoryCreation,
+                    onDetails = onOpenDetails,
+                )
+
+            is AddPinUiState.Details ->
+                AddDetailsScreen(
+                    state = uiState.selection,
+                    onNameChange = onNameChange, onNoteChange = onNoteChange,
+                    onFavoriteChange = onFavoriteChange,
+                    onChoosePhoto = onChoosePhoto, onTakePhoto = onTakePhoto,
+                    onRemovePhoto = onRemovePhoto, onBack = onBackFromDetails,
+                    onSave = onSave, photoPreview = photoPreview,
                 )
 
             is AddPinUiState.CategoryCreation ->
@@ -560,6 +580,7 @@ private fun CategorySelectionContent(
     onSave: () -> Unit,
     onBack: () -> Unit,
     onCreateCategory: () -> Unit,
+    onDetails: () -> Unit,
 ) {
     Column(
         modifier =
@@ -660,6 +681,14 @@ private fun CategorySelectionContent(
             Text(stringResource(R.string.create_category_action), modifier = Modifier.padding(start = WherisSpacing.sm))
         }
 
+        OutlinedButton(
+            onClick = onDetails,
+            enabled = !state.isSaving && state.categories.any { it.id == state.selectedCategoryId },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.details_action))
+        }
+
         if (state.saveFailed) {
             Text(
                 text = stringResource(R.string.addpin_save_error),
@@ -674,7 +703,7 @@ private fun CategorySelectionContent(
         Button(
             onClick = onSave,
             enabled =
-                state.selectedCategoryId != null &&
+                state.categories.any { it.id == state.selectedCategoryId } &&
                     !state.isSaving &&
                     !state.isLoadingCategories &&
                     !state.categoryLoadFailed,

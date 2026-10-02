@@ -4,6 +4,7 @@ import com.laurentvrevin.wheris.core.model.Category
 import com.laurentvrevin.wheris.core.model.CategoryColorKey
 import com.laurentvrevin.wheris.core.model.CategoryIconKey
 import com.laurentvrevin.wheris.core.model.CategoryId
+import com.laurentvrevin.wheris.core.model.PhotoDraftReference
 import com.laurentvrevin.wheris.core.model.Pin
 import com.laurentvrevin.wheris.core.model.UserLocation
 
@@ -35,7 +36,10 @@ sealed interface AddPinUiState {
         val categoryLoadFailed: Boolean = false,
         val isSaving: Boolean = false,
         val saveFailed: Boolean = false,
+        val details: PlaceDetailsDraft = PlaceDetailsDraft(),
     ) : AddPinUiState
+
+    data class Details(val selection: CategorySelection) : AddPinUiState
 
     data class CategoryCreation(
         val selection: CategorySelection,
@@ -52,3 +56,12 @@ sealed interface AddPinUiState {
         val pin: Pin,
     ) : AddPinUiState
 }
+
+data class PlaceDetailsDraft(
+    val name: String = "",
+    val note: String = "",
+    val isFavorite: Boolean = false,
+    val photo: PhotoDraftReference? = null,
+    val isAcquiringPhoto: Boolean = false,
+    val photoFailed: Boolean = false,
+)

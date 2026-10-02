@@ -6,22 +6,30 @@ import com.laurentvrevin.wheris.core.model.Category
 import com.laurentvrevin.wheris.core.model.CategoryColorKey
 import com.laurentvrevin.wheris.core.model.CategoryIconKey
 import com.laurentvrevin.wheris.core.model.CategoryId
+import com.laurentvrevin.wheris.core.model.PhotoDraftReference
+import com.laurentvrevin.wheris.core.model.PhotoReference
 import com.laurentvrevin.wheris.core.model.UserLocation
+import com.laurentvrevin.wheris.domain.PhotoStorage
 import com.laurentvrevin.wheris.domain.location.LocationResult
 import com.laurentvrevin.wheris.domain.repository.CategoryRepository
 import com.laurentvrevin.wheris.domain.repository.UserLocationRepository
 import com.laurentvrevin.wheris.domain.usecase.CreatePinUseCase
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class AddPinViewModel(
     private val userLocationRepository: UserLocationRepository,
     private val categoryRepository: CategoryRepository,
     private val createPinUseCase: CreatePinUseCase,
+    private val photoStorage: PhotoStorage,
+    private val cleanupScope: CoroutineScope,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<AddPinUiState>(AddPinUiState.PermissionRequired)
     val uiState: StateFlow<AddPinUiState> = _uiState.asStateFlow()
@@ -34,6 +42,134 @@ class AddPinViewModel(
     private var isCoarseLocationGranted: Boolean = false
     private var acceptedLocation: UserLocation? = null
     private var acceptedLocationIsApproximate: Boolean = false
+    private var retainedSelection: AddPinUiState.CategorySelection? = null
+    private var abandoned = false
+    private var promotedPhoto: Pair<PhotoDraftReference, PhotoReference>? = null
+    var cameraDraft: PhotoDraftReference? = null
+        private set
+
+    private fun selection(): AddPinUiState.CategorySelection? =
+        when (val current = _uiState.value) {
+            is AddPinUiState.CategorySelection -> current
+            is AddPinUiState.Details -> current.selection
+            is AddPinUiState.CategoryCreation -> current.selection
+            else -> retainedSelection
+        }
+
+    fun openDetails() {
+        val current = _uiState.value as? AddPinUiState.CategorySelection ?: return
+        if (!current.isSaving && current.categories.any { it.id == current.selectedCategoryId }) {
+            _uiState.value = AddPinUiState.Details(current)
+        }
+    }
+
+    fun backFromDetails() {
+        val current = _uiState.value as? AddPinUiState.Details ?: return
+        if (!current.selection.isSaving && !current.selection.details.isAcquiringPhoto) _uiState.value = current.selection
+    }
+
+    private fun editDetails(transform: (PlaceDetailsDraft) -> PlaceDetailsDraft) {
+        val current = selection() ?: return
+        if (!current.isSaving && !abandoned) {
+            updateSelection { it.copy(details = transform(it.details), saveFailed = false) }
+        }
+    }
+
+    fun updateName(name: String) = editDetails { it.copy(name = name) }
+
+    fun updateNote(note: String) = editDetails { it.copy(note = note) }
+
+    fun updateFavorite(favorite: Boolean) = editDetails { it.copy(isFavorite = favorite) }
+
+    fun beginPhotoAcquisition(): Boolean {
+        val current = _uiState.value as? AddPinUiState.Details ?: return false
+        if (current.selection.isSaving || current.selection.details.isAcquiringPhoto || abandoned) return false
+        editDetails { it.copy(isAcquiringPhoto = true, photoFailed = false) }
+        return true
+    }
+
+    fun onCameraPrepared(draft: PhotoDraftReference): Boolean {
+        if (abandoned || selection()?.details?.isAcquiringPhoto != true) {
+            discardLater(draft)
+            return false
+        }
+        cameraDraft = draft
+        return true
+    }
+
+    fun photoCancelled() {
+        cameraDraft?.let { draft -> discardLater(draft) }
+        cameraDraft = null
+        editDetails { it.copy(isAcquiringPhoto = false, photoFailed = false) }
+    }
+
+    fun photoFailed() {
+        // A preview/cleanup failure invalidates the cached handoff; storage must revalidate on retry.
+        promotedPhoto = null
+        cameraDraft?.let { draft -> discardLater(draft) }
+        cameraDraft = null
+        editDetails { it.copy(isAcquiringPhoto = false, photoFailed = true) }
+    }
+
+    fun photoReady(draft: PhotoDraftReference) {
+        cameraDraft = null
+        if (abandoned || _uiState.value is AddPinUiState.Saved || selection() == null) {
+            discardLater(draft)
+            return
+        }
+        val previous = selection()?.details?.photo
+        editDetails { it.copy(photo = draft, isAcquiringPhoto = false, photoFailed = false) }
+        if (previous != null && previous != draft) discardLater(previous)
+    }
+
+    fun removePhoto() {
+        val current = selection() ?: return
+        if (current.isSaving || current.details.isAcquiringPhoto) return
+        val photo = current.details.photo ?: return
+        promotedPhoto = null
+        editDetails { it.copy(isAcquiringPhoto = true) }
+        viewModelScope.launch {
+            try {
+                photoStorage.discard(photo)
+                editDetails { it.copy(photo = null, isAcquiringPhoto = false, photoFailed = false) }
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (_: Exception) {
+                editDetails { it.copy(isAcquiringPhoto = false, photoFailed = true) }
+            }
+        }
+    }
+
+    private fun discardLater(draft: PhotoDraftReference) {
+        cleanupScope.launch { discardSafely(draft) }
+    }
+
+    private suspend fun discardSafely(draft: PhotoDraftReference) {
+        try {
+            photoStorage.abandon(draft)
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (_: Exception) {
+            // Owned cache/pending files remain discoverable by next-process reconciliation.
+            editDetails { it.copy(photoFailed = true) }
+        }
+    }
+
+    fun abandon() {
+        if (abandoned || _uiState.value is AddPinUiState.Saved) return
+        abandoned = true
+        val photos = listOfNotNull(selection()?.details?.photo, cameraDraft).distinct()
+        cleanupScope.launch {
+            // A save already in progress must finish before its unattached file can be removed.
+            saveJob?.join()
+            photos.forEach { discardSafely(it) }
+        }
+    }
+
+    override fun onCleared() {
+        abandon()
+        super.onCleared()
+    }
 
     fun onPermissionGranted(
         isFineGranted: Boolean,
@@ -64,7 +200,11 @@ class AddPinViewModel(
         isCoarseGranted: Boolean = isCoarseLocationGranted,
     ) {
         when (_uiState.value) {
-            is AddPinUiState.CategorySelection, is AddPinUiState.CategoryCreation, is AddPinUiState.Saved -> return
+            is AddPinUiState.CategorySelection,
+            is AddPinUiState.CategoryCreation,
+            is AddPinUiState.Details,
+            is AddPinUiState.Saved,
+            -> return
             else -> Unit
         }
         isFineLocationGranted = isFineGranted
@@ -144,23 +284,35 @@ class AddPinViewModel(
     }
 
     fun savePin() {
-        val state = _uiState.value as? AddPinUiState.CategorySelection ?: return
+        if (_uiState.value !is AddPinUiState.CategorySelection && _uiState.value !is AddPinUiState.Details) return
+        val state = selection() ?: return
         val categoryId = state.selectedCategoryId ?: return
-        if (state.isSaving || saveJob?.isActive == true) return
+        if (state.isSaving || saveJob?.isActive == true || state.details.isAcquiringPhoto || abandoned) return
+        if (state.categories.none { it.id == categoryId }) return
 
-        _uiState.value = state.copy(isSaving = true, saveFailed = false)
+        updateSelection { it.copy(isSaving = true, saveFailed = false) }
         saveJob =
             viewModelScope.launch {
                 try {
-                    val pin = createPinUseCase(state.location, categoryId)
+                    val pin =
+                        withContext(NonCancellable) {
+                            val photo =
+                                state.details.photo?.let { draft ->
+                                    promotedPhoto?.takeIf { it.first == draft }?.second
+                                        ?: photoStorage.promote(draft).also { promotedPhoto = draft to it }
+                                }
+                            createPinUseCase(
+                                state.location, categoryId, state.details.name, state.details.note,
+                                state.details.isFavorite, photo,
+                            )
+                        }
                     categoryJob?.cancel()
                     categoryJob = null
                     _uiState.value = AddPinUiState.Saved(pin)
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (_: Exception) {
-                    val current = _uiState.value as? AddPinUiState.CategorySelection ?: return@launch
-                    _uiState.value = current.copy(isSaving = false, saveFailed = true)
+                    updateSelection { it.copy(isSaving = false, saveFailed = true) }
                 }
             }
     }
@@ -168,6 +320,7 @@ class AddPinViewModel(
     fun backToPosition() {
         val state = _uiState.value as? AddPinUiState.CategorySelection ?: return
         if (state.isSaving) return
+        retainedSelection = state
         val location = acceptedLocation ?: return
         categoryJob?.cancel()
         categoryJob = null
@@ -213,7 +366,7 @@ class AddPinViewModel(
     private fun observeCategories(location: UserLocation) {
         categoryJob?.cancel()
         _uiState.value =
-            AddPinUiState.CategorySelection(
+            retainedSelection?.copy(location = location, isLoadingCategories = true) ?: AddPinUiState.CategorySelection(
                 location = location,
                 isLoadingCategories = true,
             )
@@ -241,6 +394,7 @@ class AddPinViewModel(
             when (val current = _uiState.value) {
                 is AddPinUiState.CategorySelection -> transform(current)
                 is AddPinUiState.CategoryCreation -> current.copy(selection = transform(current.selection))
+                is AddPinUiState.Details -> current.copy(selection = transform(current.selection))
                 else -> current
             }
     }

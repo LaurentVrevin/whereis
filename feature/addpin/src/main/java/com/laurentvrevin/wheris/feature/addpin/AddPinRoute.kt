@@ -10,6 +10,7 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -22,7 +23,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.laurentvrevin.wheris.core.photo.AndroidPhotoStorage
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
+import org.koin.core.qualifier.named
 
 @Composable
 fun AddPinRoute(
@@ -34,6 +41,44 @@ fun AddPinRoute(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val activity = context.findActivity()
+    val photoStorage = koinInject<AndroidPhotoStorage>()
+    // Acquisition copying survives configuration changes without retaining an Activity.
+    val photoScope = koinInject<CoroutineScope>(qualifier = named("photoOperations"))
+    val picker =
+        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            if (uri == null) {
+                viewModel.photoCancelled()
+            } else {
+                photoScope.launch {
+                    try {
+                        viewModel.photoReady(photoStorage.importPhoto(uri))
+                    } catch (exception: CancellationException) {
+                        throw exception
+                    } catch (_: Exception) {
+                        viewModel.photoFailed()
+                    }
+                }
+            }
+        }
+    val camera =
+        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { succeeded ->
+            val draft = viewModel.cameraDraft
+            if (!succeeded) {
+                viewModel.photoCancelled()
+            } else if (draft == null) {
+                viewModel.photoFailed()
+            } else {
+                photoScope.launch {
+                    try {
+                        viewModel.photoReady(photoStorage.validateCamera(draft))
+                    } catch (exception: CancellationException) {
+                        throw exception
+                    } catch (_: Exception) {
+                        viewModel.photoFailed()
+                    }
+                }
+            }
+        }
 
     fun evaluatePermissionDenied() {
         val showRationale =
@@ -116,6 +161,7 @@ fun AddPinRoute(
     BackHandler(enabled = uiState is AddPinUiState.CategoryCreation) {
         viewModel.cancelCategoryCreation()
     }
+    BackHandler(enabled = uiState is AddPinUiState.Details) { viewModel.backFromDetails() }
     BackHandler(enabled = uiState is AddPinUiState.Saved) {
         onFinished()
     }
@@ -137,6 +183,40 @@ fun AddPinRoute(
         onCategoryColorChange = viewModel::selectCategoryColor,
         onCreateCategory = viewModel::createCategory,
         onCancelCategoryCreation = viewModel::cancelCategoryCreation,
+        onOpenDetails = viewModel::openDetails,
+        onBackFromDetails = viewModel::backFromDetails,
+        onNameChange = viewModel::updateName,
+        onNoteChange = viewModel::updateNote,
+        onFavoriteChange = viewModel::updateFavorite,
+        onRemovePhoto = viewModel::removePhoto,
+        onChoosePhoto = {
+            if (viewModel.beginPhotoAcquisition()) {
+                try {
+                    picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                } catch (_: Exception) {
+                    viewModel.photoFailed()
+                }
+            }
+        },
+        onTakePhoto = {
+            if (viewModel.beginPhotoAcquisition()) {
+                photoScope.launch {
+                    try {
+                        val draft = photoStorage.prepareCamera()
+                        if (viewModel.onCameraPrepared(draft)) camera.launch(photoStorage.cameraUri(draft))
+                    } catch (exception: CancellationException) {
+                        throw exception
+                    } catch (_: Exception) {
+                        viewModel.photoFailed()
+                    }
+                }
+            }
+        },
+        photoPreview = {
+            (uiState as? AddPinUiState.Details)?.selection?.details?.photo?.let {
+                LocalPhotoPreview(it, photoStorage, viewModel::photoFailed)
+            }
+        },
         modifier = modifier,
     )
 }

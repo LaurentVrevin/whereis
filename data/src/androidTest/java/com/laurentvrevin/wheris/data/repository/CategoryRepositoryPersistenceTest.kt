@@ -40,11 +40,13 @@ class CategoryRepositoryPersistenceTest {
                         1000L,
                     )
                 val pin =
-                    com.laurentvrevin.wheris.domain.usecase.CreatePinUseCase(PinRepositoryImpl(database.pinDao()))(location, category.id)
+                    com.laurentvrevin.wheris.domain.usecase.CreatePinUseCase(
+                        PinRepositoryImpl(database.pinDao(), FakePhotoStorage()),
+                    )(location, category.id)
                 database.close()
                 val reopened = openDatabase()
                 try {
-                    assertEquals(pin, PinRepositoryImpl(reopened.pinDao()).observePin(pin.id).first())
+                    assertEquals(pin, PinRepositoryImpl(reopened.pinDao(), FakePhotoStorage()).observePin(pin.id).first())
                     assertEquals(category, CategoryRepositoryImpl(reopened.categoryDao()).observeCategories().first().last())
                     reopened.openHelper.writableDatabase.query("PRAGMA foreign_key_check").use { assertEquals(0, it.count) }
                 } finally {

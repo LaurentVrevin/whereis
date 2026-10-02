@@ -518,7 +518,240 @@ class AddPinViewModelTest {
             assertEquals(selection, fixture.viewModel.uiState.value)
         }
 
+    @Test
+    fun failedRemovalAfterDatabaseFailureMustRevalidateBeforeAnotherInsertion() =
+        runTest(testDispatcher) {
+            val fixture = detailsFixture()
+            enrich(fixture)
+            fixture.pinRepository.shouldFail = true
+            fixture.viewModel.savePin()
+            testScheduler.runCurrent()
+            assertEquals(1, fixture.photoStorage.promotionCalls)
+            fixture.photoStorage.discardFails = true
+            fixture.viewModel.removePhoto()
+            testScheduler.runCurrent()
+            assertTrue(details(fixture).photoFailed)
+            fixture.pinRepository.shouldFail = false
+            fixture.photoStorage.promotionFails = true
+            fixture.viewModel.savePin()
+            testScheduler.runCurrent()
+            assertEquals(1, fixture.pinRepository.saveCalls)
+            assertTrue((fixture.viewModel.uiState.value as AddPinUiState.Details).selection.saveFailed)
+            assertTrue(fixture.pinRepository.pins.value.isEmpty())
+        }
+
     private fun systemCategories(): List<Category> = SystemCategoryIds.ALL.map { Category(id = it, isSystem = true) }
+
+    private suspend fun detailsFixture(): Fixture =
+        readyToSaveFixture().also {
+            it.viewModel.selectCategory(SystemCategoryIds.PARKING)
+            it.viewModel.openDetails()
+        }
+
+    private fun details(fixture: Fixture): PlaceDetailsDraft = (fixture.viewModel.uiState.value as AddPinUiState.Details).selection.details
+
+    private fun enrich(fixture: Fixture) {
+        fixture.viewModel.updateName("  Bord de l’eau  ")
+        fixture.viewModel.updateNote("Première ligne\n  seconde ligne  ")
+        fixture.viewModel.updateFavorite(true)
+        fixture.viewModel.beginPhotoAcquisition()
+        fixture.viewModel.photoReady(com.laurentvrevin.wheris.core.model.PhotoDraftReference("owned-photo"))
+    }
+
+    @Test
+    fun detailsRequireASelectedCategoryAndEmptyDetailsRemainSaveable() =
+        runTest(testDispatcher) {
+            val fixture = readyToSaveFixture()
+            fixture.viewModel.openDetails()
+            assertTrue(fixture.viewModel.uiState.value is AddPinUiState.CategorySelection)
+            fixture.viewModel.selectCategory(SystemCategoryIds.PARKING)
+            fixture.viewModel.openDetails()
+            assertEquals(PlaceDetailsDraft(), details(fixture))
+            fixture.viewModel.savePin()
+            testScheduler.runCurrent()
+            val pin = (fixture.viewModel.uiState.value as AddPinUiState.Saved).pin
+            assertEquals(null, pin.name)
+            assertEquals(null, pin.note)
+            assertFalse(pin.isFavorite)
+            assertEquals(null, pin.photoReference)
+        }
+
+    @Test
+    fun backAndReopeningPreserveTheEntireCanonicalDraft() =
+        runTest(testDispatcher) {
+            val fixture = detailsFixture()
+            enrich(fixture)
+            val before = (fixture.viewModel.uiState.value as AddPinUiState.Details).selection
+            fixture.viewModel.backFromDetails()
+            assertEquals(before, fixture.viewModel.uiState.value)
+            fixture.viewModel.openDetails()
+            assertEquals(before, (fixture.viewModel.uiState.value as AddPinUiState.Details).selection)
+            assertTrue(fixture.photoStorage.discarded.isEmpty())
+        }
+
+    @Test
+    fun directSaveAfterBackPersistsEveryDetailThroughTheSameUseCase() =
+        runTest(testDispatcher) {
+            val fixture = detailsFixture()
+            enrich(fixture)
+            fixture.viewModel.backFromDetails()
+            fixture.viewModel.savePin()
+            testScheduler.runCurrent()
+            val pin = (fixture.viewModel.uiState.value as AddPinUiState.Saved).pin
+            assertEquals("Bord de l’eau", pin.name)
+            assertEquals("Première ligne\n  seconde ligne  ", pin.note)
+            assertTrue(pin.isFavorite)
+            assertEquals("owned-photo", pin.photoReference?.value)
+            assertEquals(testLocation().position, pin.position)
+            assertEquals(1, fixture.photoStorage.promotionCalls)
+            assertEquals(1, fixture.pinRepository.saveCalls)
+        }
+
+    @Test
+    fun categoryCreationAndFlowEmissionsPreserveDetailsAndPhoto() =
+        runTest(testDispatcher) {
+            val fixture = detailsFixture()
+            enrich(fixture)
+            val before = details(fixture)
+            fixture.categoryRepository.categories.value = systemCategories().reversed()
+            testScheduler.runCurrent()
+            assertEquals(before, details(fixture))
+            fixture.viewModel.backFromDetails()
+            fixture.viewModel.openCategoryCreation()
+            fixture.viewModel.updateCategoryName("Balade")
+            fixture.viewModel.createCategory()
+            testScheduler.runCurrent()
+            val selection = fixture.viewModel.uiState.value as AddPinUiState.CategorySelection
+            assertEquals(before, selection.details)
+            assertEquals(testLocation(), selection.location)
+            assertEquals(fixture.categoryRepository.created?.id, selection.selectedCategoryId)
+            fixture.viewModel.openDetails()
+            assertEquals(before, details(fixture))
+        }
+
+    @Test
+    fun pickerAndCameraConvergeOnTheSameDraftAndCancelPreservesFields() =
+        runTest(testDispatcher) {
+            val fixture = detailsFixture()
+            fixture.viewModel.updateName("Nom")
+            fixture.viewModel.updateNote("Note")
+            fixture.viewModel.updateFavorite(true)
+            val photo = com.laurentvrevin.wheris.core.model.PhotoDraftReference("picker")
+            assertTrue(fixture.viewModel.beginPhotoAcquisition())
+            fixture.viewModel.photoReady(photo)
+            val before = details(fixture)
+            assertTrue(fixture.viewModel.beginPhotoAcquisition())
+            val camera = com.laurentvrevin.wheris.core.model.PhotoDraftReference("camera")
+            assertTrue(fixture.viewModel.onCameraPrepared(camera))
+            fixture.viewModel.photoCancelled()
+            testScheduler.runCurrent()
+            assertEquals(before, details(fixture))
+            assertEquals(listOf(camera), fixture.photoStorage.discarded)
+            fixture.viewModel.beginPhotoAcquisition()
+            fixture.viewModel.onCameraPrepared(camera)
+            fixture.viewModel.photoReady(camera)
+            testScheduler.runCurrent()
+            assertEquals(camera, details(fixture).photo)
+            assertEquals("Nom", details(fixture).name)
+            assertTrue(photo in fixture.photoStorage.discarded)
+        }
+
+    @Test
+    fun photoFailurePreservesFieldsAndRetryAndRemovalRemainPossible() =
+        runTest(testDispatcher) {
+            val fixture = detailsFixture()
+            enrich(fixture)
+            val before = details(fixture)
+            fixture.viewModel.beginPhotoAcquisition()
+            fixture.viewModel.photoFailed()
+            assertEquals(before.copy(photoFailed = true), details(fixture))
+            fixture.viewModel.removePhoto()
+            testScheduler.runCurrent()
+            assertEquals(before.copy(photo = null), details(fixture))
+            assertEquals(listOf(before.photo), fixture.photoStorage.discarded)
+        }
+
+    @Test
+    fun databaseFailureKeepsPromotedPreviewAndRetryDoesNotCreateAnotherFile() =
+        runTest(testDispatcher) {
+            val fixture = detailsFixture()
+            enrich(fixture)
+            val before = details(fixture)
+            fixture.pinRepository.shouldFail = true
+            fixture.viewModel.savePin()
+            testScheduler.runCurrent()
+            val failed = fixture.viewModel.uiState.value as AddPinUiState.Details
+            assertEquals(before, failed.selection.details)
+            assertTrue(failed.selection.saveFailed)
+            assertFalse(failed.selection.isSaving)
+            assertEquals(1, fixture.photoStorage.promotionCalls)
+            fixture.pinRepository.shouldFail = false
+            fixture.viewModel.savePin()
+            testScheduler.runCurrent()
+            assertTrue(fixture.viewModel.uiState.value is AddPinUiState.Saved)
+            assertEquals(1, fixture.photoStorage.promotionCalls)
+            assertEquals(1, fixture.pinRepository.pins.value.size)
+        }
+
+    @Test
+    fun promotionFailureNeverInsertsAndPreservesTheDraft() =
+        runTest(testDispatcher) {
+            val fixture = detailsFixture()
+            enrich(fixture)
+            val before = details(fixture)
+            fixture.photoStorage.promotionFails = true
+            fixture.viewModel.savePin()
+            testScheduler.runCurrent()
+            assertEquals(before, details(fixture))
+            assertTrue((fixture.viewModel.uiState.value as AddPinUiState.Details).selection.saveFailed)
+            assertEquals(0, fixture.pinRepository.saveCalls)
+        }
+
+    @Test
+    fun duplicateSubmissionIsBlockedDuringBothPromotionAndInsertion() =
+        runTest(testDispatcher) {
+            val fixture = detailsFixture()
+            enrich(fixture)
+            fixture.photoStorage.promotionCompletion = CompletableDeferred()
+            fixture.pinRepository.saveCompletion = CompletableDeferred()
+            fixture.viewModel.savePin()
+            fixture.viewModel.savePin()
+            fixture.viewModel.backFromDetails()
+            testScheduler.runCurrent()
+            assertTrue((fixture.viewModel.uiState.value as AddPinUiState.Details).selection.isSaving)
+            assertEquals(0, fixture.pinRepository.saveCalls)
+            fixture.photoStorage.promotionCompletion?.complete(Unit)
+            testScheduler.runCurrent()
+            fixture.viewModel.savePin()
+            assertEquals(1, fixture.pinRepository.saveCalls)
+            fixture.pinRepository.saveCompletion?.complete(Unit)
+            testScheduler.runCurrent()
+            assertEquals(1, fixture.photoStorage.promotionCalls)
+            assertEquals(1, fixture.pinRepository.pins.value.size)
+        }
+
+    @Test
+    fun abandoningAndLateAcquisitionCleanUnattachedDrafts() =
+        runTest(testDispatcher) {
+            val fixture = detailsFixture()
+            enrich(fixture)
+            fixture.viewModel.abandon()
+            fixture.viewModel.photoReady(com.laurentvrevin.wheris.core.model.PhotoDraftReference("late"))
+            testScheduler.runCurrent()
+            assertEquals(listOf("owned-photo", "late"), fixture.photoStorage.discarded.map { it.value })
+            fixture.viewModel.savePin()
+            assertEquals(0, fixture.pinRepository.saveCalls)
+        }
+
+    @Test
+    fun lateSystemResultWithoutAnAcceptedDraftIsCleaned() =
+        runTest(testDispatcher) {
+            val fixture = Fixture()
+            fixture.viewModel.photoReady(com.laurentvrevin.wheris.core.model.PhotoDraftReference("late-system-result"))
+            testScheduler.runCurrent()
+            assertEquals(AddPinUiState.PermissionRequired, fixture.viewModel.uiState.value)
+            assertEquals(listOf("late-system-result"), fixture.photoStorage.discarded.map { it.value })
+        }
 
     private inner class Fixture(
         locationResult: LocationResult = LocationResult.Timeout,
@@ -527,6 +760,7 @@ class AddPinViewModelTest {
         val locationRepository = FakeLocationRepository(locationResult)
         val categoryRepository = FakeCategoryRepository()
         val pinRepository = FakePinRepository()
+        val photoStorage = FakePhotoStorage()
         private val createPinUseCase =
             CreatePinUseCase(
                 pinRepository = pinRepository,
@@ -538,6 +772,8 @@ class AddPinViewModelTest {
                 userLocationRepository = locationRepositoryOverride ?: locationRepository,
                 categoryRepository = categoryRepository,
                 createPinUseCase = createPinUseCase,
+                photoStorage = photoStorage,
+                cleanupScope = kotlinx.coroutines.CoroutineScope(testDispatcher),
             )
     }
 

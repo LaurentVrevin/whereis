@@ -49,3 +49,5 @@ include(":feature:home")
 include(":feature:pins")
 include(":feature:pindetail")
 include(":feature:onboarding")
+
+include(":core:photo")

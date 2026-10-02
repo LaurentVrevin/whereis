@@ -19,6 +19,7 @@ dependencies {
     implementation(libs.koin.android)
 
     androidTestImplementation(libs.room.runtime)
+    androidTestImplementation(project(":core:photo"))
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
 

@@ -240,6 +240,14 @@ be deleted while still required by another reference/workflow. Temporary
 files SHOULD be cleaned up. Local files MUST NOT be exposed through
 broad public filesystem paths.
 
+B3.2 uses both Android Photo Picker and the external system camera. Picker
+content is immediately copied into private owned drafts. The camera receives
+only a temporary grant for a narrow FileProvider camera-draft path; permanent
+photos are never exposed. No general storage or CAMERA permission is added.
+See `docs/engineering/LOCAL_PHOTO_LIFECYCLE.md` for promotion, recoverable
+deletion and process reconciliation. The backup review in sections 35–36
+still applies to Room references and their permanent files together.
+
 ------------------------------------------------------------------------
 
 ## 14. Photo metadata

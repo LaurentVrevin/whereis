@@ -9,6 +9,7 @@ android {
 dependencies {
     implementation(project(":domain"))
     implementation(project(":core:model"))
+    implementation(project(":core:photo"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:ui"))
     implementation(project(":core:navigation"))
@@ -29,6 +30,7 @@ dependencies {
     implementation(libs.koin.androidx.compose)
 
     androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(libs.compose.ui.test.junit4)
     debugImplementation(libs.compose.ui.test.manifest)
 

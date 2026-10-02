@@ -1,68 +1,120 @@
-# Local photo lifecycle — B3 contract
+# Local photo lifecycle — B3.2
 
-## Scope and ownership
+## Product decision and boundaries
 
-B3.1 persists `PhotoReference` and `isFavorite`; it creates no image files.
-Acquisition (camera, system selector or both) remains an open product decision.
-No storage interface is introduced yet: the repository has no file storage implementation
-or consumer, and draft handles/resolution belong to the future platform/storage boundary.
+ADD_003 offers both `Choisir une photo` (Android Photo Picker, images only)
+and `Prendre une photo` (external system camera / TakePicture). B3.2 resolves
+the former open decision; the historical reference PDF remains unchanged.
+There is no CameraX, custom gallery, general storage/CAMERA permission or cloud.
+The external camera app accesses the hardware on Wheris's behalf.
 
-`PhotoReference.value` is an opaque identifier matching `[A-Za-z0-9][A-Za-z0-9_-]*`.
-It contains no URI, path, file extension, user content or cloud identity. Unicode is supported
-in place names/notes, but not in this storage identifier. The mapper validates persisted
-identifiers and propagates an invalid reference rather than silently treating it as absent.
-Identifier validation does not prove that a file exists.
+`PhotoDraftReference` and permanent `PhotoReference` are distinct Android-free
+opaque identifiers (`[A-Za-z0-9][A-Za-z0-9_-]*`). Only the permanent reference
+is persisted. No URI, File, Context or physical path enters ViewModel/domain/
+Room. `PhotoStorage` in domain exposes the lifecycle contract. `core:photo`
+owns Android acquisition, private files and decoding, with actual consumers
+in AddPin and repository coordination. It contains no Room, navigation or
+Compose business UI. `feature:addpin` does not depend on `data`.
 
-The storage boundary must generate identifiers and associate them with permanent files
-controlled by Wheris. A saved Pin owns its photo; do not share or delete a physical file
-while another reference/workflow needs it. Category reassignment does not change ownership.
+## Acquisition and preview
 
-## Required B3.2 flow
+Picker contents are copied immediately into `cacheDir/photo_drafts/<id>`.
+The owned copy no longer needs the external URI or persistable permission.
+Camera targets are `cacheDir/photo_drafts/camera/<id>`. FileProvider authority
+`${applicationId}.photo-drafts` is not exported and grants temporary access
+only to this camera subdirectory. Picker drafts and permanent files are not
+exposed. Both ActivityResult launchers stay in AddPinRoute.
 
-1. Acquisition may create an application-controlled temporary draft.
-2. A removal/cancellation deletes that draft and leaves the final reference null.
-3. Acquisition failure preserves position, category, name, note and favorite; saving without
-   a photo remains possible.
-4. After user validation, storage promotes the draft to permanent internal storage and
-   returns a `PhotoReference`. A persisted reference must never address a cache file.
-5. The same `CreatePinUseCase` saves the enriched Pin. Promotion must complete before the
-   database insertion. A storage failure must not persist a dangling reference.
-6. If insertion fails, retain the promoted photo for a retry or clean it up on abandonment;
-   preserve all other draft fields. Recovery must also handle a process interruption between
-   promotion and insertion, so unattached permanent files are not silently orphaned.
+Copying uses an application coroutine scope so rotation does not cancel it.
+The neutral camera draft stays in the navigation-scoped ViewModel. Rotation
+and foreground return do not automatically launch either system interaction.
+Late acquisition results after real abandonment are discarded. Cancellation
+cleans only the camera target, preserving all other fields and any prior photo.
 
-The future storage target is a private permanent directory such as `Context.filesDir/photos`,
-resolved only inside the Android storage implementation. No directory/files are created by
-B3.1. Internal paths and Android URIs must not cross into core:model/domain or logs.
+A valid image must exist, be nonempty and be decodable. BitmapFactory bounds
+and power-of-two sampling limit the largest decoded dimension to 1024 pixels.
+Decoding and EXIF orientation run on Dispatchers.IO. The small AndroidX
+ExifInterface 1.4.2 dependency supplies maintained orientation parsing on API 26;
+no image loading library is added. The platform EXIF implementation has known
+older-device security issues flagged by Android lint.
+The Route preview reads only owned bytes (draft or promoted-pending-save).
+Invalid content yields a readable error and can be retried/removed, preserving
+text and favorite. The stateless form receives the preview as a UI slot.
 
-## Required deletion coordination before real photos are produced
+## Canonical draft and save
 
-The current path is `PinDetailViewModel.confirmDelete` → `PinRepository.deletePin` →
-`PinRepositoryImpl.deletePin` → `PinDao.deletePin`. The data implementation is the
-coordination point; a ViewModel must not manipulate files.
+CategorySelection owns accepted UserLocation (metadata/timestamp), selected
+category and PlaceDetailsDraft (raw name/note, favorite, neutral photo).
+Details and CategoryCreation wrap that same selection. Category Flow emissions
+update it without erasing details. BackDetails/BackCategory preserve it; direct
+Save after returning to ADD_002 persists every detail via the same CreatePinUseCase
+and save guard as ADD_003. Optional fields stay optional; normalization stays
+in CreatePinUseCase.
 
-B3.2 must connect this path to owned-file cleanup before enabling real photo acquisition.
-Capture the reference before deleting the row and make pending cleanup recoverable across
-failure/process death (with durable retry or reconciliation). Delete a permanent file only
-after checking that no retained Pin/workflow still needs it. A database failure must retain
-the photo; a file failure after row deletion must remain recoverable and visible rather
-than being swallowed. Retrying deletion of an already absent Pin must still recover pending
-cleanup. Photo replacement/removal must follow the same ownership rules when B4 implements it.
+Promotion moves bytes to `filesDir/photos/<id>` and returns the same opaque ID.
+An in-process lease protects promoted-pending-save files from reconciliation.
+Retry reuses that file; preview resolves its new location. DB insertion failure
+retains the entire draft, including photo. Only insertion success confirms Saved.
+Submission is guarded from before promotion through insertion, and ownership
+handoff completes without cancellation once persistence starts.
 
-Room transactions cover database operations only; they cannot make filesystem operations
-atomic. B3.1 does not claim physical cleanup is implemented. This is a mandatory B3.2
-integration requirement, including tests for insertion/deletion failure and process recovery.
+The repository also verifies that a permanent photo exists and is decodable
+immediately before insertion, including retries using a cached promotion reference.
+An absent or known corrupt file is rejected before any Room row is created.
+
+Each Pin owns at most one photo; repository insertion rejects an already attached
+reference. Explicit removal and real flow abandonment discard unattached drafts,
+including promoted-pending-save files. Inner back navigation is not abandonment.
+ViewModel clearing cleans through the application scope after any save finishes.
+A failed cleanup remains discoverable in owned cache/pending storage for recovery;
+it never crashes a late acquisition callback.
+
+Failed on-screen removal retains its lease and pending bytes for preview, retry
+or re-promotion. It invalidates the ViewModel's cached promotion so a later save
+must revalidate and restore a permanent file before insertion. Real abandonment
+releases the lease even when cleanup fails, allowing later reconciliation to
+finish it. Pending files belonging to a live draft are preserved by reconciliation.
+
+## Deletion and process recovery
+
+PinRepositoryImpl serializes database/photo mutations using a mutex. Recovery
+runs before first observation/save and on deletion. Filesystem operations run
+off main. Room remains v4: no new schema, migration, table or BLOB.
+
+Deletion stages `filesDir/photos/<id>` into `filesDir/photo_pending_delete/<id>`,
+deletes the Room row, then removes the pending file. DB failure restores the
+permanent photo; restoration failure preserves a durable pending file and propagates
+the error. Final cleanup failure propagates with the row absent and pending file
+recoverable. Deleting an absent Pin first reconciles pending cleanup and remains
+idempotent. Room and filesystem are not a single transaction.
+
+Deletion also checks for any other retained Pin reference before touching the
+file. Unexpected legacy/shared references preserve the bytes until the last
+row is removed; new shared references are rejected at insertion.
+
+Reconciliation compares owned opaque file names with Room references:
+
+- referenced pending file: restore to permanent, or remove redundant pending copy;
+- unreferenced pending file: delete;
+- referenced permanent file: keep;
+- unreferenced permanent file: delete unless leased by an active in-process draft;
+- abandoned cache draft from an old process: delete; current active draft: keep.
+
+A fresh process has no old leases, so death after promotion and before insertion
+cannot leave a permanent orphan indefinitely. Scans preserve every referenced photo
+and never resolve arbitrary paths from user content. Errors remain retryable.
 
 ## Editing and backup boundary
 
-`updatePinDetails` edits name/note/time only and preserves favorite/photo. Full editing is B4.
-`savePin` persists the complete Pin; direct and enriched creation use the same insertion.
+Photos remain private and local. Existing text-only editing preserves favorite/photo;
+full editing and replacing photos on saved Pins remain B4.
 
-The current manifest has `android:allowBackup="false"`, without explicit backup or
-data-extraction XML rules. It disables cloud backup, but on some Android 12+ devices it
-does not disable device-to-device transfer. A future `filesDir/photos` directory must not
-be described as guaranteed excluded from every transfer under this configuration.
-Before release, decide backup/restore eligibility for both Room references and permanent
-photos together, then configure/test extraction rules. No global backup policy is changed
-in B3.1. See `docs/product/SECURITY_PRIVACY.md`, sections 13 and 35–36, and
-[Android Auto Backup documentation](https://developer.android.com/identity/data/autobackup).
+`android:allowBackup="false"` disables cloud backup but does not guarantee exclusion
+from every manufacturer device-to-device transfer. Before production release, Room
+references and permanent photos require a joint backup/data-extraction decision
+and device validation (SECURITY_PRIVACY sections 35–36). B3.2 does not change global
+backup eligibility.
+
+Platform contracts: [Photo Picker](https://developer.android.com/training/data-storage/shared/photo-picker),
+[external camera](https://developer.android.com/media/camera/camera-deprecated/photobasics),
+[FileProvider](https://developer.android.com/reference/androidx/core/content/FileProvider).

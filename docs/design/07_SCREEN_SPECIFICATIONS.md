@@ -889,7 +889,10 @@ Optional multiline input.
 
 ## PHOTO
 
-Optional local photo.
+Optional local photo. B3.2 offers both `Choisir une photo` (Android Photo
+Picker, images only) and `Prendre une photo` (external system camera).
+Cancellation preserves the draft; `Supprimer la photo` removes only the
+owned photo. External URIs never become canonical photo references.
 
 States: - none; - selecting/acquiring through system; - preview
 available; - failure; - removed.
@@ -2413,14 +2416,11 @@ Verify:
 
 # 67. Photo Source
 
-Still open:
-
--   system photo picker;
--   camera;
--   both.
-
-This specification defines the screen behavior around a local photo but
-does not invent the acquisition policy.
+Resolved by B3.2: both Android Photo Picker (`Choisir une photo`, images only)
+and external system camera (`Prendre une photo`, TakePicture) are available
+in the MVP. Both converge on an owned private draft and the same save.
+No custom camera/gallery or general storage permission. The historical
+reference PDF is unchanged; this decision supersedes its open choice.
 
 ------------------------------------------------------------------------
 

@@ -4,6 +4,7 @@ import android.app.Application
 import com.laurentvrevin.wheris.core.database.di.databaseModule
 import com.laurentvrevin.wheris.core.datastore.di.dataStoreModule
 import com.laurentvrevin.wheris.core.location.di.locationModule
+import com.laurentvrevin.wheris.core.photo.photoModule
 import com.laurentvrevin.wheris.data.di.dataModule
 import com.laurentvrevin.wheris.di.appLaunchModule
 import com.laurentvrevin.wheris.feature.addpin.di.addPinModule
@@ -27,6 +28,7 @@ class App : Application() {
             androidContext(this@App)
             modules(
                 databaseModule,
+                photoModule,
                 dataStoreModule,
                 dataModule,
                 appLaunchModule,

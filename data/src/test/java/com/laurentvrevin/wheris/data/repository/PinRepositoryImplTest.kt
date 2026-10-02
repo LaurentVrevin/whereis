@@ -25,7 +25,7 @@ class PinRepositoryImplTest {
     @Before
     fun setup() {
         fakeDao = FakePinDao()
-        repository = PinRepositoryImpl(fakeDao)
+        repository = PinRepositoryImpl(fakeDao, FakePhotoStorage())
     }
 
     @Test

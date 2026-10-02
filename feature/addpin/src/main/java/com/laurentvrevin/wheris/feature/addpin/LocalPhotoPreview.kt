@@ -1,0 +1,69 @@
+package com.laurentvrevin.wheris.feature.addpin
+
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import com.laurentvrevin.wheris.core.model.PhotoDraftReference
+import com.laurentvrevin.wheris.core.photo.AndroidPhotoStorage
+import kotlinx.coroutines.CancellationException
+
+/** Platform preview slot: the stateless form itself never resolves files. */
+@Composable
+internal fun LocalPhotoPreview(
+    photo: PhotoDraftReference,
+    storage: AndroidPhotoStorage,
+    onFailure: () -> Unit,
+) {
+    var bitmap by remember(photo) { mutableStateOf<ImageBitmap?>(null) }
+    var failed by remember(photo) { mutableStateOf(false) }
+    LaunchedEffect(photo) {
+        try {
+            bitmap = storage.preview(photo).asImageBitmap()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (_: Exception) {
+            failed = true
+            onFailure()
+        }
+    }
+    when {
+        bitmap != null ->
+            Image(
+                bitmap = bitmap!!,
+                contentDescription = stringResource(R.string.details_preview),
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxWidth().height(200.dp),
+            )
+        failed -> Text(stringResource(R.string.details_photo_error))
+        else -> CircularProgressIndicator()
+    }
+}
+
+/** Synthetic local landscape; no external media or filesystem in design previews. */
+@Composable
+internal fun SyntheticPhotoPreview() {
+    val sky = MaterialTheme.colorScheme.primaryContainer
+    val landscape = MaterialTheme.colorScheme.primary
+    Canvas(Modifier.fillMaxWidth().height(160.dp)) {
+        drawRect(sky)
+        drawCircle(landscape, radius = size.width * .35f, center = Offset(size.width * .25f, size.height))
+        drawCircle(landscape, radius = size.width * .45f, center = Offset(size.width * .85f, size.height * 1.1f))
+    }
+}
