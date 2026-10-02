@@ -1,5 +1,6 @@
 package com.laurentvrevin.wheris.core.database.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -30,4 +31,6 @@ data class PinEntity(
     val updatedAtEpochMillis: Long,
     val name: String? = null,
     val note: String? = null,
+    @ColumnInfo(defaultValue = "0") val isFavorite: Boolean = false,
+    val photoReference: String? = null,
 )

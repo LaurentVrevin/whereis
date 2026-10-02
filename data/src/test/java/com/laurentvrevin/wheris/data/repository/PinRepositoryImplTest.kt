@@ -4,6 +4,7 @@ import com.laurentvrevin.wheris.core.database.dao.PinDao
 import com.laurentvrevin.wheris.core.database.entity.PinEntity
 import com.laurentvrevin.wheris.core.model.CategoryId
 import com.laurentvrevin.wheris.core.model.GeoPoint
+import com.laurentvrevin.wheris.core.model.PhotoReference
 import com.laurentvrevin.wheris.core.model.Pin
 import com.laurentvrevin.wheris.core.model.PinId
 import kotlinx.coroutines.flow.Flow
@@ -41,6 +42,8 @@ class PinRepositoryImplTest {
                     updatedAtEpochMillis = 2000L,
                     name = "Camping",
                     note = "Près du chemin",
+                    isFavorite = true,
+                    photoReference = PhotoReference("photo-42"),
                 )
 
             repository.savePin(pin)
@@ -56,6 +59,8 @@ class PinRepositoryImplTest {
             assertEquals(2000L, saved.updatedAtEpochMillis)
             assertEquals("Camping", saved.name)
             assertEquals("Près du chemin", saved.note)
+            assertEquals(true, saved.isFavorite)
+            assertEquals("photo-42", saved.photoReference)
         }
 
     @Test
@@ -73,6 +78,8 @@ class PinRepositoryImplTest {
                     updatedAtEpochMillis = 2000L,
                     name = "Camping",
                     note = "Près du chemin",
+                    isFavorite = true,
+                    photoReference = "photo-42",
                 )
             fakeDao.emit(listOf(entity))
 
@@ -87,6 +94,8 @@ class PinRepositoryImplTest {
             assertEquals(2000L, observed.updatedAtEpochMillis)
             assertEquals("Camping", observed.name)
             assertEquals("Près du chemin", observed.note)
+            assertEquals(true, observed.isFavorite)
+            assertEquals(PhotoReference("photo-42"), observed.photoReference)
         }
 
     @Test
@@ -102,11 +111,15 @@ class PinRepositoryImplTest {
                     altitudeMeters = null,
                     createdAtEpochMillis = 100L,
                     updatedAtEpochMillis = 100L,
+                    isFavorite = true,
+                    photoReference = "photo-found",
                 )
             fakeDao.emit(listOf(entity))
 
             val observed = repository.observePin(PinId("find_me")).first()
             assertEquals(PinId("find_me"), observed?.id)
+            assertEquals(true, observed?.isFavorite)
+            assertEquals(PhotoReference("photo-found"), observed?.photoReference)
         }
 
     @Test
@@ -169,7 +182,8 @@ class PinRepositoryImplTest {
     @Test
     fun `updating details preserves other fields and reports a missing place`() =
         runBlocking {
-            val original = PinEntity("edit-me", 10.0, 20.0, "category", 5f, 30.0, 1000L, 2000L)
+            val original =
+                PinEntity("edit-me", 10.0, 20.0, "category", 5f, 30.0, 1000L, 2000L, isFavorite = true, photoReference = "photo-edit")
             fakeDao.emit(listOf(original))
 
             assertEquals(true, repository.updatePinDetails(PinId("edit-me"), "Name", "Note", 3000L))

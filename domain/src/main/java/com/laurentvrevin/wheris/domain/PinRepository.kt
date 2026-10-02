@@ -19,13 +19,18 @@ interface PinRepository {
     fun observePin(pinId: PinId): Flow<Pin?>
 
     /**
-     * Saves a new pin.
+     * Saves a new pin including optional details. A photo reference must already be permanent.
      *
      * @throws Exception if a pin with the same ID already exists.
      */
     suspend fun savePin(pin: Pin)
 
-    /** Deletes only this place. An already absent place is treated as deleted. */
+    /**
+     * Deletes only this place. An already absent place is treated as deleted.
+     * Before real photo acquisition is introduced, data must coordinate owned photo cleanup
+     * here, with recoverable failures; Room cannot make file deletion atomic.
+     * See docs/engineering/LOCAL_PHOTO_LIFECYCLE.md.
+     */
     suspend fun deletePin(pinId: PinId)
 
     /** Updates only editable text and modification time; false if the place no longer exists. */

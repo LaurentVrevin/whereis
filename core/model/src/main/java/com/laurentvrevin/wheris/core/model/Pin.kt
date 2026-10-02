@@ -13,4 +13,6 @@ data class Pin(
     val updatedAtEpochMillis: Long,
     val name: String? = null,
     val note: String? = null,
+    val isFavorite: Boolean = false,
+    val photoReference: PhotoReference? = null,
 )

@@ -46,7 +46,10 @@ class CategoryMutationPersistenceTest {
 
     private suspend fun addPlaces(count: Int): List<PinEntity> =
         (1..count).map { index ->
-            PinEntity("pin-$index", 10.0, 20.0, sourceId.value, 7f, 35.0, index.toLong(), 2000L, "Nom $index", "Note $index")
+            PinEntity(
+                "pin-$index", 10.0, 20.0, sourceId.value, 7f, 35.0, index.toLong(), 2000L, "Nom $index", "Note $index",
+                isFavorite = index % 2 == 1, photoReference = "photo-$index",
+            )
                 .also { database.pinDao().insertPin(it) }
         }
 

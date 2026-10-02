@@ -3,6 +3,7 @@ package com.laurentvrevin.wheris.data.mapper
 import com.laurentvrevin.wheris.core.database.entity.PinEntity
 import com.laurentvrevin.wheris.core.model.CategoryId
 import com.laurentvrevin.wheris.core.model.GeoPoint
+import com.laurentvrevin.wheris.core.model.PhotoReference
 import com.laurentvrevin.wheris.core.model.Pin
 import com.laurentvrevin.wheris.core.model.PinId
 
@@ -17,6 +18,8 @@ fun PinEntity.toDomain(): Pin {
         updatedAtEpochMillis = updatedAtEpochMillis,
         name = name,
         note = note,
+        isFavorite = isFavorite,
+        photoReference = photoReference?.let(::PhotoReference),
     )
 }
 
@@ -32,5 +35,7 @@ fun Pin.toEntity(): PinEntity {
         updatedAtEpochMillis = updatedAtEpochMillis,
         name = name,
         note = note,
+        isFavorite = isFavorite,
+        photoReference = photoReference?.value,
     )
 }

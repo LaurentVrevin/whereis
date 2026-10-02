@@ -14,7 +14,7 @@ import com.laurentvrevin.wheris.core.model.SystemCategoryIds
         PinEntity::class,
         CategoryEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 abstract class WherisDatabase : RoomDatabase() {

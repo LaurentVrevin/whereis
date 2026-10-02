@@ -164,6 +164,36 @@ class WherisDatabaseTest {
     }
 
     @Test
+    fun nativeVersionFourUsesSqlDefaultsAndStoresEnrichedFields() =
+        runBlocking {
+            val sqlDb = db.openHelper.writableDatabase
+            assertEquals(4, sqlDb.version)
+            sqlDb.execSQL(
+                "INSERT INTO pins (id, latitude, longitude, categoryId, createdAtEpochMillis, updatedAtEpochMillis) " +
+                    "VALUES ('plain', 10, 20, 'other', 1000, 2000)",
+            )
+            val plain = requireNotNull(pinDao.observePin("plain").first())
+            assertEquals(false, plain.isFavorite)
+            assertNull(plain.photoReference)
+            assertNull(plain.name)
+            assertNull(plain.note)
+            val enriched =
+                plain.copy(
+                    id = "enriched",
+                    name = "Café 東京",
+                    note = "  Note\n🌲  ",
+                    isFavorite = true,
+                    photoReference = "photo-42",
+                )
+            pinDao.insertPin(enriched)
+            assertEquals(enriched, pinDao.observePin(enriched.id).first())
+            assertEquals(2, pinDao.observePins().first().size)
+            assertEquals(1, pinDao.updateDetails(enriched.id, "Renamed", enriched.note, 3000L))
+            assertEquals(enriched.copy(name = "Renamed", updatedAtEpochMillis = 3000L), pinDao.observePin(enriched.id).first())
+            sqlDb.query("PRAGMA foreign_key_check").use { assertEquals(0, it.count) }
+        }
+
+    @Test
     fun insertPinWithInvalidCategory_shouldThrowConstraintException() {
         runBlocking {
             val pin =
