@@ -7,6 +7,8 @@ import com.laurentvrevin.wheris.core.model.PinId
 import com.laurentvrevin.wheris.core.model.SystemCategoryIds
 import com.laurentvrevin.wheris.core.model.UserLocation
 import com.laurentvrevin.wheris.domain.PinRepository
+import com.laurentvrevin.wheris.domain.PinUpdate
+import com.laurentvrevin.wheris.domain.PinUpdateResult
 import com.laurentvrevin.wheris.domain.location.LocationResult
 import com.laurentvrevin.wheris.domain.repository.UserLocationRepository
 import kotlinx.coroutines.CompletableDeferred
@@ -358,12 +360,10 @@ class PinDetailViewModelTest {
 
         override suspend fun savePin(pin: Pin) = Unit
 
-        override suspend fun updatePinDetails(
-            pinId: PinId,
-            name: String?,
-            note: String?,
+        override suspend fun updatePin(
+            update: PinUpdate,
             updatedAtEpochMillis: Long,
-        ): Boolean = error("Editing is not used by this test")
+        ): PinUpdateResult = error("Editing is not used by this test")
 
         override suspend fun deletePin(pinId: PinId) {
             deleteCalls++
@@ -386,12 +386,10 @@ class PinDetailViewModelTest {
 
         override suspend fun savePin(pin: Pin) = Unit
 
-        override suspend fun updatePinDetails(
-            pinId: PinId,
-            name: String?,
-            note: String?,
+        override suspend fun updatePin(
+            update: PinUpdate,
             updatedAtEpochMillis: Long,
-        ): Boolean = error("Editing is not used by this test")
+        ): PinUpdateResult = error("Editing is not used by this test")
 
         override suspend fun deletePin(pinId: PinId) = error("boom")
     }

@@ -1,4 +1,4 @@
-# Local photo lifecycle — B3.2
+# Local photo lifecycle — B3.2 / B4.1
 
 ## Product decision and boundaries
 
@@ -106,8 +106,41 @@ and never resolve arbitrary paths from user content. Errors remain retryable.
 
 ## Editing and backup boundary
 
-Photos remain private and local. Existing text-only editing preserves favorite/photo;
-full editing and replacing photos on saved Pins remain B4.
+Photos remain private and local. B4.1 introduces one canonical mutation:
+`PinUpdate` / `UpdatePinUseCase` / `PinRepository.updatePin`. Its contract only
+contains ID, category, name, note, favorite and explicit Keep/Remove/Replace.
+The compatibility text editor delegates to it with Keep; no text-only SQL remains.
+Position, accuracy, altitude and createdAt cannot be submitted. One transactional
+UPDATE writes all editable columns and updatedAt, using the injected use-case clock.
+
+Keep (including Replace with the current reference) does not access any file.
+Absent Pin/category and already-attached replacement are rejected before file work.
+Preflight and the Room transaction both check category/Pin existence; the transaction
+also rechecks photo ownership and the previous photo reference. Replacement validates
+the permanent owned bytes before staging the old photo. An unexpected shared old
+reference is preserved for the other Pin rather than physically deleted.
+
+Remove and Replace stage the old photo into pending deletion, then mutate Room.
+DB failure restores the old photo; a replacement remains leased and unattached for
+retry. Failed restoration leaves durable pending bytes for reconciliation. Once
+staging begins, DB/restore/handoff/cleanup finish without caller cancellation;
+cancellation still propagates to the caller, so it must not assume a cancelled call
+means the DB did not commit. The replacement's lease is released only after commit.
+
+`SUCCESS` and `SUCCESS_WITH_CLEANUP_PENDING` both mean the database mutation committed.
+The latter must finish the editing workflow without offering a save retry as though
+data were unsaved. It preserves pending cleanup and marks recovery necessary for
+the next repository observation (or a subsequent deletion/fresh process). Errors
+before commit return `TECHNICAL_FAILURE`; missing targets and shared replacement
+have specific results. CancellationException is never converted into a normal result.
+
+After process interruption, referenced pending old photos are restored if Room still
+points to them; unreferenced pending old photos are cleaned if Room points to the new
+photo. A live replacement lease protects a failed save's new bytes. A fresh process
+has no such lease and removes an unreferenced new photo, preserving every DB reference.
+
+B4.2 category/photo editing UI is not implemented. The B3.2 manual Picker/camera smoke
+is intentionally deferred to consolidation QA/B7; it has not been executed.
 
 `android:allowBackup="false"` disables cloud backup but does not guarantee exclusion
 from every manufacturer device-to-device transfer. Before production release, Room

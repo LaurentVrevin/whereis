@@ -35,11 +35,13 @@ interface PinRepository {
      */
     suspend fun deletePin(pinId: PinId)
 
-    /** Updates only editable text and modification time; false if the place no longer exists. */
-    suspend fun updatePinDetails(
-        pinId: PinId,
-        name: String?,
-        note: String?,
+    /**
+     * Canonical mutation of editable fields. SUCCESS_WITH_CLEANUP_PENDING also means committed.
+     * Ordinary storage failures return a result; coroutine cancellation still propagates.
+     * No file is touched for an absent Pin/category or KEEP. Replacement must be permanent.
+     */
+    suspend fun updatePin(
+        update: PinUpdate,
         updatedAtEpochMillis: Long,
-    ): Boolean
+    ): PinUpdateResult
 }

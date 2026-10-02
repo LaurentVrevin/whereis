@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.laurentvrevin.wheris.core.model.PinId
 import com.laurentvrevin.wheris.domain.PinRepository
+import com.laurentvrevin.wheris.domain.PinUpdateResult
 import com.laurentvrevin.wheris.domain.usecase.UpdatePinDetailsUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -91,13 +92,18 @@ class EditPinViewModel(
         _uiState.value = current.copy(isSaving = true, saveFailed = false)
         viewModelScope.launch {
             try {
-                if (updateDetails(current.pinId, current.name, current.note)) {
-                    savedStateHandle.remove<String>(DRAFT_ID)
-                    savedStateHandle.remove<String>(DRAFT_NAME)
-                    savedStateHandle.remove<String>(DRAFT_NOTE)
-                    _uiState.value = EditPinUiState.Saved
-                } else {
-                    _uiState.value = current.copy(noLongerExists = true)
+                when (updateDetails(current.pinId, current.name, current.note)) {
+                    PinUpdateResult.SUCCESS, PinUpdateResult.SUCCESS_WITH_CLEANUP_PENDING -> {
+                        savedStateHandle.remove<String>(DRAFT_ID)
+                        savedStateHandle.remove<String>(DRAFT_NAME)
+                        savedStateHandle.remove<String>(DRAFT_NOTE)
+                        _uiState.value = EditPinUiState.Saved
+                    }
+                    PinUpdateResult.PIN_NOT_FOUND -> _uiState.value = current.copy(noLongerExists = true)
+                    PinUpdateResult.CATEGORY_NOT_FOUND,
+                    PinUpdateResult.PHOTO_ALREADY_ATTACHED,
+                    PinUpdateResult.TECHNICAL_FAILURE,
+                    -> _uiState.value = current.copy(saveFailed = true)
                 }
             } catch (exception: CancellationException) {
                 throw exception

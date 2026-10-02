@@ -7,6 +7,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.laurentvrevin.wheris.core.database.dao.CategoryDao
 import com.laurentvrevin.wheris.core.database.dao.PinDao
+import com.laurentvrevin.wheris.core.database.dao.PinMutationStatus
 import com.laurentvrevin.wheris.core.database.entity.CategoryEntity
 import com.laurentvrevin.wheris.core.database.entity.PinEntity
 import com.laurentvrevin.wheris.core.model.SystemCategoryIds
@@ -188,7 +189,19 @@ class WherisDatabaseTest {
             pinDao.insertPin(enriched)
             assertEquals(enriched, pinDao.observePin(enriched.id).first())
             assertEquals(2, pinDao.observePins().first().size)
-            assertEquals(1, pinDao.updateDetails(enriched.id, "Renamed", enriched.note, 3000L))
+            assertEquals(
+                PinMutationStatus.SUCCESS,
+                pinDao.mutatePin(
+                    enriched.id,
+                    enriched.categoryId,
+                    "Renamed",
+                    enriched.note,
+                    enriched.isFavorite,
+                    enriched.photoReference,
+                    enriched.photoReference,
+                    3000L,
+                ),
+            )
             assertEquals(enriched.copy(name = "Renamed", updatedAtEpochMillis = 3000L), pinDao.observePin(enriched.id).first())
             sqlDb.query("PRAGMA foreign_key_check").use { assertEquals(0, it.count) }
         }

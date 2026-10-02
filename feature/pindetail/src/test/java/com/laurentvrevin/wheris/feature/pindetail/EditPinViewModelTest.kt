@@ -6,6 +6,8 @@ import com.laurentvrevin.wheris.core.model.Pin
 import com.laurentvrevin.wheris.core.model.PinId
 import com.laurentvrevin.wheris.core.model.SystemCategoryIds
 import com.laurentvrevin.wheris.domain.PinRepository
+import com.laurentvrevin.wheris.domain.PinUpdate
+import com.laurentvrevin.wheris.domain.PinUpdateResult
 import com.laurentvrevin.wheris.domain.usecase.UpdatePinDetailsUseCase
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -154,6 +156,40 @@ class EditPinViewModelTest {
         handle: SavedStateHandle = SavedStateHandle(),
     ) = EditPinViewModel(repository, UpdatePinDetailsUseCase(repository) { 5000L }, handle)
 
+    @Test
+    fun `committed update with pending cleanup finishes the existing editor`() =
+        runTest {
+            val repository = FakeRepository()
+            repository.updateResult = PinUpdateResult.SUCCESS_WITH_CLEANUP_PENDING
+            val handle = SavedStateHandle()
+            val viewModel = editor(repository, handle)
+            viewModel.load(repository.pin!!.id)
+            dispatcher.scheduler.advanceUntilIdle()
+            viewModel.changeName("Saved name")
+            viewModel.save()
+            dispatcher.scheduler.advanceUntilIdle()
+            assertEquals(EditPinUiState.Saved, viewModel.uiState.value)
+            assertEquals("Saved name", repository.pin!!.name)
+            assertTrue(handle.keys().isEmpty())
+        }
+
+    @Test
+    fun `missing category is a recoverable save error and retains the draft`() =
+        runTest {
+            val repository = FakeRepository()
+            repository.updateResult = PinUpdateResult.CATEGORY_NOT_FOUND
+            val viewModel = editor(repository)
+            viewModel.load(repository.pin!!.id)
+            dispatcher.scheduler.advanceUntilIdle()
+            viewModel.changeName("Draft")
+            viewModel.save()
+            dispatcher.scheduler.advanceUntilIdle()
+            val failed = viewModel.uiState.value as EditPinUiState.Content
+            assertTrue(failed.saveFailed)
+            assertEquals("Draft", failed.name)
+            assertEquals("Original", repository.pin!!.name)
+        }
+
     private class FakeRepository : PinRepository {
         var pin: Pin? =
             Pin(
@@ -168,6 +204,7 @@ class EditPinViewModelTest {
                 note = "Original note",
             )
         var fail = false
+        var updateResult = PinUpdateResult.SUCCESS
         var updateCalls = 0
         var completion: CompletableDeferred<Unit>? = null
 
@@ -179,18 +216,26 @@ class EditPinViewModelTest {
 
         override suspend fun deletePin(pinId: PinId) = error("Editor must never delete")
 
-        override suspend fun updatePinDetails(
-            pinId: PinId,
-            name: String?,
-            note: String?,
+        override suspend fun updatePin(
+            update: PinUpdate,
             updatedAtEpochMillis: Long,
-        ): Boolean {
+        ): PinUpdateResult {
             updateCalls++
             completion?.await()
             if (fail) throw IOException("storage unavailable")
-            val current = pin?.takeIf { it.id == pinId } ?: return false
-            pin = current.copy(name = name, note = note, updatedAtEpochMillis = updatedAtEpochMillis)
-            return true
+            val current = pin?.takeIf { it.id == update.pinId } ?: return PinUpdateResult.PIN_NOT_FOUND
+            if (updateResult != PinUpdateResult.SUCCESS && updateResult != PinUpdateResult.SUCCESS_WITH_CLEANUP_PENDING) {
+                return updateResult
+            }
+            pin =
+                current.copy(
+                    categoryId = update.categoryId,
+                    name = update.name,
+                    note = update.note,
+                    isFavorite = update.isFavorite,
+                    updatedAtEpochMillis = updatedAtEpochMillis,
+                )
+            return updateResult
         }
     }
 }

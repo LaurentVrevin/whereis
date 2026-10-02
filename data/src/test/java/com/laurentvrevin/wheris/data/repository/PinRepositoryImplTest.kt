@@ -7,6 +7,9 @@ import com.laurentvrevin.wheris.core.model.GeoPoint
 import com.laurentvrevin.wheris.core.model.PhotoReference
 import com.laurentvrevin.wheris.core.model.Pin
 import com.laurentvrevin.wheris.core.model.PinId
+import com.laurentvrevin.wheris.domain.PinPhotoChange
+import com.laurentvrevin.wheris.domain.PinUpdate
+import com.laurentvrevin.wheris.domain.PinUpdateResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -186,20 +189,22 @@ class PinRepositoryImplTest {
                 PinEntity("edit-me", 10.0, 20.0, "category", 5f, 30.0, 1000L, 2000L, isFavorite = true, photoReference = "photo-edit")
             fakeDao.emit(listOf(original))
 
-            assertEquals(true, repository.updatePinDetails(PinId("edit-me"), "Name", "Note", 3000L))
+            val update = PinUpdate(PinId("edit-me"), CategoryId("category"), "Name", "Note", true, PinPhotoChange.Keep)
+            assertEquals(PinUpdateResult.SUCCESS, repository.updatePin(update, 3000L))
             assertEquals(
                 listOf(original.copy(name = "Name", note = "Note", updatedAtEpochMillis = 3000L)),
                 fakeDao.entities.value,
             )
-            assertEquals(false, repository.updatePinDetails(PinId("missing"), "Absent", null, 4000L))
+            assertEquals(PinUpdateResult.PIN_NOT_FOUND, repository.updatePin(update.copy(pinId = PinId("missing")), 4000L))
             assertEquals(1, fakeDao.entities.value.size)
         }
 
     @Test
-    fun `updating details propagates storage errors`() {
+    fun `updating editable fields returns technical failure for storage errors`() {
         fakeDao.shouldFail = true
-        assertThrows(IOException::class.java) {
-            runBlocking { repository.updatePinDetails(PinId("edit-me"), "Name", "Note", 3000L) }
+        runBlocking {
+            val update = PinUpdate(PinId("edit-me"), CategoryId("category"), "Name", "Note", false, PinPhotoChange.Keep)
+            assertEquals(PinUpdateResult.TECHNICAL_FAILURE, repository.updatePin(update, 3000L))
         }
     }
 
@@ -227,17 +232,39 @@ class PinRepositoryImplTest {
             entities.value = entities.value.filterNot { it.id == pinId }
         }
 
-        override suspend fun updateDetails(
+        override suspend fun getPin(pinId: String): PinEntity? {
+            if (shouldFail) throw IOException("Fake DAO error")
+            return entities.value.find { it.id == pinId }
+        }
+
+        override suspend fun categoryExists(categoryId: String): Boolean = true
+
+        override suspend fun photoAttachedElsewhere(
+            photo: String,
             pinId: String,
+        ): Boolean = entities.value.any { it.id != pinId && it.photoReference == photo }
+
+        override suspend fun updateEditableRow(
+            pinId: String,
+            categoryId: String,
             name: String?,
             note: String?,
+            isFavorite: Boolean,
+            photoReference: String?,
             updatedAt: Long,
         ): Int {
             if (shouldFail) throw IOException("Fake DAO error")
             if (entities.value.none { it.id == pinId }) return 0
             entities.value =
                 entities.value.map {
-                    if (it.id == pinId) it.copy(name = name, note = note, updatedAtEpochMillis = updatedAt) else it
+                    if (it.id == pinId) {
+                        it.copy(
+                            categoryId = categoryId, name = name, note = note, isFavorite = isFavorite,
+                            photoReference = photoReference, updatedAtEpochMillis = updatedAt,
+                        )
+                    } else {
+                        it
+                    }
                 }
             return 1
         }

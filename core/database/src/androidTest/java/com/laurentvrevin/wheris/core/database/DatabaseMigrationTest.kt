@@ -4,6 +4,7 @@ import androidx.room.Room
 import androidx.room.testing.MigrationTestHelper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.laurentvrevin.wheris.core.database.dao.PinMutationStatus
 import com.laurentvrevin.wheris.core.database.entity.PinEntity
 import com.laurentvrevin.wheris.core.model.SystemCategoryIds
 import kotlinx.coroutines.flow.first
@@ -135,12 +136,18 @@ class DatabaseMigrationTest {
                     database.categoryDao().observeSystemCategories().first().map { it.id },
                 )
 
-                assertEquals(1, database.pinDao().updateDetails("old-pin", "Camping", "Près du chemin", 3000L))
+                assertEquals(
+                    PinMutationStatus.SUCCESS,
+                    database.pinDao().mutatePin("old-pin", original.categoryId, "Camping", "Près du chemin", false, null, null, 3000L),
+                )
                 assertEquals(
                     original.copy(name = "Camping", note = "Près du chemin", updatedAtEpochMillis = 3000L),
                     database.pinDao().observePin("old-pin").first(),
                 )
-                assertEquals(0, database.pinDao().updateDetails("missing", "Absent", null, 4000L))
+                assertEquals(
+                    PinMutationStatus.PIN_NOT_FOUND,
+                    database.pinDao().mutatePin("missing", original.categoryId, "Absent", null, false, null, null, 4000L),
+                )
                 assertEquals(1, database.pinDao().observePins().first().size)
             } finally {
                 database.close()
