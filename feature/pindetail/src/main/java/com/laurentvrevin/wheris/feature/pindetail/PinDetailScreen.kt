@@ -8,11 +8,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -26,15 +30,21 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.laurentvrevin.wheris.core.designsystem.foundation.WherisSpacing
 import com.laurentvrevin.wheris.core.designsystem.theme.WherisTheme
 import com.laurentvrevin.wheris.core.model.CardinalDirection
 import com.laurentvrevin.wheris.core.model.GeoPoint
+import com.laurentvrevin.wheris.core.model.PhotoReference
 import com.laurentvrevin.wheris.core.model.Pin
 import com.laurentvrevin.wheris.core.model.PinId
 import com.laurentvrevin.wheris.core.model.SystemCategoryIds
@@ -42,16 +52,22 @@ import com.laurentvrevin.wheris.core.ui.category.WherisCategoryIcon
 import com.laurentvrevin.wheris.core.ui.category.categoryColor
 import com.laurentvrevin.wheris.core.ui.category.categoryIcon
 import com.laurentvrevin.wheris.core.ui.category.categoryLabel
+import java.text.DateFormat
+import java.util.Date
 
 @Composable
 fun PinDetailScreen(
     uiState: PinDetailUiState,
     onBack: () -> Unit,
     onEdit: () -> Unit,
+    onNavigate: () -> Unit,
     onDelete: () -> Unit,
     onConfirmDeletion: () -> Unit,
     onCancelDeletion: () -> Unit,
     modifier: Modifier = Modifier,
+    navigationError: String? = null,
+    mapContent: @Composable (PinDetailUiState.Content) -> Unit = { DetailMapUnavailable() },
+    photoContent: @Composable (PhotoReference) -> Unit = { Text(stringResource(R.string.pindetail_photo_unavailable)) },
 ) {
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -77,12 +93,30 @@ fun PinDetailScreen(
                     onBack = onBack,
                 )
 
+            is PinDetailUiState.CleanupFailed ->
+                Column(Modifier.fillMaxSize().padding(WherisSpacing.lg), verticalArrangement = Arrangement.Center) {
+                    Text(
+                        stringResource(R.string.pindetail_cleanup_error),
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    )
+                    Button(onClick = onConfirmDeletion, enabled = !uiState.inProgress) {
+                        Text(stringResource(if (uiState.inProgress) R.string.pindetail_deleting else R.string.editpin_retry))
+                    }
+                    OutlinedButton(onClick = onBack, enabled = !uiState.inProgress) {
+                        Text(stringResource(R.string.pindetail_btn_back))
+                    }
+                }
+
             is PinDetailUiState.Content ->
                 Content(
                     state = uiState,
                     onBack = onBack,
                     onEdit = onEdit,
+                    onNavigate = onNavigate,
                     onDelete = onDelete,
+                    navigationError = navigationError,
+                    mapContent = mapContent,
+                    photoContent = photoContent,
                 )
         }
     }
@@ -90,7 +124,7 @@ fun PinDetailScreen(
     if (uiState is PinDetailUiState.Content && uiState.deletion != PinDeletionState.None) {
         val isDeleting = uiState.deletion == PinDeletionState.InProgress
         AlertDialog(
-            onDismissRequest = onCancelDeletion,
+            onDismissRequest = { if (!isDeleting) onCancelDeletion() },
             title = { Text(stringResource(R.string.pindetail_delete_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(WherisSpacing.sm)) {
@@ -104,6 +138,7 @@ fun PinDetailScreen(
                         Text(
                             text = stringResource(R.string.pindetail_delete_error),
                             color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                         )
                     }
                     if (isDeleting) {
@@ -178,10 +213,14 @@ private fun Content(
     state: PinDetailUiState.Content,
     onBack: () -> Unit,
     onEdit: () -> Unit,
+    onNavigate: () -> Unit,
     onDelete: () -> Unit,
+    navigationError: String?,
+    mapContent: @Composable (PinDetailUiState.Content) -> Unit,
+    photoContent: @Composable (PhotoReference) -> Unit,
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().testTag("detail_fields"),
         contentPadding =
             androidx.compose.foundation.layout.PaddingValues(
                 start = WherisSpacing.lg,
@@ -222,6 +261,7 @@ private fun Content(
                     WherisCategoryIcon(
                         icon = categoryIcon(state.pin.categoryId, state.category),
                         accent = categoryColor(state.category),
+                        modifier = Modifier.testTag("detail_category_icon"),
                     )
                     Column(modifier = Modifier.weight(1f).padding(start = WherisSpacing.md)) {
                         Text(
@@ -230,21 +270,35 @@ private fun Content(
                             fontWeight = FontWeight.SemiBold,
                         )
                         Text(
-                            text =
-                                if (state.pin.name != null) {
-                                    categoryLabel(
-                                        state.pin.categoryId,
-                                        state.category,
-                                    )
-                                } else {
-                                    stringResource(R.string.pindetail_fallback_identity)
-                                },
+                            text = stringResource(R.string.pindetail_category, categoryLabel(state.pin.categoryId, state.category)),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
             }
+        }
+
+        item {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(if (state.pin.isFavorite) Icons.Default.Star else Icons.Default.StarBorder, contentDescription = null)
+                Text(stringResource(if (state.pin.isFavorite) R.string.pindetail_favorite else R.string.pindetail_not_favorite))
+            }
+        }
+        item { mapContent(state) }
+        item {
+            Button(
+                onClick = onNavigate,
+                enabled = state.deletion == PinDeletionState.None,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+            ) { Text(stringResource(R.string.pindetail_navigate)) }
+            Text(stringResource(R.string.pindetail_external_navigation), style = MaterialTheme.typography.bodySmall)
+            navigationError?.let {
+                Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+            }
+        }
+        state.pin.photoReference?.let { reference ->
+            item(key = "photo-${reference.value}") { photoContent(reference) }
         }
 
         item {
@@ -259,6 +313,16 @@ private fun Content(
                     Text(
                         text = stringResource(R.string.pindetail_coordinates_title),
                         style = MaterialTheme.typography.titleMedium,
+                    )
+
+                    Text(
+                        stringResource(
+                            R.string.pindetail_recorded,
+                            DateFormat.getDateTimeInstance(
+                                DateFormat.MEDIUM,
+                                DateFormat.SHORT,
+                            ).format(Date(state.pin.createdAtEpochMillis)),
+                        ),
                     )
 
                     InfoRow(
@@ -344,7 +408,7 @@ private fun Content(
             OutlinedButton(
                 onClick = onEdit,
                 enabled = state.deletion == PinDeletionState.None,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
             ) {
                 Text(stringResource(R.string.pindetail_edit))
             }
@@ -352,9 +416,9 @@ private fun Content(
         item {
             OutlinedButton(
                 onClick = onDelete,
-                enabled = state.deletion != PinDeletionState.InProgress,
+                enabled = state.deletion == PinDeletionState.None,
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
             ) {
                 Text(stringResource(R.string.pindetail_delete))
             }
@@ -439,6 +503,7 @@ private fun PinDetailContentPreview() {
                 ),
             onBack = {},
             onEdit = {},
+            onNavigate = {},
             onDelete = {},
             onConfirmDeletion = {},
             onCancelDeletion = {},

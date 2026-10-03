@@ -17,6 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CancellationException
 
@@ -49,7 +52,7 @@ fun LocalPhotoPreview(
                 contentScale = ContentScale.Fit,
                 modifier = Modifier.fillMaxWidth().height(200.dp),
             )
-        failed -> Text(failureText)
+        failed -> Text(failureText, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         else -> CircularProgressIndicator()
     }
 }

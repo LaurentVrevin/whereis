@@ -34,6 +34,7 @@ class PinDetailViewModel(
     private var currentLocation: UserLocation? = null
     private var currentCategory: Category? = null
     private var observedPinId: PinId? = null
+    private var latestPin: Pin? = null
 
     fun observePin(pinId: PinId) {
         if (observedPinId == pinId && (pinJob?.isActive == true || _uiState.value == PinDetailUiState.Deleted)) return
@@ -41,6 +42,7 @@ class PinDetailViewModel(
         pinJob?.cancel()
         locationJob?.cancel()
         currentLocation = null
+        latestPin = null
         _uiState.value = PinDetailUiState.Loading
 
         pinJob =
@@ -50,18 +52,23 @@ class PinDetailViewModel(
                         pin to categories
                     }
                         .collect { (pin, categories) ->
+                            latestPin = pin
+                            currentCategory = categories.firstOrNull { it.id == pin?.categoryId }
                             val current = _uiState.value
                             // Room may emit null before deletePin returns. Only its completion confirms success.
                             if (
-                                current == PinDetailUiState.Deleted ||
+                                current == PinDetailUiState.Deleted || current is PinDetailUiState.CleanupFailed ||
                                 (current is PinDetailUiState.Content && current.deletion == PinDeletionState.InProgress)
                             ) {
                                 return@collect
                             }
-                            currentCategory = categories.firstOrNull { it.id == pin?.categoryId }
                             _uiState.value =
                                 if (pin == null) {
-                                    PinDetailUiState.NotFound
+                                    if ((current as? PinDetailUiState.Content)?.deletion == PinDeletionState.Failed) {
+                                        PinDetailUiState.CleanupFailed()
+                                    } else {
+                                        PinDetailUiState.NotFound
+                                    }
                                 } else {
                                     pin.toContent(currentLocation).copy(
                                         deletion = (current as? PinDetailUiState.Content)?.deletion ?: PinDeletionState.None,
@@ -74,6 +81,7 @@ class PinDetailViewModel(
                     val current = _uiState.value
                     if (
                         current != PinDetailUiState.Deleted &&
+                        current !is PinDetailUiState.CleanupFailed &&
                         !(current is PinDetailUiState.Content && current.deletion == PinDeletionState.InProgress)
                     ) {
                         _uiState.value = PinDetailUiState.Error
@@ -124,20 +132,33 @@ class PinDetailViewModel(
     }
 
     fun confirmDeletion() {
+        val cleanup = _uiState.value as? PinDetailUiState.CleanupFailed
+        if (cleanup != null) {
+            if (cleanup.inProgress) return
+            val pinId = observedPinId ?: return
+            _uiState.value = PinDetailUiState.CleanupFailed(inProgress = true)
+            delete(pinId)
+            return
+        }
         val current = _uiState.value as? PinDetailUiState.Content ?: return
         if (current.deletion != PinDeletionState.Confirmation && current.deletion != PinDeletionState.Failed) return
         _uiState.value = current.copy(deletion = PinDeletionState.InProgress)
+        delete(current.pin.id)
+    }
+
+    private fun delete(pinId: PinId) {
         viewModelScope.launch {
             try {
-                pinRepository.deletePin(current.pin.id)
+                pinRepository.deletePin(pinId)
                 pinJob?.cancel()
                 locationJob?.cancel()
                 _uiState.value = PinDetailUiState.Deleted
             } catch (exception: CancellationException) {
+                _uiState.value = latestPin?.toContent(currentLocation) ?: PinDetailUiState.NotFound
                 throw exception
             } catch (_: Exception) {
-                val latest = _uiState.value as? PinDetailUiState.Content ?: current
-                _uiState.value = latest.copy(deletion = PinDeletionState.Failed)
+                _uiState.value = latestPin?.toContent(currentLocation)?.copy(deletion = PinDeletionState.Failed)
+                    ?: PinDetailUiState.CleanupFailed()
             }
         }
     }

@@ -1170,6 +1170,28 @@ Distance/bearing/cardinal calculations use pure domain logic. Map
 rendering remains in `:core:map`. External navigation launcher is
 platform implementation triggered by UI effect.
 
+### B4.3 functional implementation
+
+PLACE_001 observes the canonical Pin/category Flows, including changes committed by
+PLACE_002. Identity falls back to the category; the separate category label/icon and
+favorite status remain explicit. Recording date uses `createdAtEpochMillis` and a
+local date/time format. Missing GPS metadata and current position are not fabricated.
+
+The existing `WherisMap` renders one selected marker and handles provider failures
+with a readable map fallback and optional retry. Permanent local photos use the
+shared preview component without drafts/leases; missing/corrupt files show a fallback
+without changing the Pin. All text/actions remain available without map/photo.
+
+Naviguer opens Android's compatible-app chooser through `:core:navigation`, sending
+coordinates only. Unavailable targets and launch failures produce a recoverable UI
+message. No preferred app is stored (B6). Home uses the same platform handoff.
+
+Deletion requires confirmation and blocks dismissal/double submission while running.
+Repository failure retains the Pin when it still exists. If Room has already deleted
+it but photo cleanup failed, show a cleanup/retry state without ghost place content.
+Completion returns to the previous destination; independent deletion shows NotFound.
+Final manual external-app integration checks belong to B7.
+
 ------------------------------------------------------------------------
 
 # 21. PLACE_002 --- Edit Place

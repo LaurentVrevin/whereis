@@ -13,6 +13,8 @@ sealed interface PinDetailUiState {
 
     data object Deleted : PinDetailUiState
 
+    data class CleanupFailed(val inProgress: Boolean = false) : PinDetailUiState
+
     data class Content(
         val pin: Pin,
         val category: Category? = null,

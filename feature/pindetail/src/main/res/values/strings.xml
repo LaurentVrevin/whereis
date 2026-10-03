@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="pindetail_title">Détails du lieu</string>
+    <string name="pindetail_category">Catégorie : %1$s</string>
+    <string name="pindetail_favorite">Lieu favori</string>
+    <string name="pindetail_not_favorite">Lieu non favori</string>
+    <string name="pindetail_recorded">Enregistré le %1$s</string>
+    <string name="pindetail_navigate">Naviguer</string>
+    <string name="pindetail_external_navigation">Choisir une application externe pour rejoindre ce lieu.</string>
+    <string name="pindetail_map_description">Carte du lieu enregistré, %1$s</string>
+    <string name="pindetail_map_unavailable">Carte indisponible. Les coordonnées et les détails restent disponibles.</string>
+    <string name="pindetail_photo_description">Photo du lieu enregistré</string>
+    <string name="pindetail_photo_unavailable">Photo indisponible. Tu peux toujours modifier ou supprimer ce lieu.</string>
+    <string name="pindetail_cleanup_error">Le lieu a été supprimé. Le nettoyage de sa photo n’a pas pu être terminé. Tu peux réessayer.</string>
     <string name="pindetail_fallback_identity">Lieu enregistré</string>
 
     <string name="pindetail_not_found_title">Lieu introuvable</string>

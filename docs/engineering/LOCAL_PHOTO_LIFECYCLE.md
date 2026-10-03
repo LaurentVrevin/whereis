@@ -182,6 +182,23 @@ again if a replacement was not committed. No Bitmap, Uri, Context or File is ser
 The B3.2 manual Picker/camera smoke is intentionally deferred to consolidation QA/B7;
 it has not been executed and B4.2 does not claim otherwise.
 
+## B4.3 — detail preview and deletion
+
+PLACE_001 reads the permanent `PhotoReference` with AndroidPhotoStorage's permanent
+preview overload and shared LocalPhotoPreview. It creates no draft or lease and never
+changes Room on a missing/corrupt preview. Pin/category Flow updates invalidate the
+preview when editing adds/replaces/removes a photo; preview fixtures are synthetic.
+
+PinRepository.deletePin remains the only file lifecycle owner: stage pending, delete
+Room row, then cleanup. A DB failure restores the photo; a cleanup failure preserves
+durable pending bytes for retry/reconciliation. The detail ViewModel waits for the
+repository result, blocks duplicate deletion and does no filesystem work. If Room
+has removed the row before cleanup fails, a dedicated cleanup/retry state replaces
+the deleted Pin's content. Retry uses the same idempotent repository deletion, including
+recovery when the row is already absent. Real local-file detail instrumentation covers
+valid/missing/corrupt previews, live canonical updates and successful delete cleanup;
+existing repository lifecycle tests cover DB rollback and final-cleanup failures.
+
 `android:allowBackup="false"` disables cloud backup but does not guarantee exclusion
 from every manufacturer device-to-device transfer. Before production release, Room
 references and permanent photos require a joint backup/data-extraction decision

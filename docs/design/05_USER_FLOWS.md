@@ -1302,6 +1302,13 @@ PLACE_001    → Lancer la navigation
 
 Both use the same external-navigation behavior.
 
+B4.3 implements the no-preference branch through Android's system chooser for both
+entry points. The shared `:core:navigation` boundary accepts only `GeoPoint` and
+sends only destination coordinates in an ACTION_VIEW `geo:` intent. Compatibility
+queries are restricted to that intent signature; no installed-app inventory is kept.
+Unavailable targets and resolver/launch failures remain recoverable in the calling
+screen. Preferred-app persistence and recovery are deferred to B6.
+
 ------------------------------------------------------------------------
 
 ## 75. Preferred navigation app available

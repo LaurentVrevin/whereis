@@ -1,0 +1,5 @@
+<resources>
+    <string name="external_navigation_chooser">Choisir une application pour naviguer</string>
+    <string name="external_navigation_unavailable">Aucune application compatible n’est disponible pour naviguer vers ce lieu.</string>
+    <string name="external_navigation_failed">Impossible d’ouvrir une application de navigation. Réessaie.</string>
+</resources>

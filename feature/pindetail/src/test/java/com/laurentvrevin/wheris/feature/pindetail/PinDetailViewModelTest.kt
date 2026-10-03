@@ -343,6 +343,147 @@ class PinDetailViewModelTest {
             updatedAtEpochMillis = 1_000L,
         )
 
+    @Test fun liveEditsReplaceAllEditableFieldsWithoutChangingRecordedMetadata() =
+        runTest {
+            val original = testPin().copy(photoReference = com.laurentvrevin.wheris.core.model.PhotoReference("photo-a"))
+            val repository = FakePinRepository(original)
+            val categories = FakeCategoryRepository()
+            val custom =
+                com.laurentvrevin.wheris.core.model.Category(
+                    com.laurentvrevin.wheris.core.model.CategoryId("live"),
+                    false,
+                    "Balades",
+                    com.laurentvrevin.wheris.core.model.CategoryIconKey.PARK,
+                    com.laurentvrevin.wheris.core.model.CategoryColorKey.GREEN,
+                    1000L,
+                )
+            categories.categories.value = listOf(custom)
+            val vm = PinDetailViewModel(repository, FakeLocationRepository(LocationResult.Timeout), categories)
+            vm.observePin(original.id)
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(original, (vm.uiState.value as PinDetailUiState.Content).pin)
+            val edited =
+                original.copy(
+                    name = "Nouveau",
+                    note = "Nouvelle note",
+                    categoryId = custom.id,
+                    isFavorite = true,
+                    photoReference = com.laurentvrevin.wheris.core.model.PhotoReference("photo-b"),
+                    updatedAtEpochMillis = 5000L,
+                )
+            repository.pin.value = edited
+            testDispatcher.scheduler.advanceUntilIdle()
+            val content = vm.uiState.value as PinDetailUiState.Content
+            assertEquals(edited, content.pin)
+            assertEquals(custom, content.category)
+            assertEquals(original.createdAtEpochMillis, content.pin.createdAtEpochMillis)
+            assertEquals(original.position, content.pin.position)
+            assertEquals(original.accuracyMeters, content.pin.accuracyMeters)
+            assertEquals(original.altitudeMeters, content.pin.altitudeMeters)
+            repository.pin.value = edited.copy(photoReference = null, isFavorite = false)
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertNull((vm.uiState.value as PinDetailUiState.Content).pin.photoReference)
+            assertEquals(false, (vm.uiState.value as PinDetailUiState.Content).pin.isFavorite)
+        }
+
+    @Test fun externalDeletionRemovesContentEvenDuringConfirmation() =
+        runTest {
+            val pin = testPin()
+            val repository = FakePinRepository(pin)
+            val vm = PinDetailViewModel(repository, FakeLocationRepository(LocationResult.Timeout), FakeCategoryRepository())
+            vm.observePin(pin.id)
+            testDispatcher.scheduler.advanceUntilIdle()
+            vm.requestDeletion()
+            repository.pin.value = null
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(PinDetailUiState.NotFound, vm.uiState.value)
+            vm.confirmDeletion()
+            assertEquals(0, repository.deleteCalls)
+        }
+
+    @Test fun cleanupFailureAfterRoomDeletionShowsNoGhostAndCanRetry() =
+        runTest {
+            val pin = testPin()
+            val repository = FakePinRepository(pin)
+            val completion = CompletableDeferred<Unit>()
+            repository.deleteCompletion = completion
+            val vm = PinDetailViewModel(repository, FakeLocationRepository(LocationResult.Timeout), FakeCategoryRepository())
+            vm.observePin(pin.id)
+            testDispatcher.scheduler.advanceUntilIdle()
+            vm.requestDeletion()
+            vm.confirmDeletion()
+            testDispatcher.scheduler.runCurrent()
+            completion.completeExceptionally(IOException("cleanup"))
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(PinDetailUiState.CleanupFailed(), vm.uiState.value)
+            repository.deleteCompletion = null
+            vm.confirmDeletion()
+            vm.confirmDeletion()
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(2, repository.deleteCalls)
+            assertEquals(PinDetailUiState.Deleted, vm.uiState.value)
+        }
+
+    @Test fun cancelledDeletionDoesNotBecomeAnErrorOrLeaveSubmissionLocked() =
+        runTest {
+            val pin = testPin()
+            val repository = FakePinRepository(pin)
+            repository.deleteFailure = kotlinx.coroutines.CancellationException("cancelled")
+            val vm = PinDetailViewModel(repository, FakeLocationRepository(LocationResult.Timeout), FakeCategoryRepository())
+            vm.observePin(pin.id)
+            testDispatcher.scheduler.advanceUntilIdle()
+            vm.requestDeletion()
+            vm.confirmDeletion()
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(PinDeletionState.None, (vm.uiState.value as PinDetailUiState.Content).deletion)
+            repository.deleteFailure = null
+            vm.requestDeletion()
+            vm.confirmDeletion()
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(PinDetailUiState.Deleted, vm.uiState.value)
+        }
+
+    @Test fun lateRoomNullAfterDeleteFailureReplacesStaleContentWithCleanupRetry() =
+        runTest {
+            val pin = testPin()
+            val repository = FakePinRepository(pin)
+            repository.deleteFailure = IOException("cleanup before Room emission")
+            val vm = PinDetailViewModel(repository, FakeLocationRepository(LocationResult.Timeout), FakeCategoryRepository())
+            vm.observePin(pin.id)
+            testDispatcher.scheduler.advanceUntilIdle()
+            vm.requestDeletion()
+            vm.confirmDeletion()
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(PinDeletionState.Failed, (vm.uiState.value as PinDetailUiState.Content).deletion)
+            repository.pin.value = null
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(PinDetailUiState.CleanupFailed(), vm.uiState.value)
+            repository.deleteFailure = null
+            vm.confirmDeletion()
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(PinDetailUiState.Deleted, vm.uiState.value)
+        }
+
+    @Test fun coincidentLocationKeepsDistanceButOmitsMeaninglessDirection() =
+        runTest {
+            val pin = testPin().copy(accuracyMeters = null, altitudeMeters = null)
+            val location = UserLocation(pin.position, 5f, null, 1000L)
+            val vm =
+                PinDetailViewModel(
+                    FakePinRepository(pin),
+                    FakeLocationRepository(LocationResult.Success(location)),
+                    FakeCategoryRepository(),
+                )
+            vm.observePin(pin.id)
+            vm.requestCurrentLocation()
+            testDispatcher.scheduler.advanceUntilIdle()
+            val content = vm.uiState.value as PinDetailUiState.Content
+            assertEquals(0.0, content.distanceMeters!!, 0.0)
+            assertNull(content.cardinalDirection)
+            assertNull(content.pin.accuracyMeters)
+            assertNull(content.pin.altitudeMeters)
+        }
+
     private class FakePinRepository(
         initialPin: Pin?,
     ) : PinRepository {
